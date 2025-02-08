@@ -1,0 +1,13 @@
+{
+  "configurations": [
+    {
+      "name": "My remote debug",
+      "type": "go",
+      "request": "attach",
+      "mode": "remote",
+      "remotePath": "${workspaceFolder}",
+      "port": 2345,
+      "host": "127.0.0.1"
+    }
+  ]
+}
