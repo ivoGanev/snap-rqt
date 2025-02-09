@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func SendRequest(ctx context.Context, request HttpRequest) string {
+func SendRequest(ctx context.Context, request Request) string {
 	var client = &http.Client{}
 
 	var req *http.Request

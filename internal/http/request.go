@@ -1,36 +1,63 @@
 package http
 
-
-type HttpRequestMethod string
-
-const (
-	GET    HttpRequestMethod = "GET"
-	POST   HttpRequestMethod = "POST"
-	PUT    HttpRequestMethod = "PUT"
-	DELETE HttpRequestMethod = "DELETE"
-	PATCH  HttpRequestMethod = "PATCH"
+import (
+	"fmt"
+	"strings"
 )
 
-type HttpRequest struct {
-	Url         string
-	Headers     map[string]string
-	Method      HttpRequestMethod
-	Body        string
+type RequestMethod string
+
+const (
+	GET    RequestMethod = "GET"
+	POST   RequestMethod = "POST"
+	PUT    RequestMethod = "PUT"
+	DELETE RequestMethod = "DELETE"
+	PATCH  RequestMethod = "PATCH"
+)
+
+var RequestMethods = []RequestMethod{GET, POST, PUT, DELETE, PATCH}
+
+type Request struct {
+	Url     string
+	Headers map[string]string
+	Method  RequestMethod
+	Body    string
 }
 
-func GetTcellColorForRequest(method HttpRequestMethod) string {
+func GetTcellColorForRequest(method RequestMethod) string {
 	switch method {
 	case GET:
-		return "[#942f94]" // Purple (similar to CSS .get)
+		return "[#942f94]" // Purple
 	case POST:
-		return "[green]" // Green (CSS .post)
+		return "[green]"
 	case PUT:
-		return "[orange]" // Orange (CSS .put)
+		return "[#ffa500]"
 	case PATCH:
-		return "[#a7a157]" // Yellowish (CSS .patch)
+		return "[#a7a157]" // Brownish
 	case DELETE:
-		return "[#d82929]" // Red (CSS .delete)
+		return "[#d82929]" // Red
 	default:
-		return "[white]" // Default color for unknown methods
+		return "[white]"
 	}
+}
+
+func (r Request) String() string {
+	// Convert headers to a formatted string
+	headersStr := "None"
+	if len(r.Headers) > 0 {
+		var headers []string
+		for key, value := range r.Headers {
+			headers = append(headers, fmt.Sprintf("%s: %s", key, value))
+		}
+		headersStr = strings.Join(headers, "\n  ")
+	}
+
+	// Format request as a string
+	return fmt.Sprintf(
+		"Request{\n  Method: %s\n  URL: %s\n  Headers:\n  %s\n  Body:\n  %s\n}",
+		r.Method,
+		r.Url,
+		headersStr,
+		strings.TrimSpace(r.Body),
+	)
 }

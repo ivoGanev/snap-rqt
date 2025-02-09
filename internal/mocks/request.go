@@ -1,36 +1,33 @@
-package http
+package mocks
 
 import (
 	"math/rand"
 	"snap-rq/internal/data"
-	"time"
+	"snap-rq/internal/http"
 
 	"github.com/google/uuid"
 )
 
-// Possible API Endpoints
+// Mock API Endpoints
 var apiEndpoints = []string{
 	"https://api.example.com/users",
-	"https://api.example.com/posts",
-	"https://api.example.com/comments",
-	"https://api.example.com/products",
 	"https://api.example.com/orders",
+	"https://api.example.com/account",
+	"https://api.example.com/products",
+	"https://api.example.com/profile",
 }
 
-// Possible HTTP Methods
-var httpMethods = []HttpRequestMethod{GET, POST, PUT, DELETE, PATCH}
+var httpMethods = []http.RequestMethod{http.GET, http.POST, http.PUT, http.DELETE, http.PATCH}
 
-// Sample Names and Descriptions
-var sampleNames = []string{"Users That Don't Make Any Sense", "Orders With Big Gains", "Products", "Accounts", "Profiles"}
+var sampleNames = []string{"Users That Don't Make Any Sense", "Orders With Big Gains",  "Accounts", "Products", "Profiles"}
 var sampleDescriptions = []string{
 	"Fetch user details",
-	"Update order information",
-	"Create a new product",
+	"Update orders",
 	"Delete an account",
+	"Create a new product",
 	"Modify profile settings",
 }
 
-// Generate Random Headers
 func generateRandomHeaders() map[string]string {
 	headers := map[string]string{
 		"Content-Type": "application/json",
@@ -42,7 +39,6 @@ func generateRandomHeaders() map[string]string {
 	return headers
 }
 
-// Generate Random JSON Body (for POST, PUT, PATCH)
 func generateRandomBody() string {
 	bodies := []string{
 		`{"key": "value"}`,
@@ -54,24 +50,23 @@ func generateRandomBody() string {
 	return bodies[rand.Intn(len(bodies))]
 }
 
-// GenerateMockRequestsAsNodes - Creates multiple random API requests
-func GenerateMockRequestsAsNodes(count int) []data.Node[HttpRequest] {
-	var nodes []data.Node[HttpRequest]
-	rand.Seed(time.Now().UnixNano()) // Seed the random generator
+func GenerateMockRequests(count int) []data.Node[http.Request] {
+	var nodes []data.Node[http.Request]
 
 	for i := 0; i < count; i++ {
-		name := sampleNames[rand.Intn(len(sampleNames))]
-		description := sampleDescriptions[rand.Intn(len(sampleDescriptions))]
-		url := apiEndpoints[rand.Intn(len(apiEndpoints))]
+		randomNumber := rand.Intn(len(sampleNames))
+		name := sampleNames[randomNumber]
+		description := sampleDescriptions[randomNumber]
+		url := apiEndpoints[randomNumber]
 		method := httpMethods[rand.Intn(len(httpMethods))]
 		headers := generateRandomHeaders()
 
 		var body string
-		if method == POST || method == PUT || method == PATCH {
+		if method == http.POST || method == http.PUT || method == http.PATCH {
 			body = generateRandomBody()
 		}
 
-		request := &HttpRequest{
+		request := &http.Request{
 			Url:     url,
 			Method:  method,
 			Headers: headers,
