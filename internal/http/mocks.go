@@ -1,45 +1,86 @@
 package http
+
 import (
+	"math/rand"
 	"snap-rq/internal/data"
+	"time"
+
+	"github.com/google/uuid"
 )
 
-func GetMockRequestsAsNodes() []data.Node[HttpRequest] {
-	return []data.Node[HttpRequest]{
-		data.NewNode("Get Users", "Fetch all users from API", &HttpRequest{
-			Url:    "https://api.example.com/users",
-			Method: GET,
-			Headers: map[string]string{}, // Empty headers
-		}),
-		data.NewNode("User Login", "Authenticate a user", &HttpRequest{
-			Url:    "https://api.example.com/login",
-			Method: POST,
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			Body: `{"username": "test", "password": "1234"}`,
-		}),
-		data.NewNode("Update User", "Modify user data", &HttpRequest{
-			Url:    "https://api.example.com/update",
-			Method: PUT,
-			Headers: map[string]string{
-				"Authorization": "Bearer token",
-			},
-			Body: `{"key": "newValue"}`,
-		}),
-		data.NewNode("Delete Account", "Remove a user account", &HttpRequest{
-			Url:    "https://api.example.com/delete",
-			Method: DELETE,
-			Headers: map[string]string{
-				"Authorization": "Bearer token",
-			},
-		}),
-		data.NewNode("Update Profile", "Modify user profile data", &HttpRequest{
-			Url:    "https://api.example.com/profile",
-			Method: PATCH,
-			Headers: map[string]string{
-				"X-Request-ID": "12345",
-			},
-			Body: `{"profile": "updated"}`,
-		}),
+// Possible API Endpoints
+var apiEndpoints = []string{
+	"https://api.example.com/users",
+	"https://api.example.com/posts",
+	"https://api.example.com/comments",
+	"https://api.example.com/products",
+	"https://api.example.com/orders",
+}
+
+// Possible HTTP Methods
+var httpMethods = []HttpRequestMethod{GET, POST, PUT, DELETE, PATCH}
+
+// Sample Names and Descriptions
+var sampleNames = []string{"Users That Don't Make Any Sense", "Orders With Big Gains", "Products", "Accounts", "Profiles"}
+var sampleDescriptions = []string{
+	"Fetch user details",
+	"Update order information",
+	"Create a new product",
+	"Delete an account",
+	"Modify profile settings",
+}
+
+// Generate Random Headers
+func generateRandomHeaders() map[string]string {
+	headers := map[string]string{
+		"Content-Type": "application/json",
 	}
+	// Randomly add an Authorization header
+	if rand.Intn(2) == 1 {
+		headers["Authorization"] = "Bearer " + uuid.New().String()
+	}
+	return headers
+}
+
+// Generate Random JSON Body (for POST, PUT, PATCH)
+func generateRandomBody() string {
+	bodies := []string{
+		`{"key": "value"}`,
+		`{"username": "user123", "password": "securepass"}`,
+		`{"product": "Laptop", "price": 999.99}`,
+		`{"order_id": "12345", "status": "shipped"}`,
+		`{"email": "example@email.com", "verified": true}`,
+	}
+	return bodies[rand.Intn(len(bodies))]
+}
+
+// GenerateMockRequestsAsNodes - Creates multiple random API requests
+func GenerateMockRequestsAsNodes(count int) []data.Node[HttpRequest] {
+	var nodes []data.Node[HttpRequest]
+	rand.Seed(time.Now().UnixNano()) // Seed the random generator
+
+	for i := 0; i < count; i++ {
+		name := sampleNames[rand.Intn(len(sampleNames))]
+		description := sampleDescriptions[rand.Intn(len(sampleDescriptions))]
+		url := apiEndpoints[rand.Intn(len(apiEndpoints))]
+		method := httpMethods[rand.Intn(len(httpMethods))]
+		headers := generateRandomHeaders()
+
+		var body string
+		if method == POST || method == PUT || method == PATCH {
+			body = generateRandomBody()
+		}
+
+		request := &HttpRequest{
+			Url:     url,
+			Method:  method,
+			Headers: headers,
+			Body:    body,
+		}
+
+		node := data.NewNode(name, description, request)
+		nodes = append(nodes, node)
+	}
+
+	return nodes
 }

@@ -2,39 +2,50 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"snap-rq/internal/http"
 	"time"
-
 	"github.com/rivo/tview"
 )
 
 func main() {
 	var app = tview.NewApplication()
 
-	requestsList := tview.NewList().ShowSecondaryText(false)
 	responseView := getResponseView(app)
 
-	// load mocks
-	for _, val := range http.GetMockRequestsAsNodes() {
-		requestsList.AddItem(val.Name, "", 0, nil)
+	table := tview.NewTable()
+
+	table.SetBorder(true)
+	table.SetTitle("Requests")
+
+	mocks := http.GenerateMockRequestsAsNodes(1000)
+	size := len(mocks)
+	count := 0
+
+	for count < size {
+		request := mocks[count]
+
+		method := fmt.Sprintf("%s %s [white]", http.GetTcellColorForRequest(request.Data.Method), string(request.Data.Method))
+		table.SetCell(count, 0, tview.NewTableCell(method))
+		table.SetCell(count, 1, tview.NewTableCell(string(request.Name)))
+		count++
 	}
 
-	// the rest
-	requestsList.SetBorder(true)
-	requestsList.SetTitle("Requests")
+	table.SetSelectable(true, true)
+	table.Select(0, 1)
 
-	requestsList.SetSelectedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
+	table.SetSelectedFunc(func(row int, column int) {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		request := http.GetMockRequestsAsNodes()[index].Data
+		request := mocks[row].Data
 		var response = ""
 		response = http.SendRequest(ctx, *request)
 		responseView.SetText(response)
 	})
 
 	var flex = tview.NewFlex()
-	flex.AddItem(requestsList, 0, 1, true).
+	flex.AddItem(table, 0, 1, true).
 		AddItem(responseView, 0, 1, false)
 
 	if err := app.SetFocus(flex).
