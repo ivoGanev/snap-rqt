@@ -93,12 +93,16 @@ func main() {
 			if column == 0 {
 				c.Pages.ShowPage(PAGE_REQUEST_METHOD_PICKER_MODAL)
 			} else {
-				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-				defer cancel()
+				go func() {
+					ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 
-				var response = ""
-				response = http.SendRequest(ctx, *request.Data)
-				responseView.SetText(response)
+					response := http.SendRequest(ctx, *request.Data)
+					c.App.QueueUpdateDraw(func() {
+						responseView.SetText(response)
+					})
+
+					cancel()
+				}()
 			}
 		}
 	})
