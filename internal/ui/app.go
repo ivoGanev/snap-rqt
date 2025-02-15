@@ -48,7 +48,7 @@ func (app *App) Init() {
 		app.Views.Debugger.SetText(app.Views.Requests.SelectedNode.String(), false)
 		return false // Allow normal drawing to continue
 	})
-
+    
 	// Construct the app
 	requestsModel := model.NewRequests()
 	requestsModel.AddListener(app.Views.Requests)

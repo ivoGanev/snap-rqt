@@ -96,7 +96,7 @@ func (r *RequestsView) Init() {
 
 					response := http.SendRequest(ctx, *request.Data)
 					r.app.QueueUpdateDraw(func() {
-						r.app.Views.Response.SetText(response)
+						r.app.Views.Response.SetText(response, false)
 					})
 
 					cancel()

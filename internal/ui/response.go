@@ -1,31 +1,36 @@
 package ui
 
 import (
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
 type ResponseView struct {
-	*tview.TextView
+	*tview.TextArea
 	app *App
 }
 
 func NewResponseView(app *App) *ResponseView {
 	responseView := ResponseView{
-		app: app,
-		TextView: tview.NewTextView(),
+		app:      app,
+		TextArea: tview.NewTextArea(),
 	}
 
 	return &responseView
 }
 
 func (r *ResponseView) Init() {
-	r.SetDynamicColors(true).
-		SetRegions(true).
-		SetChangedFunc(func() {
-			r.app.Draw()
-		})
+	r.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Rune() == 'p' {
+			return tcell.NewEventKey(tcell.KeyCtrlV, 'v', tcell.ModNone)
+		}
+		if event.Rune() == 'c' {
+			return tcell.NewEventKey(tcell.KeyCtrlQ, 'c', tcell.ModNone)
+		}
+		return event
+	})
 
-	r.SetText("No response data")
+	r.SetText("No response data", false)
 	r.SetBorder(true)
 	r.SetTitle("Response")
 }
