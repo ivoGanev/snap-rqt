@@ -8,31 +8,23 @@ import (
 	"github.com/google/uuid"
 )
 
-// Mock API Endpoints
-var apiEndpoints = []string{
-	"https://api.example.com/users",
-	"https://api.example.com/orders",
-	"https://api.example.com/account",
-	"https://api.example.com/products",
-	"https://api.example.com/profile",
+var sampleRequests = map[string]struct {
+	description string
+	url         string
+}{
+	"Users":    {"user details", "https://api.example.com/users"},
+	"Orders":   {"orders", "https://api.example.com/orders"},
+	"Accounts": {"account", "https://api.example.com/account"},
+	"Products": {"product", "https://api.example.com/products"},
+	"Profiles": {"profile settings", "https://api.example.com/profile"},
 }
 
 var httpMethods = []http.RequestMethod{http.GET, http.POST, http.PUT, http.DELETE, http.PATCH}
-
-var sampleNames = []string{"Users That Don't Make Any Sense", "Orders With Big Gains",  "Accounts", "Products", "Profiles"}
-var sampleDescriptions = []string{
-	"Fetch user details",
-	"Update orders",
-	"Delete an account",
-	"Create a new product",
-	"Modify profile settings",
-}
 
 func generateRandomHeaders() map[string]string {
 	headers := map[string]string{
 		"Content-Type": "application/json",
 	}
-	// Randomly add an Authorization header
 	if rand.Intn(2) == 1 {
 		headers["Authorization"] = "Bearer " + uuid.New().String()
 	}
@@ -53,11 +45,14 @@ func generateRandomBody() string {
 func GenerateMockRequests(count int) []data.Node[http.Request] {
 	var nodes []data.Node[http.Request]
 
+	keys := make([]string, 0, len(sampleRequests))
+	for key := range sampleRequests {
+		keys = append(keys, key)
+	}
+
 	for i := 0; i < count; i++ {
-		randomNumber := rand.Intn(len(sampleNames))
-		name := sampleNames[randomNumber]
-		description := sampleDescriptions[randomNumber]
-		url := apiEndpoints[randomNumber]
+		key := keys[rand.Intn(len(keys))]
+		entry := sampleRequests[key]
 		method := httpMethods[rand.Intn(len(httpMethods))]
 		headers := generateRandomHeaders()
 
@@ -67,13 +62,13 @@ func GenerateMockRequests(count int) []data.Node[http.Request] {
 		}
 
 		request := &http.Request{
-			Url:     url,
+			Url:     entry.url,
 			Method:  method,
 			Headers: headers,
 			Body:    body,
 		}
 
-		node := data.NewNode(name, description, request)
+		node := data.NewNode(key, entry.description, request)
 		nodes = append(nodes, node)
 	}
 
