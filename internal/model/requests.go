@@ -6,24 +6,26 @@ import (
 )
 
 type RequestsListener interface {
-	OnRequestAdded(string)
-	OnRequestRemoved(string)
-	OnRequestChanged(string)
-	OnRequestsSet([]data.Node[http.Request])
+	OnRequestsModelChanged(requests []data.Node[http.Request], operation CrudOp, multiplicity Multiplicity)
 }
 
 type Requests struct {
-	data      []data.Node[http.Request]
+	data      map[string]data.Node[http.Request]
 	listeners []RequestsListener
 }
 
 func NewRequests() *Requests {
-	return &Requests{}
+	return &Requests{
+		data: make(map[string]data.Node[http.Request]),
+	}
 }
 
 func (r *Requests) SetData(data []data.Node[http.Request]) {
+	for _, value := range data {
+		r.data[value.Id] = value
+	}
 	for _, l := range r.listeners {
-		l.OnRequestsSet(data)
+		l.OnRequestsModelChanged(data, UPDATE, MANY)
 	}
 }
 
@@ -38,8 +40,4 @@ func (r *Requests) RemoveListener(l RequestsListener) {
 			return
 		}
 	}
-}
-
-func (r *Requests) Data() *[]data.Node[http.Request] {
-	return &r.data
 }

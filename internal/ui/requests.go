@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"snap-rq/internal/data"
 	"snap-rq/internal/http"
+	"snap-rq/internal/model"
 	"time"
 
 	"github.com/rivo/tview"
@@ -18,7 +19,7 @@ type RequestsView struct {
 	data         *[]data.Node[http.Request]
 }
 
-// OnSelectionChanged implements OnMethodSelectionModalChangeListener.
+
 func (r *RequestsView) OnSelectionChanged(method string) {
 	r.SelectedNode.Data.Method = http.RequestMethod(method)
 
@@ -27,30 +28,20 @@ func (r *RequestsView) OnSelectionChanged(method string) {
 	r.app.SetFocus(r)
 }
 
-// OnRequestAdded implements model.ReqestsListener.
-func (r *RequestsView) OnRequestAdded(string) {
-	panic("unimplemented")
+func (r *RequestsView) OnRequestsModelChanged(requests []data.Node[http.Request], operation model.CrudOp, multiplicity model.Multiplicity) {
+	if operation == model.UPDATE && multiplicity == model.MANY {
+		r.setAllRequests(requests)
+	}
 }
 
-// OnRequestChanged implements model.ReqestsListener.
-func (r *RequestsView) OnRequestChanged(string) {
-	panic("unimplemented")
-}
+func (r *RequestsView) setAllRequests(requests []data.Node[http.Request]) {
+	r.data = &requests
 
-// OnRequestRemoved implements model.ReqestsListener.
-func (r *RequestsView) OnRequestRemoved(string) {
-	panic("unimplemented")
-}
-
-// OnRequestsSet implements model.ReqestsListener.
-func (r *RequestsView) OnRequestsSet(data []data.Node[http.Request]) {
-	r.data = &data
-
-	size := len(data)
+	size := len(requests)
 	count := 0
 
 	for count < size {
-		request := data[count]
+		request := requests[count]
 
 		method := fmt.Sprintf("%s %s [white]", http.GetTcellColorForRequest(request.Data.Method), string(request.Data.Method))
 
