@@ -3,6 +3,7 @@ package ui
 import (
 	"snap-rq/internal/mocks"
 	"snap-rq/internal/model"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -16,15 +17,21 @@ const (
 
 type App struct {
 	*tview.Application
-	Pages *tview.Pages
-	Views *Views
+	Pages  *tview.Pages
+	Views  *Views
+	Models *Models
 }
 
 type Views struct {
-	Response             *ResponseView
-	Requests             *RequestsView
+	ResponseWindow       *ResponseView
+	RequestsListWindow   *RequestsView
 	Debugger             *tview.TextArea
 	MethodSelectionModal *MethodSelectionModal
+	UrlInput             *UrlInput
+}
+
+type Models struct {
+	RequestsModel *model.Requests
 }
 
 func NewApp() *App {
@@ -35,45 +42,50 @@ func NewApp() *App {
 
 	app.Views = &Views{
 		Debugger:             tview.NewTextArea(),
-		Requests:             NewRequestsView(&app),
-		Response:             NewResponseView(&app),
+		UrlInput:             NewUrlInput(&app),
+		RequestsListWindow:   NewRequestsView(&app),
+		ResponseWindow:       NewResponseView(&app),
 		MethodSelectionModal: NewMethodSelectionModal(&app),
 	}
+
+	app.Models = &Models{RequestsModel: model.NewRequestsModel()}
 
 	return &app
 }
 
 func (app *App) Init() {
 	app.SetBeforeDrawFunc(func(screen tcell.Screen) bool {
-		app.Views.Debugger.SetText(app.Views.Requests.SelectedNode.String(), false)
+		app.Views.Debugger.SetText(app.Views.RequestsListWindow.SelectedNode.String(), false)
 		return false // Allow normal drawing to continue
 	})
-    
+
 	// Construct the app
-	requestsModel := model.NewRequests()
-	requestsModel.AddListener(app.Views.Requests)
-	requestsModel.SetData(mocks.GenerateMockRequests(1000))
+	app.Models.RequestsModel.AddListener(app.Views.RequestsListWindow)
+	app.Models.RequestsModel.SetAllData(mocks.GenerateMockRequests(1000))
 
 	// Init the layout configuration
-	app.Views.Requests.Init()
-	app.Views.Response.Init()
+	app.Views.RequestsListWindow.AddListener(app.Views.UrlInput)
+	app.Views.RequestsListWindow.Init()
+	app.Views.ResponseWindow.Init()
+	app.Views.UrlInput.Init()
 	app.Views.MethodSelectionModal.Init()
-	app.Views.MethodSelectionModal.AddListener(app.Views.Requests)
+	app.Views.MethodSelectionModal.AddListener(app.Views.RequestsListWindow)
 
-	var mainWindows = tview.NewFlex()
-	mainWindows.
-		AddItem(app.Views.Requests, 0, 1, true).
-		AddItem(app.Views.Response, 0, 1, false)
+	var lrcontent = tview.NewFlex()
+	lrcontent.
+		AddItem(app.Views.RequestsListWindow, 0, 1, true).
+		AddItem(app.Views.ResponseWindow, 0, 1, false)
 
-	var rootFlex = tview.NewFlex()
+	var body = tview.NewFlex()
 
-	rootFlex.
+	body.
 		SetDirection(tview.FlexRow).
-		AddItem(mainWindows, 0, 10, true).
+		AddItem(app.Views.UrlInput, 3, 0, false).
+		AddItem(lrcontent, 0, 10, true).
 		AddItem(app.Views.Debugger, 0, 1, false)
 
 	app.Pages.
-		AddPage(string(PAGE_LANDING_VIEW), rootFlex, true, true).
+		AddPage(string(PAGE_LANDING_VIEW), body, true, true).
 		AddPage(string(PAGE_REQUEST_METHOD_PICKER_MODAL), app.Views.MethodSelectionModal, true, false)
 
 	if err := app.

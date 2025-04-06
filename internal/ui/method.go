@@ -4,10 +4,11 @@ import (
 	"snap-rq/internal/http"
 
 	"github.com/rivo/tview"
+	"slices"
 )
 
 type OnMethodSelectionModalChangeListener interface {
-	OnSelectionChanged(string)
+	OnMethodSelectionChanged(string)
 }
 
 type MethodSelectionModal struct {
@@ -18,7 +19,7 @@ type MethodSelectionModal struct {
 
 func NewMethodSelectionModal(app *App) *MethodSelectionModal {
 	return &MethodSelectionModal{
-		app: app,
+		app:  app,
 		Grid: tview.NewGrid(),
 	}
 }
@@ -32,7 +33,7 @@ func (m *MethodSelectionModal) Init() {
 		methodList.AddItem(string(method), "", 0, nil).
 			SetSelectedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
 				for _, l := range m.listeners {
-					l.OnSelectionChanged(mainText)
+					l.OnMethodSelectionChanged(mainText)
 				}
 				m.Hide()
 			})
@@ -58,7 +59,7 @@ func (r *MethodSelectionModal) AddListener(l OnMethodSelectionModalChangeListene
 func (r *MethodSelectionModal) RemoveListener(l OnMethodSelectionModalChangeListener) {
 	for i, lis := range r.listeners {
 		if lis == l {
-			r.listeners = append(r.listeners[:i], r.listeners[i+1:]...)
+			r.listeners = slices.Delete(r.listeners, i, i+1)
 			return
 		}
 	}

@@ -42,7 +42,7 @@ func generateRandomBody() string {
 	return bodies[rand.Intn(len(bodies))]
 }
 
-func GenerateMockRequests(count int) []data.Node[http.Request] {
+func GenerateMockRequests(count int) *[]data.Node[http.Request] {
 	var nodes []data.Node[http.Request]
 
 	keys := make([]string, 0, len(sampleRequests))
@@ -72,5 +72,5 @@ func GenerateMockRequests(count int) []data.Node[http.Request] {
 		nodes = append(nodes, node)
 	}
 
-	return nodes
+	return &nodes
 }

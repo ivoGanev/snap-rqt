@@ -9,18 +9,23 @@ import (
 	"time"
 
 	"github.com/rivo/tview"
+	"slices"
 )
+
+type RequestsListChangedListener interface {
+	OnRequestsListSelectionChanged(selection *data.Node[http.Request])
+}
 
 type RequestsView struct {
 	*tview.Table
-	app          *App
-	SelectedNode *data.Node[http.Request]
-	SelectedRow  int
-	data         *[]data.Node[http.Request]
+	app             *App
+	SelectedNode    *data.Node[http.Request]
+	SelectedRow     int
+	data            *[]data.Node[http.Request]
+	changeListeners []RequestsListChangedListener
 }
 
-
-func (r *RequestsView) OnSelectionChanged(method string) {
+func (r *RequestsView) OnMethodSelectionChanged(method string) {
 	r.SelectedNode.Data.Method = http.RequestMethod(method)
 
 	methodText := fmt.Sprintf("%s %s [white]", http.GetTcellColorForRequest(http.RequestMethod(method)), method)
@@ -28,33 +33,26 @@ func (r *RequestsView) OnSelectionChanged(method string) {
 	r.app.SetFocus(r)
 }
 
-func (r *RequestsView) OnRequestsModelChanged(requests []data.Node[http.Request], operation model.CrudOp, multiplicity model.Multiplicity) {
+func (r *RequestsView) OnRequestsModelChanged(requests *[]data.Node[http.Request], operation model.CrudOp, multiplicity model.Multiplicity) {
 	if operation == model.UPDATE && multiplicity == model.MANY {
 		r.setAllRequests(requests)
 	}
 }
 
-func (r *RequestsView) setAllRequests(requests []data.Node[http.Request]) {
-	r.data = &requests
+func (r *RequestsView) setAllRequests(requests *[]data.Node[http.Request]) {
+	r.data = requests
 
-	size := len(requests)
-	count := 0
+	for i, request := range *requests {
+		methodText := fmt.Sprintf("%s %s [white]", http.GetTcellColorForRequest(request.Data.Method), request.Data.Method)
 
-	for count < size {
-		request := requests[count]
+		methodCell := tview.NewTableCell(methodText).SetReference(request)
+		nameCell := tview.NewTableCell(request.Name).SetReference(request)
 
-		method := fmt.Sprintf("%s %s [white]", http.GetTcellColorForRequest(request.Data.Method), string(request.Data.Method))
-
-		methodCell := tview.NewTableCell(method)
-		methodCell.SetReference(request)
-
-		nameCell := tview.NewTableCell(string(request.Name))
-		nameCell.SetReference(request)
-		r.SetCell(count, 0, methodCell)
-		r.SetCell(count, 1, nameCell)
-		count++
+		r.SetCell(i, 0, methodCell)
+		r.SetCell(i, 1, nameCell)
 	}
 }
+
 
 func NewRequestsView(app *App) *RequestsView {
 	requestsView := RequestsView{
@@ -66,12 +64,13 @@ func NewRequestsView(app *App) *RequestsView {
 }
 
 func (r *RequestsView) Init() {
-
 	r.SetBorder(true)
 	r.SetTitle("Requests")
 
 	r.SetSelectable(true, true)
-	r.SelectRequest(1)
+
+	r.Select(0, 1)
+	r.processSelectionChanged(0)
 
 	r.SetSelectedFunc(func(row int, column int) {
 		ref := r.GetCell(row, column).GetReference()
@@ -87,7 +86,7 @@ func (r *RequestsView) Init() {
 
 					response := http.SendRequest(ctx, *request.Data)
 					r.app.QueueUpdateDraw(func() {
-						r.app.Views.Response.SetText(response, false)
+						r.app.Views.ResponseWindow.SetText(response, false)
 					})
 
 					cancel()
@@ -97,15 +96,30 @@ func (r *RequestsView) Init() {
 	})
 
 	r.SetSelectionChangedFunc(func(row int, column int) {
-		data := *r.data
-		r.SelectedNode = &data[row]
-		r.SelectedRow = row
+		r.processSelectionChanged(row)
 	})
 }
 
-func (r *RequestsView) SelectRequest(row int) {
+
+func (r *RequestsView) processSelectionChanged(row int) {
 	data := *r.data
 	r.SelectedNode = &data[row]
 	r.SelectedRow = row
-	r.Select(0, row)
+
+	for _, l := range r.changeListeners {
+		l.OnRequestsListSelectionChanged(&data[row])
+	}
+}
+
+func (u *RequestsView) AddListener(l RequestsListChangedListener) {
+	u.changeListeners = append(u.changeListeners, l)
+}
+
+func (u *RequestsView) RemoveListener(l RequestsListChangedListener) {
+	for i, lis := range u.changeListeners {
+		if lis == l {
+			u.changeListeners = slices.Delete(u.changeListeners, i, i+1)
+			return
+		}
+	}
 }

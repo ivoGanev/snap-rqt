@@ -19,23 +19,23 @@ var collectionNames = []string{
 	"Debugging & Testing APIs",
 }
 
-func GenerateCollectionMocks(collectionCount, requestsPerCollection int) []data.Node[map[string]data.Node[http.Request]] {
+func GenerateCollectionMocks(collectionCount, requestsPerCollection int) *[]data.Node[map[string]data.Node[http.Request]] {
 	var collections []data.Node[map[string]data.Node[http.Request]]
 
-	for i := 0; i < collectionCount; i++ {
+	for range collectionCount {
 		collectionName := collectionNames[rand.Intn(len(collectionNames))]
 		collectionDescription := "A collection of API requests for " + collectionName
 
 		requestNodes := GenerateMockRequests(requestsPerCollection)
 		requestMap := make(map[string]data.Node[http.Request])
 
-		for _, reqNode := range requestNodes {
-			requestMap[reqNode.Name] = reqNode
+		for _, reqNode := range *requestNodes {
+			requestMap[reqNode.Id] = reqNode
 		}
 
 		collection := data.NewNode(collectionName, collectionDescription, &requestMap)
 		collections = append(collections, collection)
 	}
 
-	return collections
+	return &collections
 }
