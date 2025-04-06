@@ -5,5 +5,5 @@ import (
 )
 
 type Collection struct {
-	*Node[map[string]Node[http.Request]]
+	Node[map[string]Node[http.Request]]
 }

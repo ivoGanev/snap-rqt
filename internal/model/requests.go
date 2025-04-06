@@ -1,13 +1,13 @@
 package model
 
 import (
+	"slices"
 	"snap-rq/internal/data"
 	"snap-rq/internal/http"
-	"slices"
 )
 
 type RequestsListener interface {
-	OnRequestsModelChanged(requests *[]data.Node[http.Request], operation CrudOp, multiplicity Multiplicity)
+	OnRequestsModelChanged(requests *[]data.Node[http.Request], operation CrudOp)
 }
 
 type Requests struct {
@@ -26,7 +26,7 @@ func (r *Requests) SetAllData(data *[]data.Node[http.Request]) {
 		r.data[value.Id] = value
 	}
 	for _, l := range r.listeners {
-		l.OnRequestsModelChanged(data, UPDATE, MANY)
+		l.OnRequestsModelChanged(data, UPDATE)
 	}
 }
 
@@ -37,10 +37,9 @@ func (r *Requests) SetData(requestId string, replace *data.Node[http.Request]) {
 
 	update := &[]data.Node[http.Request]{*replace}
 	for _, l := range r.listeners {
-		l.OnRequestsModelChanged(update, UPDATE, ONE)
+		l.OnRequestsModelChanged(update, UPDATE)
 	}
 }
-
 
 func (r *Requests) AddListener(l RequestsListener) {
 	r.listeners = append(r.listeners, l)

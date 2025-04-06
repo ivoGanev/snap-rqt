@@ -1,14 +1,27 @@
 package ui
 
 import (
-	"snap-rq/internal/data"
-	"snap-rq/internal/http"
-
 	"github.com/rivo/tview"
 )
 
-type Collections struct {
+type CollectionsView struct {
 	*tview.Table
 	app *App
-	SelectedNode    *data.Node[http.Request]
+}
+
+func NewColletionsView(app *App) *CollectionsView {
+	collectionsView := CollectionsView{
+		app:   app,
+		Table: tview.NewTable(),
+	}
+
+	return &collectionsView
+}
+
+
+func (r *CollectionsView) Init() {
+	r.SetBorder(true)
+	r.SetTitle("Collections")
+
+	r.SetSelectable(true, true)
 }

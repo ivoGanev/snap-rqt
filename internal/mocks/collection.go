@@ -19,8 +19,8 @@ var collectionNames = []string{
 	"Debugging & Testing APIs",
 }
 
-func GenerateCollectionMocks(collectionCount, requestsPerCollection int) *[]data.Node[map[string]data.Node[http.Request]] {
-	var collections []data.Node[map[string]data.Node[http.Request]]
+func GenerateCollectionMocks(collectionCount, requestsPerCollection int) *[]data.Collection {
+	var collections []data.Collection
 
 	for range collectionCount {
 		collectionName := collectionNames[rand.Intn(len(collectionNames))]
@@ -33,7 +33,7 @@ func GenerateCollectionMocks(collectionCount, requestsPerCollection int) *[]data
 			requestMap[reqNode.Id] = reqNode
 		}
 
-		collection := data.NewNode(collectionName, collectionDescription, &requestMap)
+		collection := data.Collection { Node: data.NewNode(collectionName, collectionDescription, &requestMap) }
 		collections = append(collections, collection)
 	}
 

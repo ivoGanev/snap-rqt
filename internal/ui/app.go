@@ -23,8 +23,9 @@ type App struct {
 }
 
 type Views struct {
-	ResponseWindow       *ResponseView
-	RequestsListWindow   *RequestsView
+	CollectionsView      *CollectionsView
+	ResponseView         *ResponseView
+	RequestsListView     *RequestsView
 	Debugger             *tview.TextArea
 	MethodSelectionModal *MethodSelectionModal
 	UrlInput             *UrlInput
@@ -32,6 +33,7 @@ type Views struct {
 
 type Models struct {
 	RequestsModel *model.Requests
+	CollectionsModel *model.Collections
 }
 
 func NewApp() *App {
@@ -41,11 +43,12 @@ func NewApp() *App {
 	}
 
 	app.Views = &Views{
-		Debugger:             tview.NewTextArea(),
+		CollectionsView:      NewColletionsView(&app),
 		UrlInput:             NewUrlInput(&app),
-		RequestsListWindow:   NewRequestsView(&app),
-		ResponseWindow:       NewResponseView(&app),
+		RequestsListView:     NewRequestsView(&app),
+		ResponseView:         NewResponseView(&app),
 		MethodSelectionModal: NewMethodSelectionModal(&app),
+		Debugger:             tview.NewTextArea(),
 	}
 
 	app.Models = &Models{RequestsModel: model.NewRequestsModel()}
@@ -55,26 +58,28 @@ func NewApp() *App {
 
 func (app *App) Init() {
 	app.SetBeforeDrawFunc(func(screen tcell.Screen) bool {
-		app.Views.Debugger.SetText(app.Views.RequestsListWindow.SelectedNode.String(), false)
+		app.Views.Debugger.SetText(app.Views.RequestsListView.SelectedNode.String(), false)
 		return false // Allow normal drawing to continue
 	})
 
 	// Construct the app
-	app.Models.RequestsModel.AddListener(app.Views.RequestsListWindow)
+	app.Models.RequestsModel.AddListener(app.Views.RequestsListView)
 	app.Models.RequestsModel.SetAllData(mocks.GenerateMockRequests(1000))
 
 	// Init the layout configuration
-	app.Views.RequestsListWindow.AddListener(app.Views.UrlInput)
-	app.Views.RequestsListWindow.Init()
-	app.Views.ResponseWindow.Init()
+	app.Views.RequestsListView.AddListener(app.Views.UrlInput)
+	app.Views.RequestsListView.Init()
+	app.Views.ResponseView.Init()
 	app.Views.UrlInput.Init()
+	app.Views.CollectionsView.Init()
 	app.Views.MethodSelectionModal.Init()
-	app.Views.MethodSelectionModal.AddListener(app.Views.RequestsListWindow)
+	app.Views.MethodSelectionModal.AddListener(app.Views.RequestsListView)
 
 	var lrcontent = tview.NewFlex()
 	lrcontent.
-		AddItem(app.Views.RequestsListWindow, 0, 1, true).
-		AddItem(app.Views.ResponseWindow, 0, 1, false)
+		AddItem(app.Views.CollectionsView, 0, 1, false).
+		AddItem(app.Views.RequestsListView, 0, 3, true).
+		AddItem(app.Views.ResponseView, 0, 3, false)
 
 	var body = tview.NewFlex()
 

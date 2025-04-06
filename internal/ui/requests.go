@@ -8,8 +8,9 @@ import (
 	"snap-rq/internal/model"
 	"time"
 
-	"github.com/rivo/tview"
 	"slices"
+
+	"github.com/rivo/tview"
 )
 
 type RequestsListChangedListener interface {
@@ -33,8 +34,8 @@ func (r *RequestsView) OnMethodSelectionChanged(method string) {
 	r.app.SetFocus(r)
 }
 
-func (r *RequestsView) OnRequestsModelChanged(requests *[]data.Node[http.Request], operation model.CrudOp, multiplicity model.Multiplicity) {
-	if operation == model.UPDATE && multiplicity == model.MANY {
+func (r *RequestsView) OnRequestsModelChanged(requests *[]data.Node[http.Request], operation model.CrudOp) {
+	if operation == model.UPDATE && len(*requests) > 1 {
 		r.setAllRequests(requests)
 	}
 }
@@ -52,7 +53,6 @@ func (r *RequestsView) setAllRequests(requests *[]data.Node[http.Request]) {
 		r.SetCell(i, 1, nameCell)
 	}
 }
-
 
 func NewRequestsView(app *App) *RequestsView {
 	requestsView := RequestsView{
@@ -86,7 +86,7 @@ func (r *RequestsView) Init() {
 
 					response := http.SendRequest(ctx, *request.Data)
 					r.app.QueueUpdateDraw(func() {
-						r.app.Views.ResponseWindow.SetText(response, false)
+						r.app.Views.ResponseView.SetText(response, false)
 					})
 
 					cancel()
@@ -99,7 +99,6 @@ func (r *RequestsView) Init() {
 		r.processSelectionChanged(row)
 	})
 }
-
 
 func (r *RequestsView) processSelectionChanged(row int) {
 	data := *r.data
