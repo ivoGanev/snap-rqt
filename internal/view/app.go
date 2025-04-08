@@ -1,4 +1,4 @@
-package ui
+package view
 
 import (
 	"snap-rq/internal/mocks"
@@ -13,6 +13,7 @@ type PageName string
 const (
 	PAGE_REQUEST_METHOD_PICKER_MODAL PageName = "request-method-picker"
 	PAGE_LANDING_VIEW                PageName = "landing-view"
+	ENABLE_DEBUG                     bool     = false
 )
 
 type App struct {
@@ -29,10 +30,11 @@ type Views struct {
 	Debugger             *tview.TextArea
 	MethodSelectionModal *MethodSelectionModal
 	UrlInput             *UrlInput
+	NavHelp              *NavHelp
 }
 
 type Models struct {
-	RequestsModel *model.Requests
+	RequestsModel    *model.Requests
 	CollectionsModel *model.Collections
 }
 
@@ -44,6 +46,7 @@ func NewApp() *App {
 
 	app.Views = &Views{
 		CollectionsView:      NewColletionsView(&app),
+		NavHelp:              NewNavigationHelp(&app),
 		UrlInput:             NewUrlInput(&app),
 		RequestsListView:     NewRequestsView(&app),
 		ResponseView:         NewResponseView(&app),
@@ -70,6 +73,7 @@ func (app *App) Init() {
 	app.Views.RequestsListView.AddListener(app.Views.UrlInput)
 	app.Views.RequestsListView.Init()
 	app.Views.ResponseView.Init()
+	app.Views.NavHelp.Init()
 	app.Views.UrlInput.Init()
 	app.Views.CollectionsView.Init()
 	app.Views.MethodSelectionModal.Init()
@@ -85,9 +89,13 @@ func (app *App) Init() {
 
 	body.
 		SetDirection(tview.FlexRow).
+		AddItem(app.Views.NavHelp, 5, 0, false).
 		AddItem(app.Views.UrlInput, 3, 0, false).
-		AddItem(lrcontent, 0, 10, true).
-		AddItem(app.Views.Debugger, 0, 1, false)
+		AddItem(lrcontent, 0, 10, true)
+
+	if ENABLE_DEBUG {
+		body.AddItem(app.Views.Debugger, 0, 1, false)
+	}
 
 	app.Pages.
 		AddPage(string(PAGE_LANDING_VIEW), body, true, true).

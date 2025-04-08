@@ -1,10 +1,10 @@
 package main
 
-import "snap-rq/internal/ui"
+import "snap-rq/internal/view"
 
 
 
 func main() {
-	app := ui.NewApp()
+	app := view.NewApp()
 	app.Init()
 }
