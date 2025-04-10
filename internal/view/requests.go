@@ -19,11 +19,11 @@ type RequestsListChangedListener interface {
 
 type RequestsView struct {
 	*tview.Table
-	app             *App
-	SelectedNode    *data.Node[http.Request]
-	SelectedRow     int
-	data            *[]data.Node[http.Request]
-	changeListeners []RequestsListChangedListener
+	app          *App
+	SelectedNode *data.Node[http.Request]
+	SelectedRow  int
+	data         *[]data.Node[http.Request]
+	listeners    []RequestsListChangedListener
 }
 
 func (r *RequestsView) OnMethodSelectionChanged(method string) {
@@ -105,19 +105,19 @@ func (r *RequestsView) processSelectionChanged(row int) {
 	r.SelectedNode = &data[row]
 	r.SelectedRow = row
 
-	for _, l := range r.changeListeners {
+	for _, l := range r.listeners {
 		l.OnRequestsListSelectionChanged(&data[row])
 	}
 }
 
 func (u *RequestsView) AddListener(l RequestsListChangedListener) {
-	u.changeListeners = append(u.changeListeners, l)
+	u.listeners = append(u.listeners, l)
 }
 
 func (u *RequestsView) RemoveListener(l RequestsListChangedListener) {
-	for i, lis := range u.changeListeners {
+	for i, lis := range u.listeners {
 		if lis == l {
-			u.changeListeners = slices.Delete(u.changeListeners, i, i+1)
+			u.listeners = slices.Delete(u.listeners, i, i+1)
 			return
 		}
 	}

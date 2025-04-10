@@ -1,6 +1,7 @@
 package view
 
 import (
+	"snap-rq/internal/data"
 	"snap-rq/internal/mocks"
 	"snap-rq/internal/model"
 
@@ -65,11 +66,21 @@ func (app *App) Init() {
 		return false // Allow normal drawing to continue
 	})
 
-	// Construct the app
-	app.Models.RequestsModel.AddListener(app.Views.RequestsListView)
-	app.Models.RequestsModel.SetAllData(mocks.GenerateMockRequests(1000))
+	// Load app data
+	var store data.Store = &data.MockStore{}
+	store.LoadAllCollections()
+	requests := store.LoadAllRequests()
 
-	// Init the layout configuration
+	loadedRequests := mocks.GenerateMockRequests(1000)
+
+	app.Models.RequestsModel.SetAllData(loadedRequests)
+	app.Models.CollectionsModel.SetCollections()
+
+	// Handle model listeners
+	app.Models.RequestsModel.AddListener(app.Views.RequestsListView)
+	app.Models.CollectionsModel.AddListener(app.Views.CollectionsView)
+
+	// Init layout and bind controllers
 	app.Views.RequestsListView.AddListener(app.Views.UrlInput)
 	app.Views.RequestsListView.Init()
 	app.Views.ResponseView.Init()

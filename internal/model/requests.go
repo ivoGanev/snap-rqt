@@ -6,10 +6,25 @@ import (
 	"snap-rq/internal/http"
 )
 
+// Event handlers
 type RequestsListener interface {
 	OnRequestsModelChanged(requests *[]data.Node[http.Request], operation CrudOp)
 }
 
+func (r *Requests) AddListener(l RequestsListener) {
+	r.listeners = append(r.listeners, l)
+}
+
+func (r *Requests) RemoveListener(l RequestsListener) {
+	for i, lis := range r.listeners {
+		if lis == l {
+			r.listeners = slices.Delete(r.listeners, i, i+1)
+			return
+		}
+	}
+}
+
+// Initialisation
 type Requests struct {
 	data      map[string]data.Node[http.Request]
 	listeners []RequestsListener
@@ -21,6 +36,7 @@ func NewRequestsModel() *Requests {
 	}
 }
 
+// CRUD operations
 func (r *Requests) SetAllData(data *[]data.Node[http.Request]) {
 	for _, value := range *data {
 		r.data[value.Id] = value
@@ -41,15 +57,3 @@ func (r *Requests) SetData(requestId string, replace *data.Node[http.Request]) {
 	}
 }
 
-func (r *Requests) AddListener(l RequestsListener) {
-	r.listeners = append(r.listeners, l)
-}
-
-func (r *Requests) RemoveListener(l RequestsListener) {
-	for i, lis := range r.listeners {
-		if lis == l {
-			r.listeners = slices.Delete(r.listeners, i, i+1)
-			return
-		}
-	}
-}
