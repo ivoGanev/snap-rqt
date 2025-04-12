@@ -1,8 +1,8 @@
-package view
+package internal
 
 import (
+	"snap-rq/internal/controller"
 	"snap-rq/internal/data"
-	"snap-rq/internal/mocks"
 	"snap-rq/internal/model"
 
 	"github.com/gdamore/tcell/v2"
@@ -19,15 +19,18 @@ const (
 
 type App struct {
 	*tview.Application
-	Pages  *tview.Pages
-	Views  *Views
-	Models *Models
+	Pages        *tview.Pages
+	Views        *Views
+	Models       *Models
+	Controllers  *Controllers
+	SessionState *data.SessionState
+	Store        *data.Store
 }
 
 type Views struct {
 	CollectionsView      *CollectionsView
 	ResponseView         *ResponseView
-	RequestsListView     *RequestsView
+	RequestsView         *RequestsView
 	Debugger             *tview.TextArea
 	MethodSelectionModal *MethodSelectionModal
 	UrlInput             *UrlInput
@@ -39,6 +42,10 @@ type Models struct {
 	CollectionsModel *model.Collections
 }
 
+type Controllers struct {
+	MethodSelectionController controller.MethodController
+}
+
 func NewApp() *App {
 	app := App{
 		Application: tview.NewApplication(),
@@ -46,12 +53,12 @@ func NewApp() *App {
 	}
 
 	app.Views = &Views{
-		CollectionsView:      NewColletionsView(&app),
-		NavHelp:              NewNavigationHelp(&app),
-		UrlInput:             NewUrlInput(&app),
-		RequestsListView:     NewRequestsView(&app),
-		ResponseView:         NewResponseView(&app),
-		MethodSelectionModal: NewMethodSelectionModal(&app),
+		CollectionsView:      NewColletionsView(app),
+		NavHelp:              NewNavigationHelp(app),
+		UrlInput:             NewUrlInput(app),
+		RequestsView:         NewRequestsView(app),
+		ResponseView:         NewResponseView(app),
+		MethodSelectionModal: NewMethodSelectionModal(app),
 		Debugger:             tview.NewTextArea(),
 	}
 
@@ -62,7 +69,7 @@ func NewApp() *App {
 
 func (app *App) Init() {
 	app.SetBeforeDrawFunc(func(screen tcell.Screen) bool {
-		app.Views.Debugger.SetText(app.Views.RequestsListView.SelectedNode.String(), false)
+		app.Views.Debugger.SetText(app.Views.RequestsView.SelectedNode.String(), false)
 		return false // Allow normal drawing to continue
 	})
 
@@ -71,29 +78,27 @@ func (app *App) Init() {
 	store.LoadAllCollections()
 	requests := store.LoadAllRequests()
 
-	loadedRequests := mocks.GenerateMockRequests(1000)
-
 	app.Models.RequestsModel.SetAllData(loadedRequests)
 	app.Models.CollectionsModel.SetCollections()
 
 	// Handle model listeners
-	app.Models.RequestsModel.AddListener(app.Views.RequestsListView)
+	app.Models.RequestsModel.AddListener(app.Views.RequestsView)
 	app.Models.CollectionsModel.AddListener(app.Views.CollectionsView)
 
 	// Init layout and bind controllers
-	app.Views.RequestsListView.AddListener(app.Views.UrlInput)
-	app.Views.RequestsListView.Init()
+	app.Views.RequestsView.AddListener(app.Views.UrlInput)
+	app.Views.RequestsView.Init()
 	app.Views.ResponseView.Init()
 	app.Views.NavHelp.Init()
 	app.Views.UrlInput.Init()
 	app.Views.CollectionsView.Init()
 	app.Views.MethodSelectionModal.Init()
-	app.Views.MethodSelectionModal.AddListener(app.Views.RequestsListView)
+	app.Views.MethodSelectionModal.AddListener(app.Views.RequestsView)
 
 	var lrcontent = tview.NewFlex()
 	lrcontent.
 		AddItem(app.Views.CollectionsView, 0, 1, false).
-		AddItem(app.Views.RequestsListView, 0, 3, true).
+		AddItem(app.Views.RequestsView, 0, 3, true).
 		AddItem(app.Views.ResponseView, 0, 3, false)
 
 	var body = tview.NewFlex()
@@ -119,12 +124,4 @@ func (app *App) Init() {
 		Run(); err != nil {
 		panic(err)
 	}
-}
-
-func (app *App) ShowPage(p PageName) {
-	app.Pages.ShowPage(string(p))
-}
-
-func (app *App) HidePage(p PageName) {
-	app.Pages.HidePage(string(p))
 }

@@ -1,7 +1,8 @@
-package data
+package internal
 
 import (
 	"math/rand"
+	"snap-rq/internal/data"
 	"snap-rq/internal/http"
 
 	"github.com/google/uuid"
@@ -35,9 +36,6 @@ func (m *MockStore) GetCollectionsForRequest(requestID int) ([]Collection, error
 	return m.StoredCollections, nil
 }
 
-
-
-
 var collectionNames = []string{
 	"User APIs",
 	"Order Services",
@@ -51,19 +49,19 @@ var collectionNames = []string{
 	"Debugging & Testing APIs",
 }
 
-func GenerateCollectionMocks(collectionCount int, requestGenerator func() *[]Node[http.Request]) *[]Collection {
+func GenerateCollectionMocks(collectionCount int, requestGenerator func() *[]Request) *[]Collection {
 	var collections []Collection
 
 	for range collectionCount {
 		collectionName := collectionNames[rand.Intn(len(collectionNames))]
 		collectionDescription := "A collection of API requests for " + collectionName
-		collection := Collection { Node: NewNode(collectionName, collectionDescription, requestGenerator()) }
+		collectionNode := data.NewNode(collectionName, collectionDescription, requestGenerator())
+		collection := Collection{ Node: collectionNode }
 		collections = append(collections, collection)
 	}
 
 	return &collections
 }
-
 
 var sampleRequests = map[string]struct {
 	description string

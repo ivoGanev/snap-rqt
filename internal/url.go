@@ -1,14 +1,15 @@
-package view
+package internal
 
 import (
-	"github.com/rivo/tview"
 	"snap-rq/internal/data"
 	"snap-rq/internal/http"
+
+	"github.com/rivo/tview"
 )
 
 type UrlInput struct {
 	*tview.InputField
-	app *App
+	app          *App
 	selectedNode *data.Node[http.Request]
 }
 
@@ -20,14 +21,14 @@ func (r *UrlInput) OnRequestsListSelectionChanged(selection *data.Node[http.Requ
 func NewUrlInput(app *App) *UrlInput {
 	return &UrlInput{
 		InputField: tview.NewInputField(),
-		app: app,
+		app:        app,
 	}
 }
 
 func (r *UrlInput) Init() {
 	r.SetTitle("Url")
 	r.SetBorder(true)
-	r.SetChangedFunc(func(text string){
+	r.SetChangedFunc(func(text string) {
 		if r.selectedNode != nil {
 			r.selectedNode.Data.Url = text
 			r.app.Models.RequestsModel.SetData(r.selectedNode.Id, r.selectedNode)

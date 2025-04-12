@@ -1,4 +1,4 @@
-package view
+package internal
 
 import (
 	"github.com/gdamore/tcell/v2"

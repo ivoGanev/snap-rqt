@@ -1,4 +1,4 @@
-package view
+package internal
 
 import (
 	"github.com/gdamore/tcell/v2"
@@ -7,12 +7,10 @@ import (
 
 type NavHelp struct {
 	*tview.Table
-	app *App
 }
 
-func NewNavigationHelp(app *App) *NavHelp {
+func NewNavigationHelp() *NavHelp {
 	return &NavHelp{
-		app:   app,
 		Table: tview.NewTable(),
 	}
 }
@@ -24,7 +22,6 @@ func (n *NavHelp) Init() {
 		{"(q)", "Quit"},
 		{"(s)", "Save"},
 	}
-
 	mid := (len(shortcuts) + 1) / 2 // ceiling divide for uneven counts
 	for row := range mid {
 		left := shortcuts[row]

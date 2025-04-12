@@ -1,20 +1,19 @@
-package view
+package internal
 
 import (
 	"slices"
-	"snap-rq/internal/data"
-
+	"snap-rq/internal/controller"
 	"github.com/rivo/tview"
 )
 
 type CollectionsView struct {
 	*tview.Table
-	app *App
-	listeners    []CollectionsViewChangedListener
+	app       *App
+	listeners []CollectionsViewChangedListener
 }
 
 type CollectionsViewChangedListener interface {
-	OnCollectionListSelectionChanged(selection *data.Collection)
+	OnCollectionListSelectionChanged(selection *Collection)
 }
 
 func (u *CollectionsView) AddListener(l CollectionsViewChangedListener) {
@@ -31,7 +30,7 @@ func (u *CollectionsView) RemoveListener(l CollectionsViewChangedListener) {
 }
 
 // Initialisation
-func NewColletionsView(app *App) *CollectionsView {
+func NewColletionsView(c *controller.EditorController) *CollectionsView {
 	collectionsView := CollectionsView{
 		app:   app,
 		Table: tview.NewTable(),
@@ -39,7 +38,6 @@ func NewColletionsView(app *App) *CollectionsView {
 
 	return &collectionsView
 }
-
 
 func (r *CollectionsView) Init() {
 	r.SetBorder(true)
