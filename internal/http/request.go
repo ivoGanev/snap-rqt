@@ -24,22 +24,7 @@ type Request struct {
 	Body    string
 }
 
-func GetTcellColorForRequest(method RequestMethod) string {
-	switch method {
-	case GET:
-		return "[#942f94]" // Purple
-	case POST:
-		return "[green]"
-	case PUT:
-		return "[#ffa500]"
-	case PATCH:
-		return "[#a7a157]" // Brownish
-	case DELETE:
-		return "[#d82929]" // Red
-	default:
-		return "[white]"
-	}
-}
+
 
 func (r Request) String() string {
 	// Convert headers to a formatted string

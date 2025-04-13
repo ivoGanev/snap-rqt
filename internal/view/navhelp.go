@@ -1,10 +1,11 @@
-package internal
+package view
 
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
+// Navigational help for the user. Shows the user the hot keys etc.
 type NavHelp struct {
 	*tview.Table
 }

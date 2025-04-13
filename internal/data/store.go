@@ -1,4 +1,4 @@
-package internal
+package data
 
 type Store interface {
 	StoreCollection(collection *Collection) error
@@ -7,4 +7,5 @@ type Store interface {
 	CheckExistsCollection(collection *Collection) bool
 	LoadAllCollections() ([]Collection, error)
 	LoadAllRequests() ([]Request, error)
+	LoadSessionData() (UserSession, error)
 }

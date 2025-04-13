@@ -1,8 +1,7 @@
-package internal
+package data
 
 import (
 	"math/rand"
-	"snap-rq/internal/data"
 	"snap-rq/internal/http"
 
 	"github.com/google/uuid"
@@ -55,7 +54,7 @@ func GenerateCollectionMocks(collectionCount int, requestGenerator func() *[]Req
 	for range collectionCount {
 		collectionName := collectionNames[rand.Intn(len(collectionNames))]
 		collectionDescription := "A collection of API requests for " + collectionName
-		collectionNode := data.NewNode(collectionName, collectionDescription, requestGenerator())
+		collectionNode := NewNode(collectionName, collectionDescription, requestGenerator())
 		collection := Collection{ Node: collectionNode }
 		collections = append(collections, collection)
 	}

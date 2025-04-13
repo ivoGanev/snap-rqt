@@ -1,9 +1,10 @@
 package internal
 
 import (
-	"snap-rq/internal/controller"
 	"snap-rq/internal/data"
 	"snap-rq/internal/model"
+	"snap-rq/internal/styles"
+	"snap-rq/internal/view"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -19,31 +20,38 @@ const (
 
 type App struct {
 	*tview.Application
-	Pages        *tview.Pages
-	Views        *Views
-	Models       *Models
-	Controllers  *Controllers
-	SessionState *data.SessionState
-	Store        *data.Store
+	Pages         *tview.Pages
+	Views         *Views
+	Models        *Models
+	Controllers   *Controllers
+	Store         *data.Store
+	StyleProvider styles.StyleProvider
 }
 
 type Views struct {
-	CollectionsView      *CollectionsView
-	ResponseView         *ResponseView
-	RequestsView         *RequestsView
-	Debugger             *tview.TextArea
-	MethodSelectionModal *MethodSelectionModal
-	UrlInput             *UrlInput
-	NavHelp              *NavHelp
+	CollectionsView          *view.CollectionsView
+	ResponseView             *view.ResponseView
+	RequestsView             *view.RequestsView
+	Debugger                 *tview.TextArea
+	RequestMethodPickerModal *view.RequestMethodPickerModal
+	UrlInput                 *view.UrlInput
+	NavHelp                  *view.NavHelp
 }
 
 type Models struct {
-	RequestsModel    *model.Requests
-	CollectionsModel *model.Collections
+	*model.CollectionsModel
+	*model.RequestsModel
+	*model.UserSessionModel
 }
 
 type Controllers struct {
-	MethodSelectionController controller.MethodController
+	*RequestMethodPickerController
+	*RequestsViewController
+	*UrlInputController
+}
+
+type OnAppModelsLoadedListener interface {
+	OnAppModelsLoaded()
 }
 
 func NewApp() *App {
@@ -52,48 +60,58 @@ func NewApp() *App {
 		Pages:       tview.NewPages(),
 	}
 
+	app.StyleProvider = &styles.Default{}
+
 	app.Views = &Views{
-		CollectionsView:      NewColletionsView(app),
-		NavHelp:              NewNavigationHelp(app),
-		UrlInput:             NewUrlInput(app),
-		RequestsView:         NewRequestsView(app),
-		ResponseView:         NewResponseView(app),
-		MethodSelectionModal: NewMethodSelectionModal(app),
-		Debugger:             tview.NewTextArea(),
+		CollectionsView:          view.NewColletionsView(),
+		NavHelp:                  view.NewNavigationHelp(),
+		UrlInput:                 view.NewUrlInput(),
+		RequestsView:             view.NewRequestsView(app.StyleProvider),
+		ResponseView:             view.NewResponseView(),
+		RequestMethodPickerModal: view.NewMethodPickerModal(),
+		Debugger:                 tview.NewTextArea(),
 	}
 
-	app.Models = &Models{RequestsModel: model.NewRequestsModel()}
+	app.Models = &Models{
+		CollectionsModel: model.NewCollectionModel(*app.Store),
+		RequestsModel:    model.NewRequestModel(*app.Store),
+		UserSessionModel: model.NewUserSessionModel(*app.Store),
+	}
 
+	app.Controllers = &Controllers{
+		RequestMethodPickerController: NewMethodPickerModalController(&app),
+		RequestsViewController:        NewRequestsViewController(&app),
+		UrlInputController:            NewUrlInputController(&app),
+	}
+
+	// app.Store = &data.MockStore{}
 	return &app
 }
 
 func (app *App) Init() {
 	app.SetBeforeDrawFunc(func(screen tcell.Screen) bool {
-		app.Views.Debugger.SetText(app.Views.RequestsView.SelectedNode.String(), false)
 		return false // Allow normal drawing to continue
 	})
 
-	// Load app data
-	var store data.Store = &data.MockStore{}
-	store.LoadAllCollections()
-	requests := store.LoadAllRequests()
+	// Bind app listeners
+	var r []OnAppModelsLoadedListener
+	r[0] = app.Views.RequestsView
 
-	app.Models.RequestsModel.SetAllData(loadedRequests)
-	app.Models.CollectionsModel.SetCollections()
+	// Bind model listeners
+	app.Models.RequestsModel.AddListener(app.Controllers.RequestsViewController)
+	// app.Models.CollectionsModel.AddListener(app.Controllers.Coll)
 
-	// Handle model listeners
-	app.Models.RequestsModel.AddListener(app.Views.RequestsView)
-	app.Models.CollectionsModel.AddListener(app.Views.CollectionsView)
-
-	// Init layout and bind controllers
-	app.Views.RequestsView.AddListener(app.Views.UrlInput)
+	// Init layout
 	app.Views.RequestsView.Init()
 	app.Views.ResponseView.Init()
 	app.Views.NavHelp.Init()
 	app.Views.UrlInput.Init()
 	app.Views.CollectionsView.Init()
-	app.Views.MethodSelectionModal.Init()
-	app.Views.MethodSelectionModal.AddListener(app.Views.RequestsView)
+	app.Views.RequestMethodPickerModal.Init()
+
+	// Bind controllers
+	app.Views.RequestMethodPickerModal.SetRequestMethodPickerListener(app.Controllers.RequestMethodPickerController)
+	app.Views.RequestsView.SetRequestsViewListener(app.Controllers.RequestsViewController)
 
 	var lrcontent = tview.NewFlex()
 	lrcontent.
@@ -115,7 +133,12 @@ func (app *App) Init() {
 
 	app.Pages.
 		AddPage(string(PAGE_LANDING_VIEW), body, true, true).
-		AddPage(string(PAGE_REQUEST_METHOD_PICKER_MODAL), app.Views.MethodSelectionModal, true, false)
+		AddPage(string(PAGE_REQUEST_METHOD_PICKER_MODAL), app.Views.RequestMethodPickerModal, true, false)
+
+	// Load app data
+	app.Models.RequestsModel.Load()
+	app.Models.CollectionsModel.Load()
+	app.Models.UserSessionModel.Load()
 
 	if err := app.
 		SetFocus(app.Pages).
@@ -124,4 +147,16 @@ func (app *App) Init() {
 		Run(); err != nil {
 		panic(err)
 	}
+}
+
+func (app *App) showPage(p PageName) {
+	app.Pages.ShowPage(string(p))
+}
+
+func (app *App) hidePage(p PageName) {
+	app.Pages.HidePage(string(p))
+}
+
+func (app *App) focus(p tview.Primitive) {
+	app.SetFocus(p)
 }
