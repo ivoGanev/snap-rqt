@@ -2,7 +2,6 @@ package view
 
 import (
 	"snap-rq/internal/http"
-
 	"github.com/rivo/tview"
 )
 

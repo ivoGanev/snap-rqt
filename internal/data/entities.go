@@ -1,11 +1,13 @@
 package data
 
-import (
-	"snap-rq/internal/http"
-)
+import "snap-rq/internal/http"
 
 type Collection struct {
 	Node[[]Request]
+}
+
+type CollectionSimple struct {
+	Node[[]RequestSimple]
 }
 
 type Request struct {
@@ -13,6 +15,22 @@ type Request struct {
 }
 
 type UserSession struct {
-	SelectedRequestId string
-	SelectedSessionId string
+	RequestId    string
+	CollectionId string
+}
+
+type RequestSimple struct {
+	Id         string
+	Url        string
+	Name       string
+	MethodType http.RequestMethod
+}
+
+func NewRequestSimple(r Request) RequestSimple {
+	return RequestSimple{
+		Id:         r.Id,
+		Url:        r.Data.Url,
+		Name:       r.Name,
+		MethodType: r.Data.Method,
+	}
 }

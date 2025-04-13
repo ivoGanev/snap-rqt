@@ -24,7 +24,7 @@ type App struct {
 	Views         *Views
 	Models        *Models
 	Controllers   *Controllers
-	Store         *data.Store
+	Store         data.Store
 	StyleProvider styles.StyleProvider
 }
 
@@ -39,9 +39,7 @@ type Views struct {
 }
 
 type Models struct {
-	*model.CollectionsModel
-	*model.RequestsModel
-	*model.UserSessionModel
+	*model.ProjectModel
 }
 
 type Controllers struct {
@@ -73,9 +71,7 @@ func NewApp() *App {
 	}
 
 	app.Models = &Models{
-		CollectionsModel: model.NewCollectionModel(*app.Store),
-		RequestsModel:    model.NewRequestModel(*app.Store),
-		UserSessionModel: model.NewUserSessionModel(*app.Store),
+		ProjectModel: model.NewProjectModel(app.Store),
 	}
 
 	app.Controllers = &Controllers{
@@ -93,12 +89,8 @@ func (app *App) Init() {
 		return false // Allow normal drawing to continue
 	})
 
-	// Bind app listeners
-	var r []OnAppModelsLoadedListener
-	r[0] = app.Views.RequestsView
-
 	// Bind model listeners
-	app.Models.RequestsModel.AddListener(app.Controllers.RequestsViewController)
+	// app.Models.RequestsModel.AddListener(app.Controllers.RequestsViewController)
 	// app.Models.CollectionsModel.AddListener(app.Controllers.Coll)
 
 	// Init layout
@@ -136,10 +128,16 @@ func (app *App) Init() {
 		AddPage(string(PAGE_REQUEST_METHOD_PICKER_MODAL), app.Views.RequestMethodPickerModal, true, false)
 
 	// Load app data
-	app.Models.RequestsModel.Load()
-	app.Models.CollectionsModel.Load()
-	app.Models.UserSessionModel.Load()
+	sessionData, _ := app.Store.LoadSessionData()
+	if sessionData != nil {
+		collection, _ := app.Store.GetCollectionSimple(sessionData.CollectionId)
+		app.Views.RequestsView.RenderRequests(*collection.Data)
+	} else {
+		collections, _ := app.Store.GetCollectionsSimple()
+		app.Views.RequestsView.RenderRequests(*collections[0].Data)
+	}
 
+	// Start the app
 	if err := app.
 		SetFocus(app.Pages).
 		SetRoot(app.Pages, true).

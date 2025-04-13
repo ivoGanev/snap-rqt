@@ -9,9 +9,9 @@ import (
 )
 
 type RequestsViewListener interface {
-	OnRequestSelected(data.Request)
-	OnRequestMethodSelected(data.Request)
-	OnRequestsListSelectionChanged(data.Request)
+	OnRequestSelected(data.RequestSimple)
+	OnRequestMethodSelected(data.RequestSimple)
+	OnRequestsListSelectionChanged(data.RequestSimple)
 }
 
 func (r *RequestsView) SetRequestsViewListener(l RequestsViewListener) {
@@ -20,23 +20,23 @@ func (r *RequestsView) SetRequestsViewListener(l RequestsViewListener) {
 
 type selectedRow struct {
 	index   int
-	request data.Request
+	request data.RequestSimple
 }
 
 // Displays a collection of requests
 type RequestsView struct {
 	*tview.Table
-	collection    *data.Collection
 	selectedRow   selectedRow
 	eventListener RequestsViewListener
 	styleProvider styles.StyleProvider
+	requests      []data.RequestSimple
 }
 
-func (r *RequestsView) DisplayCollection(collection *data.Collection) {
-	r.collection = collection
-	requests := *collection.Data
+
+func (r *RequestsView) RenderRequests(requests []data.RequestSimple) {
+	r.requests = requests
 	for i, request := range requests {
-		methodText := r.styleProvider.GetStyledRequestMethod(string(request.Data.Method))
+		methodText := r.styleProvider.GetStyledRequestMethod(string(request.MethodType))
 		methodCell := tview.NewTableCell(methodText).SetReference(request)
 		nameCell := tview.NewTableCell(request.Name).SetReference(request)
 
@@ -61,7 +61,7 @@ func (r *RequestsView) Init() {
 
 	r.SetSelectedFunc(func(row int, column int) {
 		ref := r.GetCell(row, column).GetReference()
-		request, _ := ref.(data.Request)
+		request, _ := ref.(data.RequestSimple)
 		if column == 0 {
 			if r.eventListener != nil {
 				r.eventListener.OnRequestMethodSelected(request)
@@ -74,7 +74,7 @@ func (r *RequestsView) Init() {
 	})
 
 	r.SetSelectionChangedFunc(func(row int, column int) {
-		request := (*r.collection.Data)[row]
+		request := r.requests[row]
 		r.selectedRow = selectedRow{
 			index:   row,
 			request: request,
@@ -90,7 +90,7 @@ func (r *RequestsView) SelectRequest(position int) {
 	r.Select(0, position)
 	r.selectedRow = selectedRow{
 		index:   position,
-		request: (*r.collection.Data)[position],
+		request: r.requests[position],
 	}
 }
 
@@ -99,6 +99,6 @@ func (r *RequestsView) ChangeMethodTypeOnSelectedRow(method http.RequestMethod) 
 		SetText(r.styleProvider.GetStyledRequestMethod(string(method)))
 }
 
-func (r *RequestsView) GetSelectedRequest() *data.Request {
+func (r *RequestsView) GetSelectedRequest() *data.RequestSimple {
 	return &r.selectedRow.request
 }

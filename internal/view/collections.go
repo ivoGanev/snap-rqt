@@ -1,7 +1,6 @@
 package view
 
 import (
-	"snap-rq/internal/data"
 	"github.com/rivo/tview"
 )
 
@@ -11,7 +10,7 @@ type CollectionsView struct {
 }
 
 type CollectionsViewChangedListener interface {
-	OnCollectionListSelectionChanged(selection *data.Collection)
+	OnCollectionListSelectionChanged()
 }
 
 func (r *CollectionsView) SetListener(l CollectionsViewChangedListener) {

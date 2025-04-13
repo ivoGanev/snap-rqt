@@ -10,5 +10,5 @@ func NewUrlInputController(c *App) *UrlInputController {
 
 func (c *UrlInputController) OnUrlTextChanged(text string) {
 	selectedRequest := c.App.Views.RequestsView.GetSelectedRequest()
-	c.App.Models.RequestsModel.UpdateRequestUrl(selectedRequest, text)
+	c.App.Models.ProjectModel.UpdateRequestUrl(selectedRequest.Id, text)
 }

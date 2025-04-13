@@ -1,7 +1,6 @@
 package view
 
 import (
-	"snap-rq/internal/data"
 	"github.com/rivo/tview"
 )
 
@@ -35,6 +34,6 @@ func (r *UrlInput) Init() {
 	})
 }
 
-func (r *UrlInput) SetUrlText(text data.Request) {
-	r.SetText(text.Data.Url)
+func (r *UrlInput) SetUrlText(text string) {
+	r.SetText(text)
 }
