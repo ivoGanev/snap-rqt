@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start Delve Headless",
+      "type": "shell",
+      "command": "dlv debug --headless --listen=:2345 --log --api-version=2 main.go",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "API server listening at:",
+          "endsPattern": "API server listening at:"
+        }
+      },
+    }
+  ]
+}

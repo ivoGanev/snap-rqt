@@ -1,4 +1,4 @@
-package view
+package app
 
 import (
 	"github.com/gdamore/tcell/v2"
@@ -7,16 +7,14 @@ import (
 
 type ResponseView struct {
 	*tview.TextArea
-	app *App
 }
 
-func NewResponseView(app *App) *ResponseView {
+func NewResponseView() ResponseView {
 	responseView := ResponseView{
-		app:      app,
 		TextArea: tview.NewTextArea(),
 	}
 
-	return &responseView
+	return responseView
 }
 
 func (r *ResponseView) Init() {

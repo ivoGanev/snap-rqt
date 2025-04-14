@@ -1,10 +1,8 @@
-package mocks
+package memmock
 
 import (
 	"math/rand"
-	"snap-rq/internal/data"
-	"snap-rq/internal/http"
-
+	"snap-rq/app"
 	"github.com/google/uuid"
 )
 
@@ -19,7 +17,7 @@ var sampleRequests = map[string]struct {
 	"Profiles": {"profile settings", "https://api.example.com/profile"},
 }
 
-var httpMethods = []http.RequestMethod{http.GET, http.POST, http.PUT, http.DELETE, http.PATCH}
+
 
 func generateRandomHeaders() map[string]string {
 	headers := map[string]string{
@@ -42,35 +40,29 @@ func generateRandomBody() string {
 	return bodies[rand.Intn(len(bodies))]
 }
 
-func GenerateMockRequests(count int) *[]data.Node[http.Request] {
-	var nodes []data.Node[http.Request]
+func GenerateMockRequests(count int) []app.Request {
+	var nodes []app.Request
 
 	keys := make([]string, 0, len(sampleRequests))
 	for key := range sampleRequests {
 		keys = append(keys, key)
 	}
 
-	for i := 0; i < count; i++ {
-		key := keys[rand.Intn(len(keys))]
-		entry := sampleRequests[key]
-		method := httpMethods[rand.Intn(len(httpMethods))]
+	for range count {
+		name := keys[rand.Intn(len(keys))]
+		entry := sampleRequests[name]
+		method := app.RequestMethods[rand.Intn(len(app.RequestMethods))]
 		headers := generateRandomHeaders()
 
 		var body string
-		if method == http.POST || method == http.PUT || method == http.PATCH {
+		if method == "POST" || method == "PUT" || method == "PATCH" {
 			body = generateRandomBody()
 		}
 
-		request := &http.Request{
-			Url:     entry.url,
-			Method:  method,
-			Headers: headers,
-			Body:    body,
-		}
+		request := app.NewRequest("", name, entry.description, string(method), entry.url, headers, body)
 
-		node := data.NewNode(key, entry.description, request)
-		nodes = append(nodes, node)
+		nodes = append(nodes, request)
 	}
 
-	return &nodes
+	return nodes
 }

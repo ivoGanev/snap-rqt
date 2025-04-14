@@ -1,9 +1,8 @@
-package mocks
+package memmock
 
 import (
 	"math/rand"
-	"snap-rq/internal/data"
-	"snap-rq/internal/http"
+	"snap-rq/app"
 )
 
 var collectionNames = []string{
@@ -19,21 +18,13 @@ var collectionNames = []string{
 	"Debugging & Testing APIs",
 }
 
-func GenerateCollectionMocks(collectionCount, requestsPerCollection int) *[]data.Collection {
-	var collections []data.Collection
+func GenerateCollectionMocks(collectionCount int) *[]app.Collection {
+	var collections []app.Collection
 
 	for range collectionCount {
 		collectionName := collectionNames[rand.Intn(len(collectionNames))]
 		collectionDescription := "A collection of API requests for " + collectionName
-
-		requestNodes := GenerateMockRequests(requestsPerCollection)
-		requestMap := make(map[string]data.Node[http.Request])
-
-		for _, reqNode := range *requestNodes {
-			requestMap[reqNode.Id] = reqNode
-		}
-
-		collection := data.Collection { Node: data.NewNode(collectionName, collectionDescription, &requestMap) }
+		collection := app.NewCollection(collectionName, collectionDescription)
 		collections = append(collections, collection)
 	}
 

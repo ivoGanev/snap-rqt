@@ -1,30 +1,28 @@
-package view
+package app
 
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
-type NavHelp struct {
+// Navigational help for the user. Shows the user the hot keys etc.
+type NavHelpView struct {
 	*tview.Table
-	app *App
 }
 
-func NewNavigationHelp(app *App) *NavHelp {
-	return &NavHelp{
-		app:   app,
+func NewNavigationHelpView() NavHelpView {
+	return NavHelpView{
 		Table: tview.NewTable(),
 	}
 }
 
-func (n *NavHelp) Init() {
+func (n *NavHelpView) Init() {
 	shortcuts := [][]string{
 		{"(e)", "Edit request"},
 		{"(c)", "Select collection"},
 		{"(q)", "Quit"},
 		{"(s)", "Save"},
 	}
-
 	mid := (len(shortcuts) + 1) / 2 // ceiling divide for uneven counts
 	for row := range mid {
 		left := shortcuts[row]
