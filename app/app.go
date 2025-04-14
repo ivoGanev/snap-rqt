@@ -42,6 +42,7 @@ type Controllers struct {
 
 type Services struct {
 	RequestsService
+	CollectionService
 }
 
 type OnAppModelsLoadedListener interface {
@@ -87,7 +88,14 @@ func (app *App) Init() {
 		panic(err)
 	}
 	app.Views.RequestsView.RenderRequests(requests)
-	
+	app.Views.RequestsView.SelectRequest(0)
+
+	collections, err := app.Services.CollectionService.GetCollections()
+	if err != nil {
+		panic(err)
+	}
+	app.Views.CollectionsView.RenderCollections(collections)
+
 	// Init layout
 	app.Views.RequestsView.Init()
 	app.Views.ResponseView.Init()

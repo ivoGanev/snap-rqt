@@ -28,3 +28,11 @@ func (r *CollectionsView) Init() {
 	r.SetTitle("Collections")
 	r.SetSelectable(true, true)
 }
+
+func (r *CollectionsView) RenderCollections(collections []Collection) {
+	for i, collection := range collections {
+		nameCell := tview.NewTableCell(collection.Name).SetReference(collection.Name)
+
+		r.SetCell(i, 0, nameCell)
+	}
+}

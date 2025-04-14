@@ -17,6 +17,14 @@ func NewRequestsService() *MemMockRequestsService {
 	}
 }
 
+func (m *MemMockRequestsService) DeleteRequest(id string) (app.Request, error) {
+	panic("Not implemented")
+}
+
+func (m *MemMockRequestsService) CreateRequest(id app.Request) (error) {
+	panic("Not implemented")
+}
+
 func (m *MemMockRequestsService) GetRequestListItems() ([]app.RequestListItem, error) {
 	var items []app.RequestListItem
 	for _, r := range m.StoredRequests {
@@ -35,7 +43,7 @@ func (m *MemMockRequestsService) SaveRequest(r *app.Request) error {
 	return nil
 }
 
-func (m *MemMockRequestsService) GetAllRequests() ([]app.Request, error) {
+func (m *MemMockRequestsService) GetRequests() ([]app.Request, error) {
 	return m.StoredRequests, nil
 }
 

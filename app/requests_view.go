@@ -2,7 +2,6 @@ package app
 
 import (
 	"snap-rq/app/style"
-
 	"github.com/rivo/tview"
 )
 
@@ -46,7 +45,6 @@ func (r *RequestsView) Init() {
 	r.SetBorder(true)
 	r.SetTitle("Requests")
 	r.SetSelectable(true, true)
-	r.SelectRequest(0)
 
 	r.SetSelectedFunc(func(row int, column int) {
 		ref := r.GetCell(row, column).GetReference()
@@ -58,22 +56,25 @@ func (r *RequestsView) Init() {
 		}
 	})
 
-	r.SetSelectionChangedFunc(func(row int, column int) {
+	r.SetSelectionChangedFunc(func(row, _ int) {
 		request := r.requests[row]
-		r.selectedRow = selectedRow{
-			index:   row,
-			request: request,
-		}
+		r.setSelectedRow(row, request)
 		r.controller.HandleSelectedRequestChanged(request)
 	})
 }
 
 // Selects an item from the request list
 func (r *RequestsView) SelectRequest(position int) {
+	request := r.requests[position]
 	r.Select(0, position)
+	r.setSelectedRow(position, request)
+	r.controller.HandleSelectedRequestChanged(request)
+}
+
+func (r *RequestsView) setSelectedRow(index int, request RequestListItem) {
 	r.selectedRow = selectedRow{
-		index:   position,
-		request: r.requests[position],
+		index:   index,
+		request: request,
 	}
 }
 

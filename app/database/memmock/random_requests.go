@@ -17,6 +17,8 @@ var sampleRequests = map[string]struct {
 	"Profiles": {"profile settings", "https://api.example.com/profile"},
 }
 
+
+
 func generateRandomHeaders() map[string]string {
 	headers := map[string]string{
 		"Content-Type": "application/json",

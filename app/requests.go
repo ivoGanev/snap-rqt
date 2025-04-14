@@ -11,9 +11,10 @@ import (
 
 type RequestsService interface {
 	GetRequestListItems() ([]RequestListItem, error)
-	SaveRequest(request *Request) error
-	GetAllRequests() ([]Request, error)
+	CreateRequest(request Request) error
+	GetRequests() ([]Request, error)
 	GetRequest(id string) (Request, error)
+	DeleteRequest(id string) (Request, error)
 	UpdateRequest(request Request) (Request, error)
 }
 
