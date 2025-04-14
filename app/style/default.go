@@ -1,14 +1,13 @@
-package styles
+package style
 
 import (
 	"fmt"
 )
 
-type Default struct {
-
+type DefaultStylesProvider struct {
 }
 
-func (s *Default) GetStyledRequestMethod(method string) string {
+func (s *DefaultStylesProvider) GetStyledRequestMethod(method string) string {
 	var color string
 
 	switch method {

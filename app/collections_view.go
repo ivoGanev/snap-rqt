@@ -1,4 +1,4 @@
-package view
+package app
 
 import (
 	"github.com/rivo/tview"
@@ -17,8 +17,8 @@ func (r *CollectionsView) SetListener(l CollectionsViewChangedListener) {
 	r.listener = l
 }
 
-func NewColletionsView() *CollectionsView {
-	return &CollectionsView{
+func NewColletionsView() CollectionsView {
+	return CollectionsView{
 		Table: tview.NewTable(),
 	}
 }

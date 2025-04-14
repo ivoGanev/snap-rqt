@@ -7,16 +7,23 @@ import (
 	"net/http"
 )
 
-func SendRequest(ctx context.Context, request *Request) string {
+type HttpRequest struct {
+	Method       string            `json:"method"`
+	URL          string            `json:"url"`
+	Headers      map[string]string `json:"headers,omitempty"`
+	Body         string            `json:"body,omitempty"`
+}
+
+func SendRequest(ctx context.Context, request HttpRequest) string {
 	var client = &http.Client{}
 
 	var req *http.Request
 	var err error
 
 	if request.Method == "GET" || request.Method == "DELETE" {
-		req, err = http.NewRequestWithContext(ctx, string(request.Method), request.Url, nil)
+		req, err = http.NewRequestWithContext(ctx, string(request.Method), request.URL, nil)
 	} else {
-		req, err = http.NewRequestWithContext(ctx, string(request.Method), request.Url, bytes.NewBuffer([]byte(request.Body)))
+		req, err = http.NewRequestWithContext(ctx, string(request.Method), request.URL, bytes.NewBuffer([]byte(request.Body)))
 		for key, value := range request.Headers {
 			req.Header.Set(key, value)
 		}

@@ -1,39 +1,27 @@
-package view
+package app
 
 import (
-	"snap-rq/internal/data"
-	"snap-rq/internal/http"
-	"snap-rq/internal/styles"
+	"snap-rq/app/style"
 
 	"github.com/rivo/tview"
 )
 
-type RequestsViewListener interface {
-	OnRequestSelected(data.RequestSimple)
-	OnRequestMethodSelected(data.RequestSimple)
-	OnRequestsListSelectionChanged(data.RequestSimple)
-}
-
-func (r *RequestsView) SetRequestsViewListener(l RequestsViewListener) {
-	r.eventListener = l
-}
 
 type selectedRow struct {
 	index   int
-	request data.RequestSimple
+	request RequestListItem
 }
 
 // Displays a collection of requests
 type RequestsView struct {
 	*tview.Table
 	selectedRow   selectedRow
-	eventListener RequestsViewListener
-	styleProvider styles.StyleProvider
-	requests      []data.RequestSimple
+	styleProvider style.StyleProvider
+	requests      []RequestListItem
+	controller    RequestsController
 }
 
-
-func (r *RequestsView) RenderRequests(requests []data.RequestSimple) {
+func (r *RequestsView) RenderRequests(requests []RequestListItem) {
 	r.requests = requests
 	for i, request := range requests {
 		methodText := r.styleProvider.GetStyledRequestMethod(string(request.MethodType))
@@ -45,12 +33,13 @@ func (r *RequestsView) RenderRequests(requests []data.RequestSimple) {
 	}
 }
 
-func NewRequestsView(styles styles.StyleProvider) *RequestsView {
+func NewRequestsView(styles style.StyleProvider, controller RequestsController) RequestsView {
 	requestsView := RequestsView{
 		Table:         tview.NewTable(),
 		styleProvider: styles,
+		controller: controller,
 	}
-	return &requestsView
+	return requestsView
 }
 
 func (r *RequestsView) Init() {
@@ -61,15 +50,11 @@ func (r *RequestsView) Init() {
 
 	r.SetSelectedFunc(func(row int, column int) {
 		ref := r.GetCell(row, column).GetReference()
-		request, _ := ref.(data.RequestSimple)
+		request, _ := ref.(RequestListItem)
 		if column == 0 {
-			if r.eventListener != nil {
-				r.eventListener.OnRequestMethodSelected(request)
-			}
+			r.controller.HandleRequestMethodSelected(request)
 		} else {
-			if r.eventListener != nil {
-				r.eventListener.OnRequestSelected(request)
-			}
+			r.controller.HandleRequestNameSelected(request)
 		}
 	})
 
@@ -79,9 +64,7 @@ func (r *RequestsView) Init() {
 			index:   row,
 			request: request,
 		}
-		if r.eventListener != nil {
-			r.eventListener.OnRequestsListSelectionChanged(request)
-		}
+		r.controller.HandleSelectedRequestChanged(request)
 	})
 }
 
@@ -94,11 +77,11 @@ func (r *RequestsView) SelectRequest(position int) {
 	}
 }
 
-func (r *RequestsView) ChangeMethodTypeOnSelectedRow(method http.RequestMethod) {
+func (r *RequestsView) ChangeMethodTypeOnSelectedRow(requestMethod string) {
 	r.GetCell(r.selectedRow.index, 0).
-		SetText(r.styleProvider.GetStyledRequestMethod(string(method)))
+		SetText(r.styleProvider.GetStyledRequestMethod(string(requestMethod)))
 }
 
-func (r *RequestsView) GetSelectedRequest() *data.RequestSimple {
-	return &r.selectedRow.request
+func (r *RequestsView) GetSelectedRequest() RequestListItem {
+	return r.selectedRow.request
 }

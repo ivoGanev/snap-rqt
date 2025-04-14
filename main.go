@@ -1,8 +1,17 @@
 package main
 
-import "snap-rq/internal"
+import (
+	"snap-rq/app"
+	"snap-rq/app/database/memmock"
+)
 
 func main() {
-	app := internal.NewApp()
+	requestsService := memmock.NewRequestsService()
+
+	services := app.Services{
+		RequestsService: requestsService,
+	}
+
+	app := app.NewApp(&services)
 	app.Init()
 }
