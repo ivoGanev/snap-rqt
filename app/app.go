@@ -127,6 +127,26 @@ func (app *App) Init() {
 		AddPage(string(PAGE_LANDING_VIEW), body, true, true).
 		AddPage(string(PAGE_REQUEST_METHOD_PICKER_MODAL), app.Views.RequestMethodPickerModalView, true, false)
 
+	// set hotkeys
+	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Rune() == 'c' {
+			// Collections focus hotkey
+			app.focus(app.Views.CollectionsView)
+			return nil
+		}
+		if event.Rune() == 'r' {
+			// Requests focus hotkey
+			app.focus(app.Views.RequestsView)
+			return nil
+		}
+		if event.Rune() == 'q' {
+			// Quit
+			app.Stop()
+			return nil
+		}
+		return event
+	})
+
 	// Start the app
 	if err := app.
 		SetFocus(app.Pages).

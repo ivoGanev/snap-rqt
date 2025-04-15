@@ -25,7 +25,7 @@ func NewColletionsView() CollectionsView {
 
 func (r *CollectionsView) Init() {
 	r.SetBorder(true)
-	r.SetTitle("Collections")
+	r.SetTitle("(c) Collections")
 	r.SetSelectable(true, true)
 }
 
