@@ -4,6 +4,7 @@ import (
 	"errors"
 	"snap-rq/app"
 	"time"
+	"slices"
 )
 
 type MemMockCollectionService struct {
@@ -33,7 +34,7 @@ func (s *MemMockCollectionService) CreateCollection(c *app.Collection) error {
 func (s *MemMockCollectionService) DeleteCollection(id string) error {
 	for i, col := range s.collections {
 		if col.Id == id {
-			s.collections = append(s.collections[:i], s.collections[i+1:]...)
+			s.collections = slices.Delete(s.collections, i, i+1)
 			return nil
 		}
 	}

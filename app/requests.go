@@ -10,7 +10,7 @@ import (
 )
 
 type RequestsService interface {
-	GetRequestListItems() ([]RequestListItem, error)
+	GetRequestListItems(collectionId string) ([]RequestListItem, error)
 	CreateRequest(request Request) error
 	GetRequests() ([]Request, error)
 	GetRequest(id string) (Request, error)

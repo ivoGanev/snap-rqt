@@ -8,32 +8,46 @@ import (
 // MemMockRequestsService implements the RequestsService interface
 type MemMockRequestsService struct {
 	StoredRequests []app.Request
+	MemMockCollectionService
 }
 
 // NewRequestsService initializes the service with mock data
-func NewRequestsService() *MemMockRequestsService {
-	return &MemMockRequestsService{
-		StoredRequests: GenerateMockRequests(10), // You can customize count here
+func NewRequestsService(collectionService MemMockCollectionService) *MemMockRequestsService {
+	m := &MemMockRequestsService{}
+	m.MemMockCollectionService = collectionService
+	collections, err := m.MemMockCollectionService.GetCollections()
+	if err != nil {
+		panic(err)
 	}
+
+	var requests []app.Request
+	for _, collection := range collections {
+		requestBatch := GenerateMockRequests(100, collection.Id)
+		requests = append(requests, requestBatch...)
+	}
+	m.StoredRequests = requests
+	return m
 }
 
 func (m *MemMockRequestsService) DeleteRequest(id string) (app.Request, error) {
 	panic("Not implemented")
 }
 
-func (m *MemMockRequestsService) CreateRequest(id app.Request) (error) {
+func (m *MemMockRequestsService) CreateRequest(id app.Request) error {
 	panic("Not implemented")
 }
 
-func (m *MemMockRequestsService) GetRequestListItems() ([]app.RequestListItem, error) {
+func (m *MemMockRequestsService) GetRequestListItems(collectionId string) ([]app.RequestListItem, error) {
 	var items []app.RequestListItem
 	for _, r := range m.StoredRequests {
-		items = append(items, app.RequestListItem{
-			Id:         r.Id,
-			Name:       r.Name,
-			Url:        r.Url,
-			MethodType: r.MethodType,
-		})
+		if r.CollectionID == collectionId {
+			items = append(items, app.RequestListItem{
+				Id:         r.Id,
+				Name:       r.Name,
+				Url:        r.Url,
+				MethodType: r.MethodType,
+			})
+		}
 	}
 	return items, nil
 }

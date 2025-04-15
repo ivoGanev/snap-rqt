@@ -40,7 +40,7 @@ func generateRandomBody() string {
 	return bodies[rand.Intn(len(bodies))]
 }
 
-func GenerateMockRequests(count int) []app.Request {
+func GenerateMockRequests(count int, collectionId string) []app.Request {
 	var nodes []app.Request
 
 	keys := make([]string, 0, len(sampleRequests))
@@ -59,7 +59,7 @@ func GenerateMockRequests(count int) []app.Request {
 			body = generateRandomBody()
 		}
 
-		request := app.NewRequest("", name, entry.description, string(method), entry.url, headers, body)
+		request := app.NewRequest(collectionId, name, entry.description, string(method), entry.url, headers, body)
 
 		nodes = append(nodes, request)
 	}

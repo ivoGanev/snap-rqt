@@ -83,17 +83,18 @@ func (app *App) Init() {
 	})
 
 	// Load initial data
-	requests, err := app.Services.RequestsService.GetRequestListItems()
+	collections, err := app.Services.CollectionService.GetCollections()
+	if err != nil {
+		panic(err)
+	}
+
+	requests, err := app.Services.RequestsService.GetRequestListItems(collections[0].Id)
 	if err != nil {
 		panic(err)
 	}
 	app.Views.RequestsView.RenderRequests(requests)
 	app.Views.RequestsView.SelectRequest(0)
 
-	collections, err := app.Services.CollectionService.GetCollections()
-	if err != nil {
-		panic(err)
-	}
 	app.Views.CollectionsView.RenderCollections(collections)
 
 	// Init layout

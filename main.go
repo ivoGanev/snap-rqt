@@ -6,8 +6,8 @@ import (
 )
 
 func main() {
-	requestsService := memmock.NewRequestsService()
 	collectionService := memmock.NewCollectionService()
+	requestsService := memmock.NewRequestsService(*collectionService)
 
 	services := app.Services{
 		RequestsService:   requestsService,
