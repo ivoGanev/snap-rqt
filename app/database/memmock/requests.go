@@ -3,9 +3,9 @@ package memmock
 import (
 	"errors"
 	"snap-rq/app"
+	"snap-rq/app/database/memmock/random"
 )
 
-// MemMockRequestsService implements the RequestsService interface
 type MemMockRequestsService struct {
 	StoredRequests []app.Request
 	MemMockCollectionService
@@ -22,7 +22,7 @@ func NewRequestsService(collectionService MemMockCollectionService) *MemMockRequ
 
 	var requests []app.Request
 	for _, collection := range collections {
-		requestBatch := GenerateMockRequests(100, collection.Id)
+		requestBatch := random.Requests(100, collection.Id)
 		requests = append(requests, requestBatch...)
 	}
 	m.StoredRequests = requests

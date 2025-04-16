@@ -1,4 +1,4 @@
-package memmock
+package random
 
 import (
 	"math/rand"
@@ -18,7 +18,7 @@ var collectionNames = []string{
 	"Debugging & Testing APIs",
 }
 
-func GenerateCollectionMocks(collectionCount int) *[]app.Collection {
+func Collection(collectionCount int) []app.Collection {
 	var collections []app.Collection
 
 	for range collectionCount {
@@ -28,5 +28,5 @@ func GenerateCollectionMocks(collectionCount int) *[]app.Collection {
 		collections = append(collections, collection)
 	}
 
-	return &collections
+	return collections
 }

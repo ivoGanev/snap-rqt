@@ -6,15 +6,10 @@ import (
 
 type CollectionsView struct {
 	*tview.Table
-	listener CollectionsViewChangedListener
 }
 
-type CollectionsViewChangedListener interface {
-	OnCollectionListSelectionChanged()
-}
-
-func (r *CollectionsView) SetListener(l CollectionsViewChangedListener) {
-	r.listener = l
+func (r CollectionsView) SelectCollection(row int) {
+	r.Select(row, 0)
 }
 
 func NewColletionsView() CollectionsView {

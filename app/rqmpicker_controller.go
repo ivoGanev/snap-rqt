@@ -13,7 +13,10 @@ func NewMethodPickerModalController(app *App) *RequestMethodPickerViewController
 }
 
 func (c *RequestMethodPickerViewController) HandleRequestMethodSelected(method string) {
-	c.App.Views.RequestsView.ChangeMethodTypeOnSelectedRow(method)
+	state := c.App.Services.StateService.GetState()
+	rstate := state.GetRequestViewState(state.AppViewState.SelectedCollectionId)
+
+	c.App.Views.RequestsView.ChangeMethodTypeOnSelectedRow(rstate.RowIndex, method)
 	c.App.hidePage(PAGE_REQUEST_METHOD_PICKER_MODAL)
 	c.App.focus(c.App.Views.RequestsView)
 }

@@ -1,8 +1,9 @@
-package memmock
+package random
 
 import (
 	"math/rand"
 	"snap-rq/app"
+
 	"github.com/google/uuid"
 )
 
@@ -16,8 +17,6 @@ var sampleRequests = map[string]struct {
 	"Products": {"product", "https://api.example.com/products"},
 	"Profiles": {"profile settings", "https://api.example.com/profile"},
 }
-
-
 
 func generateRandomHeaders() map[string]string {
 	headers := map[string]string{
@@ -40,7 +39,7 @@ func generateRandomBody() string {
 	return bodies[rand.Intn(len(bodies))]
 }
 
-func GenerateMockRequests(count int, collectionId string) []app.Request {
+func Requests(count int, collectionId string) []app.Request {
 	var nodes []app.Request
 
 	keys := make([]string, 0, len(sampleRequests))

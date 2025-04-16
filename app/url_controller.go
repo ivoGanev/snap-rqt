@@ -14,8 +14,10 @@ func NewUrlInputController(app *App, requestsService RequestsService) *UrlInputV
 }
 
 func (c *UrlInputViewController) HandleUrlTextChanged(urlText string) {
-	selectedRequest := c.App.Views.RequestsView.GetSelectedRequest()
-	request, err := c.RequestsService.GetRequest(selectedRequest.Id)
+	state := c.App.Services.StateService.GetState()
+	rstate := state.GetRequestViewState(state.AppViewState.SelectedCollectionId)
+
+	request, err := c.RequestsService.GetRequest(rstate.RequestId)
 	if err != nil {
 		panic(request)
 	}

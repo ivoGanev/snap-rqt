@@ -1,10 +1,8 @@
 package app
 
 import (
-	"snap-rq/app/style"
-
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"snap-rq/app/style"
 )
 
 const (
@@ -12,16 +10,9 @@ const (
 	REQUEST_COLUMN = 1
 )
 
-type SessionState struct {
-	RowIndex    int
-	ColumnIndex int
-	request     RequestListItem
-}
-
 // Displays a collection of requests
 type RequestsView struct {
 	*tview.Table
-	sessionState  SessionState
 	styleProvider style.StyleProvider
 	requests      []RequestListItem
 	controller    RequestsController
@@ -65,16 +56,7 @@ func (r *RequestsView) Init() {
 
 	r.SetSelectionChangedFunc(func(row, column int) {
 		request := r.requests[row]
-		r.setSessionState(row, column, request)
 		r.controller.HandleSelectedRequestChanged(request)
-	})
-
-	r.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyTab {
-			r.controller.HandleColumnSwitch()
-			return nil
-		}
-		return event
 	})
 }
 
@@ -82,7 +64,6 @@ func (r *RequestsView) Init() {
 func (r *RequestsView) SelectRequest(row int) {
 	request := r.requests[row]
 	r.Select(row, REQUEST_COLUMN)
-	r.setSessionState(row, REQUEST_COLUMN, request)
 	r.controller.HandleSelectedRequestChanged(request)
 }
 
@@ -90,32 +71,10 @@ func (r *RequestsView) SelectRequest(row int) {
 func (r *RequestsView) SelectMethod(row int) {
 	request := r.requests[row]
 	r.Select(row, METHOD_COLUMN)
-	r.setSessionState(row, METHOD_COLUMN, request)
 	r.controller.HandleSelectedRequestChanged(request)
 }
 
-func (r *RequestsView) SwitchColumns() {
-	row := r.sessionState.RowIndex
-	if r.sessionState.ColumnIndex == METHOD_COLUMN {
-		r.SelectRequest(row)
-	} else {
-		r.SelectMethod(row)
-	}
-}
-
-func (r *RequestsView) ChangeMethodTypeOnSelectedRow(requestMethod string) {
-	r.GetCell(r.sessionState.RowIndex, 0).
+func (r *RequestsView) ChangeMethodTypeOnSelectedRow(row int, requestMethod string) {
+	r.GetCell(row, 0).
 		SetText(r.styleProvider.GetStyledRequestMethod(string(requestMethod)))
-}
-
-func (r *RequestsView) GetSelectedRequest() RequestListItem {
-	return r.sessionState.request
-}
-
-func (r *RequestsView) setSessionState(rowIndex int, columnIndex int, request RequestListItem) {
-	r.sessionState = SessionState{
-		ColumnIndex: columnIndex,
-		RowIndex:    rowIndex,
-		request:     request,
-	}
 }

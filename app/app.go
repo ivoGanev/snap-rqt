@@ -1,17 +1,19 @@
 package app
 
 import (
+	"snap-rq/app/style"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"snap-rq/app/style"
 )
 
-type PageName string
-
 const (
-	PAGE_REQUEST_METHOD_PICKER_MODAL PageName = "request-method-picker"
-	PAGE_LANDING_VIEW                PageName = "landing-view"
-	ENABLE_DEBUG                     bool     = false
+	VIEW_NAME_REQUESTS               = "requests"
+	VIEW_NAME_RESPONSE               = "response"
+	VIEW_NAME_COLLECTIONS            = "collections"
+	PAGE_REQUEST_METHOD_PICKER_MODAL = "request-method-picker"
+	PAGE_LANDING_VIEW                = "landing-view"
+	ENABLE_DEBUG                     = false
 )
 
 type App struct {
@@ -43,6 +45,7 @@ type Controllers struct {
 type Services struct {
 	RequestsService
 	CollectionService
+	StateService
 }
 
 type OnAppModelsLoadedListener interface {
@@ -82,7 +85,7 @@ func (app *App) Init() {
 		return false // Allow normal drawing to continue
 	})
 
-	// Load initial data
+	// Load app data
 	collections, err := app.Services.CollectionService.GetCollections()
 	if err != nil {
 		panic(err)
@@ -93,9 +96,12 @@ func (app *App) Init() {
 		panic(err)
 	}
 	app.Views.RequestsView.RenderRequests(requests)
-	app.Views.RequestsView.SelectRequest(0)
-
 	app.Views.CollectionsView.RenderCollections(collections)
+
+	// Load and set app state
+	appState := app.Services.StateService.GetState()
+	app.Views.RequestsView.SelectRequest(appState.GetRequestViewState(appState.AppViewState.SelectedCollectionId).RowIndex)
+	app.Views.CollectionsView.SelectCollection(appState.AppViewState.SelectedCollectionRow)
 
 	// Init layout
 	app.Views.RequestsView.Init()
@@ -158,11 +164,11 @@ func (app *App) Init() {
 	}
 }
 
-func (app *App) showPage(p PageName) {
+func (app *App) showPage(p string) {
 	app.Pages.ShowPage(string(p))
 }
 
-func (app *App) hidePage(p PageName) {
+func (app *App) hidePage(p string) {
 	app.Pages.HidePage(string(p))
 }
 

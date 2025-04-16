@@ -2,9 +2,10 @@ package memmock
 
 import (
 	"errors"
-	"snap-rq/app"
-	"time"
 	"slices"
+	"snap-rq/app"
+	"snap-rq/app/database/memmock/random"
+	"time"
 )
 
 type MemMockCollectionService struct {
@@ -13,7 +14,7 @@ type MemMockCollectionService struct {
 
 func NewCollectionService() *MemMockCollectionService {
 	return &MemMockCollectionService{
-		collections: *GenerateCollectionMocks(20),
+		collections: random.Collection(20),
 	}
 }
 

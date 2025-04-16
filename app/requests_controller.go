@@ -10,7 +10,6 @@ type RequestsController interface {
 	HandleRequestNameSelected(RequestListItem)
 	HandleRequestMethodSelected(RequestListItem)
 	HandleSelectedRequestChanged(RequestListItem)
-	HandleColumnSwitch()
 }
 
 type RequestsViewController struct {
@@ -28,6 +27,7 @@ func (r *RequestsViewController) HandleRequestMethodSelected(request RequestList
 }
 
 func (r *RequestsViewController) HandleRequestNameSelected(request RequestListItem) {
+
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 
@@ -47,8 +47,4 @@ func (r *RequestsViewController) HandleRequestNameSelected(request RequestListIt
 
 func (r *RequestsViewController) HandleSelectedRequestChanged(selectedRequest RequestListItem) {
 	r.App.Views.UrlInputView.SetUrlText(selectedRequest.Url)
-}
-
-func (r *RequestsViewController) HandleColumnSwitch() {
-	r.App.Views.RequestsView.SwitchColumns()
 }
