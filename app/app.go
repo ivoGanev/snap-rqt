@@ -40,6 +40,7 @@ type Controllers struct {
 	*RequestMethodPickerViewController
 	*RequestsViewController
 	*UrlInputViewController
+	*CollectionViewController
 }
 
 type Services struct {
@@ -65,10 +66,11 @@ func NewApp(services *Services) App {
 		RequestMethodPickerViewController: NewMethodPickerModalController(&app),
 		RequestsViewController:            NewRequestsViewController(&app, services),
 		UrlInputViewController:            NewUrlInputController(&app, services),
+		CollectionViewController:          NewCollectionViewController(&app),
 	}
 
 	app.Views = &Views{
-		CollectionsView:              NewColletionsView(),
+		CollectionsView:              NewColletionsView(app.Controllers.CollectionViewController),
 		NavHelpView:                  NewNavigationHelpView(),
 		UrlInputView:                 NewUrlInputView(app.Controllers.UrlInputViewController),
 		RequestsView:                 NewRequestsView(app.StyleProvider, app.Controllers.RequestsViewController),
@@ -100,8 +102,8 @@ func (app *App) Init() {
 
 	// Load and set app state
 	appState := app.Services.StateService.GetState()
-	app.Views.RequestsView.SelectRequest(appState.GetRequestViewState(appState.AppViewState.SelectedCollectionId).RowIndex)
-	app.Views.CollectionsView.SelectCollection(appState.AppViewState.SelectedCollectionRow)
+	app.Views.CollectionsView.SelectCollection(appState.GetSelectedCollectionRow())
+	app.Views.RequestsView.SelectRequest(appState.GetSelectedRequestRow())
 
 	// Init layout
 	app.Views.RequestsView.Init()
@@ -114,8 +116,8 @@ func (app *App) Init() {
 	// Build Editor Layout
 	var lrcontent = tview.NewFlex()
 	lrcontent.
-		AddItem(app.Views.CollectionsView, 0, 1, false).
-		AddItem(app.Views.RequestsView, 0, 3, true).
+		AddItem(app.Views.CollectionsView, 0, 1, true).
+		AddItem(app.Views.RequestsView, 0, 3, false).
 		AddItem(app.Views.ResponseView, 0, 3, false)
 
 	var body = tview.NewFlex()

@@ -38,6 +38,12 @@ type RequestListItem struct {
 	MethodType string
 }
 
+type SelectedRequest struct {
+	Row    int
+	Column int
+	Id     string
+}
+
 func (r Request) AsHttpRequest() http.HttpRequest {
 	return http.HttpRequest{
 		Method:  r.MethodType,
