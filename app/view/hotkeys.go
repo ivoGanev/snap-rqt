@@ -1,4 +1,4 @@
-package app
+package view
 
 import (
 	"github.com/gdamore/tcell/v2"
@@ -6,17 +6,17 @@ import (
 )
 
 // Navigational help for the user. Shows the user the hot keys etc.
-type NavHelpView struct {
+type HotkeysHelp struct {
 	*tview.Table
 }
 
-func NewNavigationHelpView() NavHelpView {
-	return NavHelpView{
+func NewHotkeysHelp() HotkeysHelp {
+	return HotkeysHelp{
 		Table: tview.NewTable(),
 	}
 }
 
-func (n *NavHelpView) Init() {
+func (n *HotkeysHelp) Init() {
 	shortcuts := [][]string{
 		{"(e)", "Edit request"},
 		{"(c)", "Select collection"},

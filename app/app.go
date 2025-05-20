@@ -2,6 +2,7 @@ package app
 
 import (
 	"snap-rq/app/style"
+	"snap-rq/app/view"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -32,7 +33,7 @@ type Views struct {
 	tview.TextArea
 	RequestMethodPickerModalView
 	UrlInputView
-	NavHelpView
+	view.HotkeysHelp
 	Debugger *tview.TextArea
 }
 
@@ -71,7 +72,7 @@ func NewApp(services *Services) App {
 
 	app.Views = &Views{
 		CollectionsView:              NewColletionsView(app.Controllers.CollectionViewController),
-		NavHelpView:                  NewNavigationHelpView(),
+		HotkeysHelp:                  view.NewHotkeysHelp(),
 		UrlInputView:                 NewUrlInputView(app.Controllers.UrlInputViewController),
 		RequestsView:                 NewRequestsView(app.StyleProvider, app.Controllers.RequestsViewController),
 		ResponseView:                 NewResponseView(),
@@ -108,7 +109,7 @@ func (app *App) Init() {
 	// Init layout
 	app.Views.RequestsView.Init()
 	app.Views.ResponseView.Init()
-	app.Views.NavHelpView.Init()
+	app.Views.HotkeysHelp.Init()
 	app.Views.UrlInputView.Init()
 	app.Views.CollectionsView.Init()
 	app.Views.RequestMethodPickerModalView.Init()
@@ -124,7 +125,7 @@ func (app *App) Init() {
 
 	body.
 		SetDirection(tview.FlexRow).
-		AddItem(app.Views.NavHelpView, 5, 0, false).
+		AddItem(app.Views.HotkeysHelp, 5, 0, false).
 		AddItem(app.Views.UrlInputView, 3, 0, false).
 		AddItem(lrcontent, 0, 10, true)
 
