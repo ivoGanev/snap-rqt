@@ -1,7 +1,6 @@
 package service
 
 import (
-	"snap-rq/app/entity"
 	"snap-rq/app/repository"
 )
 
@@ -13,34 +12,26 @@ func NewStateService(stateRepository repository.StateRepository) *StateService {
 	return &StateService{stateRepository}
 }
 
-func (s *StateService) SetFocusedCollection(selectedCollection entity.FocusedCollection) {
+func (s *StateService) SetFocusedCollection(collectionId string) {
 	state := s.state.GetState()
-	state.FocusedCollection = selectedCollection
+	state.FocusedCollectionId = collectionId
 	s.state.SetState(state)
 }
 
-func (s *StateService) SetFocusedRequest(collectionID string, request entity.FocusedRequest) {
+func (s *StateService) SetFocusedRequest(collectionID string, requestId string) {
 	state := s.state.GetState()
-	state.FocusedRequests[collectionID] = request
+	state.FocusedRequestIds[collectionID] = requestId
 	s.state.SetState(state)
 }
 
-func (s *StateService) GetFocusedRequest(collectionID string) entity.FocusedRequest {
-	return s.state.GetState().FocusedRequests[collectionID]
+func (s *StateService) GetFocusedRequest(collectionID string) string {
+	return s.state.GetState().FocusedRequestIds[collectionID]
 }
 
 func (s *StateService) GetFocusedCollectionId() string {
-	return s.state.GetState().FocusedCollection.Id
-}
-
-func (s *StateService) GetFocusedCollectionRow() int {
-	return s.state.GetState().FocusedCollection.Row
+	return s.state.GetState().FocusedCollectionId
 }
 
 func (s *StateService) GetFocusedRequestId() string {
-	return s.state.GetState().FocusedRequests[s.GetFocusedCollectionId()].Id
-}
-
-func (s *StateService) GetFocusedRequestRow() int {
-	return s.state.GetState().FocusedRequests[s.GetFocusedCollectionId()].Row
+	return s.state.GetState().FocusedRequestIds[s.GetFocusedCollectionId()]
 }

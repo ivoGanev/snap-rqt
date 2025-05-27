@@ -37,10 +37,10 @@ func (a *AppService) FetchLandingData() entity.BasicFocusData {
 	requests := a.requestsService.GetRequestsBasic(cId)
 
 	return entity.BasicFocusData{
-		Collections:           collections,
-		RequestsBasic:         requests,
-		SelectedCollectionRow: a.stateService.GetFocusedCollectionRow(),
-		SelectedRequestRow:    a.stateService.GetFocusedRequestRow(),
+		Collections:          collections,
+		RequestsBasic:        requests,
+		SelectedCollectionId: a.stateService.GetFocusedCollectionId(),
+		SelectedRequestId:    a.stateService.GetFocusedRequestId(),
 	}
 }
 
@@ -59,8 +59,8 @@ func (a *AppService) SendHttpRequestById(id string) string {
 	return http.SendRequest(ctx, req.AsHttpRequest())
 }
 
-func (a *AppService) ChangeFocusedCollection(focused entity.FocusedCollection) entity.BasicFocusData {
-	a.stateService.SetFocusedCollection(focused)
+func (a *AppService) ChangeFocusedCollection(focusedCollectionId string) entity.BasicFocusData {
+	a.stateService.SetFocusedCollection(focusedCollectionId)
 	return a.FetchBasicFocusData()
 }
 
@@ -76,9 +76,9 @@ func (a *AppService) FetchBasicFocusData() entity.BasicFocusData {
 	requests := a.requestsService.GetRequestsBasic(cId)
 
 	return entity.BasicFocusData{
-		Collections:           collections,
-		RequestsBasic:         requests,
-		SelectedCollectionRow: a.stateService.GetFocusedCollectionRow(),
-		SelectedRequestRow:    a.stateService.GetFocusedRequestRow(),
+		Collections:          collections,
+		RequestsBasic:        requests,
+		SelectedCollectionId: a.stateService.GetFocusedCollectionId(),
+		SelectedRequestId:    a.stateService.GetFocusedRequestId(),
 	}
 }

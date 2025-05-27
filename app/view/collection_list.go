@@ -7,22 +7,26 @@ import (
 )
 
 type CollectionListListener interface {
-	OnCollectionChanged(entity.FocusedCollection)
+	OnCollectionChanged(entity.Collection)
 }
 
 func (r *CollectionsList) SetListener(listener CollectionListListener) {
 	r.listener = listener
 }
 
+
 type CollectionsList struct {
 	*tview.Table
 	listener CollectionListListener
+	collections map[string]int // Mapping: collection id -> collection row
 }
 
-func (r *CollectionsList) SelectCollection(row int) {
-	r.Select(row, 0)
-	collectionId := r.GetCell(row, 0).GetReference().(string)
-	r.listener.OnCollectionChanged(entity.FocusedCollection{Id: collectionId, Row: row})
+func (r *CollectionsList) SelectCollection(collectionId string) {
+	collectionRow := r.collections[collectionId]
+	r.Select(collectionRow, 0)
+
+	// collection := r.GetCell(collectionRow, 0).GetReference().(entity.Collection)
+	// r.listener.OnCollectionChanged(collection)
 }
 
 func NewColletionsList() *CollectionsList {
@@ -37,15 +41,15 @@ func (r *CollectionsList) Init() {
 	r.SetSelectable(true, true)
 
 	r.SetSelectionChangedFunc(func(row, column int) {
-		collectionId := r.GetCell(row, 0).GetReference().(string)
-		r.listener.OnCollectionChanged(entity.FocusedCollection{Id: collectionId, Row: row})
+		collection := r.GetCell(row, 0).GetReference().(entity.Collection)
+		r.listener.OnCollectionChanged(collection)
 	})
 }
 
 func (r *CollectionsList) RenderCollections(collections []entity.Collection) {
 	for i, collection := range collections {
 		nameCell := tview.NewTableCell(collection.Name).
-			SetReference(collection.Id)
+			SetReference(collection)
 
 		r.SetCell(i, 0, nameCell)
 	}

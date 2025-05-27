@@ -1,8 +1,8 @@
 package entity
 
 type BasicFocusData struct {
-	Collections           []Collection
-	RequestsBasic         []RequestBasic
-	SelectedCollectionRow int
-	SelectedRequestRow    int
+	Collections          []Collection
+	RequestsBasic        []RequestBasic
+	SelectedCollectionId string
+	SelectedRequestId    string
 }

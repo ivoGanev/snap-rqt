@@ -3,8 +3,8 @@ package repository
 import "snap-rq/app/entity"
 
 type StateRepository interface {
-	GetState() entity.State
-	SetState(state entity.State)
+	GetState() entity.AppViewState
+	SetState(state entity.AppViewState)
 }
 
 type RequestsRepository interface {

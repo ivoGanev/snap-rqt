@@ -22,22 +22,28 @@ func (r *RequestsList) SetListener(listener RequestListListener) {
 	r.listener = listener
 }
 
+type RequestRow struct {
+	Row     int
+	Request entity.RequestBasic
+}
+
 type RequestsList struct {
 	*tview.Table
 	styles   style.StyleProvider
-	requests []entity.RequestBasic
+	requests map[string]int // Mapping: request id -> request row
 	listener RequestListListener
 }
 
 func (r *RequestsList) RenderRequests(requests []entity.RequestBasic) {
-	r.requests = requests
-	for i, request := range requests {
+	for row, request := range requests {
+		r.requests[request.Id] = row
+
 		methodText := r.styles.GetStyledRequestMethod(string(request.MethodType))
 		methodCell := tview.NewTableCell(methodText).SetReference(request)
 		requestCell := tview.NewTableCell(request.Name).SetReference(request)
 
-		r.SetCell(i, METHOD_COLUMN, methodCell)
-		r.SetCell(i, REQUEST_COLUMN, requestCell)
+		r.SetCell(row, METHOD_COLUMN, methodCell)
+		r.SetCell(row, REQUEST_COLUMN, requestCell)
 	}
 }
 
@@ -45,6 +51,7 @@ func NewRequestsList(styles style.StyleProvider) *RequestsList {
 	requestsView := RequestsList{
 		Table:  tview.NewTable(),
 		styles: styles,
+		requests: make(map[string]int),
 	}
 	return &requestsView
 }
@@ -65,26 +72,28 @@ func (r *RequestsList) Init() {
 	})
 
 	r.SetSelectionChangedFunc(func(row, column int) {
-		request := r.requests[row]
+		ref := r.GetCell(row, column).GetReference()
+		request, _ := ref.(entity.RequestBasic)
 		r.listener.OnSelectedRequestChanged(request)
 	})
 }
 
 // Selects an item from the request list
-func (r *RequestsList) SelectRequest(row int) {
-	request := r.requests[row]
-	r.Select(row, REQUEST_COLUMN)
-	r.listener.OnSelectedRequestChanged(request)
+func (r *RequestsList) SelectRequest(requestId string) {
+	requestRow := r.requests[requestId]
+	r.Select(requestRow, REQUEST_COLUMN)
+	// r.listener.OnSelectedRequestChanged(requestRow.Request)
 }
 
 // Selects the request method table item on a specific row of the requests list
-func (r *RequestsList) SelectMethod(row int) {
-	request := r.requests[row]
-	r.Select(row, METHOD_COLUMN)
-	r.listener.OnSelectedRequestChanged(request)
+func (r *RequestsList) SelectMethod(requestId string) {
+	requestRow := r.requests[requestId]
+	r.Select(requestRow, METHOD_COLUMN)
+	// r.listener.OnSelectedRequestChanged(requestRow.Request)
 }
 
-func (r *RequestsList) ChangeMethodTypeOnSelectedRow(row int, requestMethod string) {
-	r.GetCell(row, 0).
+func (r *RequestsList) ChangeMethodTypeOnSelectedRow(requestId string, requestMethod string) {
+	requestRow := r.requests[requestId]
+	r.GetCell(requestRow, 0).
 		SetText(r.styles.GetStyledRequestMethod(string(requestMethod)))
 }

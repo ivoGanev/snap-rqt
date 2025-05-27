@@ -24,9 +24,9 @@ func (a *AppController) Start() {
 	// Load and render app data on load
 	d := a.appService.FetchLandingData()
 	a.rootView.Views.RequestsList.RenderRequests(d.RequestsBasic)
-	a.rootView.Views.RequestsList.SelectRequest(d.SelectedRequestRow)
+	a.rootView.Views.RequestsList.SelectRequest(d.SelectedRequestId)
 	a.rootView.Views.CollectionsList.RenderCollections(d.Collections)
-	a.rootView.Views.CollectionsList.SelectCollection(d.SelectedCollectionRow)
+	a.rootView.Views.CollectionsList.SelectCollection(d.SelectedCollectionId)
 }
 
 func (a *AppController) OnUrlInputTextChanged(urlText string) {
@@ -35,7 +35,7 @@ func (a *AppController) OnUrlInputTextChanged(urlText string) {
 
 func (a *AppController) OnRequestMethodPickerSelected(method string) {
 	d := a.appService.FetchBasicFocusData()
-	a.rootView.Views.RequestsList.ChangeMethodTypeOnSelectedRow(d.SelectedRequestRow, method)
+	a.rootView.Views.RequestsList.ChangeMethodTypeOnSelectedRow(d.SelectedRequestId, method)
 	a.rootView.HidePage(view.PAGE_REQUEST_METHOD_PICKER_MODAL)
 	a.rootView.Focus(a.rootView.Views.RequestsList)
 }
@@ -58,10 +58,10 @@ func (a *AppController) OnSelectedRequestChanged(selectedRequest entity.RequestB
 	a.rootView.Views.UrlInputView.SetUrlText(selectedRequest.Url)
 }
 
-func (a *AppController) OnCollectionChanged(changedCollection entity.FocusedCollection) {
-	d := a.appService.ChangeFocusedCollection(changedCollection)
+func (a *AppController) OnCollectionChanged(changedCollection entity.Collection) {
+	d := a.appService.ChangeFocusedCollection(changedCollection.Id)
 
 	// when user selects a collection, a request item would be automatically changed
 	a.rootView.Views.RequestsList.RenderRequests(d.RequestsBasic)
-	a.rootView.Views.RequestsList.SelectRequest(d.SelectedRequestRow)
+	a.rootView.Views.RequestsList.SelectRequest(d.SelectedRequestId)
 }
