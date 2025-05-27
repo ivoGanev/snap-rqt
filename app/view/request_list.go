@@ -15,7 +15,7 @@ const (
 type RequestListListener interface {
 	OnRequestMethodSelected(entity.RequestBasic)
 	OnRequestNameSelected(entity.RequestBasic)
-	OnSelectedRequestChanged(entity.RequestBasic)
+	OnFocusedRequestChanged(entity.RequestBasic)
 }
 
 func (r *RequestsList) SetListener(listener RequestListListener) {
@@ -49,8 +49,8 @@ func (r *RequestsList) RenderRequests(requests []entity.RequestBasic) {
 
 func NewRequestsList(styles style.StyleProvider) *RequestsList {
 	requestsView := RequestsList{
-		Table:  tview.NewTable(),
-		styles: styles,
+		Table:    tview.NewTable(),
+		styles:   styles,
 		requests: make(map[string]int),
 	}
 	return &requestsView
@@ -74,7 +74,7 @@ func (r *RequestsList) Init() {
 	r.SetSelectionChangedFunc(func(row, column int) {
 		ref := r.GetCell(row, column).GetReference()
 		request, _ := ref.(entity.RequestBasic)
-		r.listener.OnSelectedRequestChanged(request)
+		r.listener.OnFocusedRequestChanged(request)
 	})
 }
 
@@ -82,17 +82,15 @@ func (r *RequestsList) Init() {
 func (r *RequestsList) SelectRequest(requestId string) {
 	requestRow := r.requests[requestId]
 	r.Select(requestRow, REQUEST_COLUMN)
-	// r.listener.OnSelectedRequestChanged(requestRow.Request)
 }
 
 // Selects the request method table item on a specific row of the requests list
 func (r *RequestsList) SelectMethod(requestId string) {
 	requestRow := r.requests[requestId]
 	r.Select(requestRow, METHOD_COLUMN)
-	// r.listener.OnSelectedRequestChanged(requestRow.Request)
 }
 
-func (r *RequestsList) ChangeMethodTypeOnSelectedRow(requestId string, requestMethod string) {
+func (r *RequestsList) ChangeRequestMethod(requestId string, requestMethod string) {
 	requestRow := r.requests[requestId]
 	r.GetCell(requestRow, 0).
 		SetText(r.styles.GetStyledRequestMethod(string(requestMethod)))

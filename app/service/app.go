@@ -65,8 +65,8 @@ func (a *AppService) ChangeFocusedCollection(focusedCollectionId string) entity.
 }
 
 func (a AppService) ChangeFocusedRequest(selectedRequest entity.RequestBasic) {
-	// cId := a.stateService.GetFocusedCollectionId()
-	// a.stateService.SetFocusedRequest(cId, )
+	cId := a.stateService.GetFocusedCollectionId()
+	a.stateService.SetFocusedRequest(cId, selectedRequest.Id)
 }
 
 func (a *AppService) FetchBasicFocusData() entity.BasicFocusData {

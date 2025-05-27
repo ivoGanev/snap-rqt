@@ -7,7 +7,7 @@ import (
 )
 
 type CollectionListListener interface {
-	OnCollectionChanged(entity.Collection)
+	OnFocusedCollectionChanged(entity.Collection)
 }
 
 func (r *CollectionsList) SetListener(listener CollectionListListener) {
@@ -24,9 +24,6 @@ type CollectionsList struct {
 func (r *CollectionsList) SelectCollection(collectionId string) {
 	collectionRow := r.collections[collectionId]
 	r.Select(collectionRow, 0)
-
-	// collection := r.GetCell(collectionRow, 0).GetReference().(entity.Collection)
-	// r.listener.OnCollectionChanged(collection)
 }
 
 func NewColletionsList() *CollectionsList {
@@ -42,7 +39,7 @@ func (r *CollectionsList) Init() {
 
 	r.SetSelectionChangedFunc(func(row, column int) {
 		collection := r.GetCell(row, 0).GetReference().(entity.Collection)
-		r.listener.OnCollectionChanged(collection)
+		r.listener.OnFocusedCollectionChanged(collection)
 	})
 }
 

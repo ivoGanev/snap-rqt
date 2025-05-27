@@ -35,7 +35,7 @@ func (a *AppController) OnUrlInputTextChanged(urlText string) {
 
 func (a *AppController) OnRequestMethodPickerSelected(method string) {
 	d := a.appService.FetchBasicFocusData()
-	a.rootView.Views.RequestsList.ChangeMethodTypeOnSelectedRow(d.SelectedRequestId, method)
+	a.rootView.Views.RequestsList.ChangeRequestMethod(d.SelectedRequestId, method)
 	a.rootView.HidePage(view.PAGE_REQUEST_METHOD_PICKER_MODAL)
 	a.rootView.Focus(a.rootView.Views.RequestsList)
 }
@@ -53,12 +53,12 @@ func (a *AppController) OnRequestNameSelected(selected entity.RequestBasic) {
 	}()
 }
 
-func (a *AppController) OnSelectedRequestChanged(selectedRequest entity.RequestBasic) {
+func (a *AppController) OnFocusedRequestChanged(selectedRequest entity.RequestBasic) {
 	a.appService.ChangeFocusedRequest(selectedRequest)
 	a.rootView.Views.UrlInputView.SetUrlText(selectedRequest.Url)
 }
 
-func (a *AppController) OnCollectionChanged(changedCollection entity.Collection) {
+func (a *AppController) OnFocusedCollectionChanged(changedCollection entity.Collection) {
 	d := a.appService.ChangeFocusedCollection(changedCollection.Id)
 
 	// when user selects a collection, a request item would be automatically changed
