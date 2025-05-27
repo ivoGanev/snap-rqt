@@ -1,0 +1,3 @@
+- Services control the business logic of the app.
+- The service layer communicates with repositories (such as memory, mongo, etc.)
+- The service layer should not care about views - view are handled only by controllers

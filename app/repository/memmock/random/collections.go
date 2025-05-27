@@ -2,7 +2,7 @@ package random
 
 import (
 	"math/rand"
-	"snap-rq/app"
+	"snap-rq/app/entity"
 )
 
 var collectionNames = []string{
@@ -18,13 +18,13 @@ var collectionNames = []string{
 	"Debugging & Testing APIs",
 }
 
-func Collection(collectionCount int) []app.Collection {
-	var collections []app.Collection
+func Collection(collectionCount int) []entity.Collection {
+	var collections []entity.Collection
 
 	for range collectionCount {
 		collectionName := collectionNames[rand.Intn(len(collectionNames))]
 		collectionDescription := "A collection of API requests for " + collectionName
-		collection := app.NewCollection(collectionName, collectionDescription)
+		collection := entity.NewCollection(collectionName, collectionDescription)
 		collections = append(collections, collection)
 	}
 

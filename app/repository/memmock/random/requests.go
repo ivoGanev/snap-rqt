@@ -2,7 +2,8 @@ package random
 
 import (
 	"math/rand"
-	"snap-rq/app"
+	"snap-rq/app/constants"
+	"snap-rq/app/entity"
 
 	"github.com/google/uuid"
 )
@@ -39,8 +40,8 @@ func generateRandomBody() string {
 	return bodies[rand.Intn(len(bodies))]
 }
 
-func Requests(count int, collectionId string) []app.Request {
-	var nodes []app.Request
+func Requests(count int, collectionId string) []entity.Request {
+	var nodes []entity.Request
 
 	keys := make([]string, 0, len(sampleRequests))
 	for key := range sampleRequests {
@@ -50,7 +51,7 @@ func Requests(count int, collectionId string) []app.Request {
 	for range count {
 		name := keys[rand.Intn(len(keys))]
 		entry := sampleRequests[name]
-		method := app.RequestMethods[rand.Intn(len(app.RequestMethods))]
+		method := constants.RequestMethods[rand.Intn(len(constants.RequestMethods))]
 		headers := generateRandomHeaders()
 
 		var body string
@@ -58,7 +59,7 @@ func Requests(count int, collectionId string) []app.Request {
 			body = generateRandomBody()
 		}
 
-		request := app.NewRequest(collectionId, name, entry.description, string(method), entry.url, headers, body)
+		request := entity.NewRequest(collectionId, name, entry.description, string(method), entry.url, headers, body)
 
 		nodes = append(nodes, request)
 	}

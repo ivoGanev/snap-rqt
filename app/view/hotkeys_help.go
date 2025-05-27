@@ -10,8 +10,8 @@ type HotkeysHelp struct {
 	*tview.Table
 }
 
-func NewHotkeysHelp() HotkeysHelp {
-	return HotkeysHelp{
+func NewHotkeysHelp() *HotkeysHelp {
+	return &HotkeysHelp{
 		Table: tview.NewTable(),
 	}
 }
