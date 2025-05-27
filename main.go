@@ -1,19 +1,34 @@
 package main
 
 import (
-	"snap-rq/app"
-	memmock "snap-rq/app/database/memmock"
+	"snap-rq/app/controller"
+	"snap-rq/app/service"
+	"snap-rq/app/view"
+
+	"github.com/gdamore/tcell/v2"
 )
 
 func main() {
-	requestsService := memmock.NewRequestsService()
-	collectionService := memmock.NewCollectionService()
 
-	services := app.Services{
-		RequestsService:   requestsService,
-		CollectionService: collectionService,
-	}
+	// Set up services: should not perform any initialisation logic that would affect any views.
+	// Services are not hierarchical, they talk between each other, but don't need parent-child relationship
+	var services = service.NewAppService()
 
-	app := app.NewApp(&services)
+	// Load app
+	var app = view.NewApp()
+
+	// Init root app controller
+	var controller = controller.NewAppController(app, services)
+
+	app.Views.CollectionsList.SetListener(&controller)
+	app.Views.RequestsList.SetListener(&controller)
+	app.Views.MethodPickerModal.SetListener(&controller)
+	app.Views.UrlInputView.SetListener(&controller)
+
+	app.SetBeforeDrawFunc(func(screen tcell.Screen) bool {
+		return false // Allow normal drawing to continue
+	})
+
+	controller.Start()
 	app.Init()
 }

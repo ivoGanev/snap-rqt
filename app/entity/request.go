@@ -1,4 +1,4 @@
-package app
+package entity
 
 import (
 	"fmt"
@@ -8,15 +8,6 @@ import (
 
 	"github.com/google/uuid"
 )
-
-type RequestsService interface {
-	GetRequestListItems() ([]RequestListItem, error)
-	CreateRequest(request Request) error
-	GetRequests() ([]Request, error)
-	GetRequest(id string) (Request, error)
-	DeleteRequest(id string) (Request, error)
-	UpdateRequest(request Request) (Request, error)
-}
 
 type Request struct {
 	Id           string            `json:"id"`
@@ -31,11 +22,46 @@ type Request struct {
 	ModifiedAt   *time.Time        `json:"modified_at,omitempty"`
 }
 
-type RequestListItem struct {
+type PatchRequest struct {
+	Name        *string            `json:"name,omitempty"`
+	Description *string            `json:"description,omitempty"`
+	MethodType  *string            `json:"method,omitempty"`
+	Url         *string            `json:"url,omitempty"`
+	Headers     *map[string]string `json:"headers,omitempty"`
+	Body        *string            `json:"body,omitempty"`
+}
+
+type RequestBasic struct {
 	Id         string
 	Url        string
 	Name       string
 	MethodType string
+}
+
+
+func (r *Request) ApplyPatch(patch PatchRequest) {
+	now := time.Now()
+
+	if patch.Name != nil {
+		r.Name = *patch.Name
+	}
+	if patch.Description != nil {
+		r.Description = *patch.Description
+	}
+	if patch.MethodType != nil {
+		r.MethodType = *patch.MethodType
+	}
+	if patch.Url != nil {
+		r.Url = *patch.Url
+	}
+	if patch.Headers != nil {
+		r.Headers = *patch.Headers
+	}
+	if patch.Body != nil {
+		r.Body = *patch.Body
+	}
+
+	r.ModifiedAt = &now
 }
 
 func (r Request) AsHttpRequest() http.HttpRequest {
@@ -86,8 +112,8 @@ func NewRequest(
 	}
 }
 
-func NewRequestSimple(r Request) RequestListItem {
-	return RequestListItem{
+func NewRequestBasic(r Request) RequestBasic {
+	return RequestBasic{
 		Id:         r.Id,
 		Url:        r.Url,
 		Name:       r.Name,
