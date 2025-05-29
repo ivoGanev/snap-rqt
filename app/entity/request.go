@@ -9,6 +9,16 @@ import (
 	"github.com/google/uuid"
 )
 
+type PatchRequest struct {
+	Name        *string            `json:"name,omitempty"`
+	Description *string            `json:"description,omitempty"`
+	MethodType  *string            `json:"method,omitempty"`
+	Url         *string            `json:"url,omitempty"`
+	Headers     *map[string]string `json:"headers,omitempty"`
+	Body        *string            `json:"body,omitempty"`
+}
+
+// Core request
 type Request struct {
 	Id           string            `json:"id"`
 	CollectionID string            `json:"collection_id"` // Foreign key
@@ -20,24 +30,8 @@ type Request struct {
 	Body         string            `json:"body,omitempty"`
 	CreatedAt    time.Time         `json:"created_at"`
 	ModifiedAt   *time.Time        `json:"modified_at,omitempty"`
+	RowPosition  int               `json:"row_position"` // User's logical position of the request
 }
-
-type PatchRequest struct {
-	Name        *string            `json:"name,omitempty"`
-	Description *string            `json:"description,omitempty"`
-	MethodType  *string            `json:"method,omitempty"`
-	Url         *string            `json:"url,omitempty"`
-	Headers     *map[string]string `json:"headers,omitempty"`
-	Body        *string            `json:"body,omitempty"`
-}
-
-type RequestBasic struct {
-	Id         string
-	Url        string
-	Name       string
-	MethodType string
-}
-
 
 func (r *Request) ApplyPatch(patch PatchRequest) {
 	now := time.Now()
@@ -98,9 +92,11 @@ func NewRequest(
 	collectionID, name, description, method, url string,
 	headers map[string]string,
 	body string,
+	rowPosition int,
 ) Request {
+	requestID := fmt.Sprintf("%s-%s", collectionID, uuid.New().String())
 	return Request{
-		Id:           uuid.New().String(),
+		Id:           requestID,
 		CollectionID: collectionID,
 		Name:         name,
 		Description:  description,
@@ -109,14 +105,25 @@ func NewRequest(
 		Headers:      headers,
 		Body:         body,
 		CreatedAt:    time.Now(),
+		RowPosition:  rowPosition,
 	}
 }
 
-func NewRequestBasic(r Request) RequestBasic {
+// Basic Request
+type RequestBasic struct {
+	Id          string
+	Url         string
+	Name        string
+	MethodType  string
+	RowPosition int
+}
+
+func NewRequestBasicFromRequest(r Request) RequestBasic {
 	return RequestBasic{
-		Id:         r.Id,
-		Url:        r.Url,
-		Name:       r.Name,
-		MethodType: r.MethodType,
+		Id:          r.Id,
+		Url:         r.Url,
+		Name:        r.Name,
+		MethodType:  r.MethodType,
+		RowPosition: r.RowPosition,
 	}
 }

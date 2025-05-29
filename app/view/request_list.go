@@ -4,6 +4,7 @@ import (
 	"snap-rq/app/entity"
 	"snap-rq/app/style"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -13,9 +14,12 @@ const (
 )
 
 type RequestListListener interface {
-	OnRequestMethodSelected(entity.RequestBasic)
-	OnRequestNameSelected(entity.RequestBasic)
-	OnFocusedRequestChanged(entity.RequestBasic)
+	OnRequestListMethodSelected(entity.RequestBasic)
+	OnRequestListNameSelected(entity.RequestBasic)
+	OnRequestListRequestFocusChanged(entity.RequestBasic)
+	OnRequestListAdd(position int) //  'position' indicates the position of the request currently in focus (i.e. not the position where the user expects the next request to be added)
+	OnRequestListRemove(entity.RequestBasic)
+	OnRequestListDuplicate(entity.RequestBasic)
 }
 
 func (r *RequestsList) SetListener(listener RequestListListener) {
@@ -35,7 +39,8 @@ type RequestsList struct {
 }
 
 func (r *RequestsList) RenderRequests(requests []entity.RequestBasic) {
-	for row, request := range requests {
+	for _, request := range requests {
+		row := request.RowPosition
 		r.requests[request.Id] = row
 
 		methodText := r.styles.GetStyledRequestMethod(string(request.MethodType))
@@ -62,19 +67,33 @@ func (r *RequestsList) Init() {
 	r.SetSelectable(true, true)
 
 	r.SetSelectedFunc(func(row int, column int) {
-		ref := r.GetCell(row, column).GetReference()
-		request, _ := ref.(entity.RequestBasic)
+		request := r.getRequest(row, column)
 		if column == METHOD_COLUMN {
-			r.listener.OnRequestMethodSelected(request)
+			r.listener.OnRequestListMethodSelected(request)
 		} else {
-			r.listener.OnRequestNameSelected(request)
+			r.listener.OnRequestListNameSelected(request)
 		}
 	})
 
 	r.SetSelectionChangedFunc(func(row, column int) {
-		ref := r.GetCell(row, column).GetReference()
-		request, _ := ref.(entity.RequestBasic)
-		r.listener.OnFocusedRequestChanged(request)
+		r.listener.OnRequestListRequestFocusChanged(r.getRequest(row, column))
+	})
+
+	r.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Rune() == 'a' {
+			row, _ := r.GetSelection()
+			r.listener.OnRequestListAdd(row)
+			return nil
+		} else if event.Rune() == 'r' {
+			row, column := r.GetSelection()
+			r.listener.OnRequestListRemove(r.getRequest(row, column))
+			return nil
+		} else if event.Rune() == 'd' {
+			row, column := r.GetSelection()
+			r.listener.OnRequestListDuplicate(r.getRequest(row, column))
+			return nil
+		}
+		return event
 	})
 }
 
@@ -94,4 +113,10 @@ func (r *RequestsList) ChangeRequestMethod(requestId string, requestMethod strin
 	requestRow := r.requests[requestId]
 	r.GetCell(requestRow, 0).
 		SetText(r.styles.GetStyledRequestMethod(string(requestMethod)))
+}
+
+func (r *RequestsList) getRequest(row int, column int) entity.RequestBasic {
+	ref := r.GetCell(row, column).GetReference()
+	request, _ := ref.(entity.RequestBasic)
+	return request
 }

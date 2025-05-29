@@ -99,7 +99,7 @@ func (app *App) Init() {
 
 	// set hotkeys
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		// Swap views
+		// Swap collecti0n/request views
 		focus := app.GetFocus()
 		if focus != nil && event.Key() == tcell.KeyTAB {
 			if focus == views.CollectionsList {

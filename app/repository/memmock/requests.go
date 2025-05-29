@@ -3,16 +3,50 @@ package memmock
 import (
 	"errors"
 	"snap-rq/app/entity"
+	"snap-rq/app/repository"
 	"snap-rq/app/repository/memmock/random"
+	"sort"
 )
 
 type MemMockRequestsRepository struct {
 	StoredRequests []entity.Request
 }
 
+func (m *MemMockRequestsRepository) ShiftRequests(collectionId string, startingPosition int, direction string) {
+	switch direction {
+	case repository.SHIFT_UP:
+		// Sort in descending order to prevent overwriting positions
+		sort.SliceStable(m.StoredRequests, func(i, j int) bool {
+			return m.StoredRequests[i].RowPosition > m.StoredRequests[j].RowPosition
+		})
+		for i := range m.StoredRequests {
+			if m.StoredRequests[i].CollectionID == collectionId &&
+				m.StoredRequests[i].RowPosition >= startingPosition {
+				m.StoredRequests[i].RowPosition += 1
+			}
+		}
+
+	case repository.SHIFT_DOWN:
+		// Sort in ascending order to prevent overwriting positions
+		sort.SliceStable(m.StoredRequests, func(i, j int) bool {
+			return m.StoredRequests[i].RowPosition < m.StoredRequests[j].RowPosition
+		})
+		for i := range m.StoredRequests {
+			if m.StoredRequests[i].CollectionID == collectionId &&
+				m.StoredRequests[i].RowPosition >= startingPosition {
+				m.StoredRequests[i].RowPosition -= 1
+			}
+		}
+
+	default:
+		// Optional: handle unsupported direction
+	}
+}
+
+
 // NewRequestsRepository initializes the service with mock data
-func NewRequestsRepository(c MemMockCollectionRepository) MemMockRequestsRepository {
-	m := MemMockRequestsRepository{}
+func NewRequestsRepository(c *MemMockCollectionRepository) *MemMockRequestsRepository {
+	m := &MemMockRequestsRepository{}
 
 	collections, err := c.GetCollections()
 	if err != nil {
@@ -32,8 +66,9 @@ func (m *MemMockRequestsRepository) DeleteRequest(id string) (entity.Request, er
 	panic("Not implemented")
 }
 
-func (m *MemMockRequestsRepository) CreateRequest(id entity.Request) error {
-	panic("Not implemented")
+func (m *MemMockRequestsRepository) CreateRequest(request entity.Request) error {
+	m.StoredRequests = append(m.StoredRequests, request)
+	return nil
 }
 
 func (m *MemMockRequestsRepository) GetRequestsBasic(collectionId string) ([]entity.RequestBasic, error) {
@@ -41,12 +76,7 @@ func (m *MemMockRequestsRepository) GetRequestsBasic(collectionId string) ([]ent
 	var items []entity.RequestBasic
 	for _, r := range m.StoredRequests {
 		if r.CollectionID == collectionId {
-			items = append(items, entity.RequestBasic{
-				Id:         r.Id,
-				Name:       r.Name,
-				Url:        r.Url,
-				MethodType: r.MethodType,
-			})
+			items = append(items, entity.NewRequestBasicFromRequest(r))
 		}
 	}
 	return items, nil

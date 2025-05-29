@@ -6,7 +6,7 @@ type MemMockViewStateRepository struct {
 	state entity.AppViewState
 }
 
-func NewStateService(c MemMockCollectionRepository, r MemMockRequestsRepository) MemMockViewStateRepository {
+func NewStateService(c *MemMockCollectionRepository, r *MemMockRequestsRepository) *MemMockViewStateRepository {
 	collections, err := c.GetCollections()
 	if err != nil {
 		panic(err)
@@ -23,7 +23,7 @@ func NewStateService(c MemMockCollectionRepository, r MemMockRequestsRepository)
 		FocusedCollectionId: collections[0].Id,
 		FocusedView: "requests", // TODO: Make it a constant
 	}
-	return MemMockViewStateRepository{state}
+	return &MemMockViewStateRepository{state}
 }
 
 func (m *MemMockViewStateRepository) GetState() entity.AppViewState {

@@ -1,20 +1,21 @@
 package service
 
 import (
+	"snap-rq/app/constants"
 	"snap-rq/app/entity"
 	"snap-rq/app/repository"
 )
 
 type RequestsService struct {
-	requests repository.RequestsRepository
+	repository repository.RequestsRepository
 }
 
 func (m RequestsService) UpdateRequest(request entity.Request) {
-	m.requests.UpdateRequest(request)
+	m.repository.UpdateRequest(request)
 }
 
 func (m RequestsService) GetRequest(rId string) entity.Request {
-	storedRequests, err := m.requests.GetRequest(rId)
+	storedRequests, err := m.repository.GetRequest(rId)
 	if err != nil {
 		panic(err)
 	}
@@ -26,10 +27,16 @@ func NewRequestsService(requests repository.RequestsRepository) *RequestsService
 }
 
 func (m *RequestsService) GetRequestsBasic(collectionId string) []entity.RequestBasic {
-	storedRequests, err := m.requests.GetRequestsBasic(collectionId)
+	storedRequests, err := m.repository.GetRequestsBasic(collectionId)
 	if err != nil {
 		panic(err)
 	}
 
 	return storedRequests
+}
+
+func (m *RequestsService) CreateRequest(collectionId string, position int) {
+	request := entity.NewRequest(collectionId, "New Request", "", string(constants.GET), "", make(map[string]string), "", position)
+	m.repository.ShiftRequests(collectionId, position, repository.SHIFT_UP)
+	m.repository.CreateRequest(request)
 }

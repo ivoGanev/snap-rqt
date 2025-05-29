@@ -12,8 +12,8 @@ type MemMockCollectionRepository struct {
 	collections []entity.Collection
 }
 
-func NewCollectionRepository() MemMockCollectionRepository {
-	return MemMockCollectionRepository{
+func NewCollectionRepository() *MemMockCollectionRepository {
+	return &MemMockCollectionRepository{
 		collections: random.Collection(20),
 	}
 }

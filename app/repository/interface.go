@@ -15,6 +15,7 @@ type RequestsRepository interface {
 	UpdateRequest(updated entity.Request) (entity.Request, error)
 	SaveRequest(r *entity.Request) error
 	GetRequestsBasic(collectionId string) ([]entity.RequestBasic, error)
+	ShiftRequests(collectionId string, startingPosition int, direction string)
 }
 
 type CollectionsRepository interface {
@@ -24,3 +25,8 @@ type CollectionsRepository interface {
 	GetCollection(id string) (entity.Collection, error)
 	UpdateCollection(updated entity.Collection) (entity.Collection, error)
 }
+
+const (
+	SHIFT_UP = "UP"
+	SHIFT_DOWN = "DOWN"
+)

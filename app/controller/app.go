@@ -7,14 +7,15 @@ import (
 )
 
 type AppController struct {
-	rootView   view.App
-	appService service.AppService
+	rootView   *view.App
+	appService *service.AppService
 }
+
 
 func NewAppController(rootView view.App, appService service.AppService) AppController {
 	var controller = AppController{
-		rootView,
-		appService,
+		&rootView,
+		&appService,
 	}
 
 	return controller
@@ -40,11 +41,11 @@ func (a *AppController) OnRequestMethodPickerSelected(method string) {
 	a.rootView.Focus(a.rootView.Views.RequestsList)
 }
 
-func (a *AppController) OnRequestMethodSelected(entity.RequestBasic) {
+func (a *AppController) OnRequestListMethodSelected(entity.RequestBasic) {
 	a.rootView.ShowPage(view.PAGE_REQUEST_METHOD_PICKER_MODAL)
 }
 
-func (a *AppController) OnRequestNameSelected(selected entity.RequestBasic) {
+func (a *AppController) OnRequestListNameSelected(selected entity.RequestBasic) {
 	go func() {
 		response := a.appService.SendHttpRequestById(selected.Id)
 		a.rootView.QueueUpdateDraw(func() {
@@ -53,7 +54,19 @@ func (a *AppController) OnRequestNameSelected(selected entity.RequestBasic) {
 	}()
 }
 
-func (a *AppController) OnFocusedRequestChanged(selectedRequest entity.RequestBasic) {
+func (a *AppController) OnRequestListAdd(position int) {
+	a.appService.AddRequest(position)
+	d := a.appService.FetchBasicFocusData()
+	a.rootView.Views.RequestsList.RenderRequests(d.RequestsBasic)
+}
+
+func (a *AppController) OnRequestListDuplicate(entity.RequestBasic) {
+}
+
+func (a *AppController) OnRequestListRemove(entity.RequestBasic) {
+}
+
+func (a *AppController) OnRequestListRequestFocusChanged(selectedRequest entity.RequestBasic) {
 	a.appService.ChangeFocusedRequest(selectedRequest)
 	a.rootView.Views.UrlInputView.SetUrlText(selectedRequest.Url)
 }
