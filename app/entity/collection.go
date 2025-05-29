@@ -22,3 +22,4 @@ func NewCollection(name string, description string) Collection {
 		CreatedAt:   time.Now(),
 	}
 }
+
