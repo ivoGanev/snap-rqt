@@ -14,14 +14,16 @@ type AppService struct {
 	requestsService    *RequestsService
 }
 
+
+
 func NewAppService() AppService {
 	collectionsRepository := memmock.NewCollectionRepository()
 	requestsRepository := memmock.NewRequestsRepository(collectionsRepository)
 	stateRepository := memmock.NewStateService(collectionsRepository, requestsRepository)
 
-	stateService := NewStateService(&stateRepository)
-	collectionService := NewCollectionService(&collectionsRepository)
-	requestsService := NewRequestsService(&requestsRepository)
+	stateService := NewStateService(stateRepository)
+	collectionService := NewCollectionService(collectionsRepository)
+	requestsService := NewRequestsService(requestsRepository)
 
 	appService := AppService{
 		stateService,
@@ -64,9 +66,14 @@ func (a *AppService) ChangeFocusedCollection(focusedCollectionId string) entity.
 	return a.FetchBasicFocusData()
 }
 
-func (a AppService) ChangeFocusedRequest(selectedRequest entity.RequestBasic) {
+func (a *AppService) ChangeFocusedRequest(selectedRequest entity.RequestBasic) {
 	cId := a.stateService.GetFocusedCollectionId()
 	a.stateService.SetFocusedRequest(cId, selectedRequest.Id)
+}
+
+func (a *AppService) AddRequest(position int) {
+	cId := a.stateService.GetFocusedCollectionId()
+	a.requestsService.CreateRequest(cId, position)
 }
 
 func (a *AppService) FetchBasicFocusData() entity.BasicFocusData {

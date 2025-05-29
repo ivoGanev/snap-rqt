@@ -48,7 +48,7 @@ func Requests(count int, collectionId string) []entity.Request {
 		keys = append(keys, key)
 	}
 
-	for range count {
+	for index := range count {
 		name := keys[rand.Intn(len(keys))]
 		entry := sampleRequests[name]
 		method := constants.RequestMethods[rand.Intn(len(constants.RequestMethods))]
@@ -59,7 +59,7 @@ func Requests(count int, collectionId string) []entity.Request {
 			body = generateRandomBody()
 		}
 
-		request := entity.NewRequest(collectionId, name, entry.description, string(method), entry.url, headers, body)
+		request := entity.NewRequest(collectionId, name, entry.description, string(method), entry.url, headers, body, index)
 
 		nodes = append(nodes, request)
 	}
