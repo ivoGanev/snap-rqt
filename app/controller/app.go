@@ -63,7 +63,10 @@ func (a *AppController) OnRequestListAdd(position int) {
 func (a *AppController) OnRequestListDuplicate(entity.RequestBasic) {
 }
 
-func (a *AppController) OnRequestListRemove(entity.RequestBasic) {
+func (a *AppController) OnRequestListRemove(request entity.RequestBasic, position int) {
+	a.appService.RemoveRequest(request.Id, position)
+	d := a.appService.FetchBasicFocusData()
+	a.rootView.Views.RequestsList.RenderRequests(d.RequestsBasic)
 }
 
 func (a *AppController) OnRequestListRequestFocusChanged(selectedRequest entity.RequestBasic) {

@@ -76,6 +76,11 @@ func (a *AppService) AddRequest(position int) {
 	a.requestsService.CreateRequest(cId, position)
 }
 
+func (a *AppService) RemoveRequest(requestId string, position int) {
+	cId := a.stateService.GetFocusedCollectionId()
+	a.requestsService.DeleteRequest(cId, requestId, position)
+}
+
 func (a *AppService) FetchBasicFocusData() entity.BasicFocusData {
 	collections := a.collectionsService.GetCollections()
 	cId := a.stateService.GetFocusedCollectionId()

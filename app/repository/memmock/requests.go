@@ -6,6 +6,7 @@ import (
 	"snap-rq/app/repository"
 	"snap-rq/app/repository/memmock/random"
 	"sort"
+	"slices"
 )
 
 type MemMockRequestsRepository struct {
@@ -62,8 +63,17 @@ func NewRequestsRepository(c *MemMockCollectionRepository) *MemMockRequestsRepos
 	return m
 }
 
-func (m *MemMockRequestsRepository) DeleteRequest(id string) (entity.Request, error) {
-	panic("Not implemented")
+func (m *MemMockRequestsRepository) DeleteRequest(id string) error {
+	index := -1
+	for i, r := range m.StoredRequests {
+		if r.Id == id {
+			index = i
+		}
+	}
+	if index != -1 {
+		m.StoredRequests = slices.Delete(m.StoredRequests, index, index+1)
+	}
+	return nil
 }
 
 func (m *MemMockRequestsRepository) CreateRequest(request entity.Request) error {
@@ -80,11 +90,6 @@ func (m *MemMockRequestsRepository) GetRequestsBasic(collectionId string) ([]ent
 		}
 	}
 	return items, nil
-}
-
-func (m *MemMockRequestsRepository) SaveRequest(r *entity.Request) error {
-	m.StoredRequests = append(m.StoredRequests, *r)
-	return nil
 }
 
 func (m *MemMockRequestsRepository) GetRequests() ([]entity.Request, error) {

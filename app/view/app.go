@@ -120,7 +120,7 @@ func (app *App) Init() {
 			app.Focus(views.RequestsList)
 			return nil
 		}
-		if event.Rune() == 'q' {
+		if event.Key() == tcell.KeyEsc || event.Key() == tcell.KeyEscape || event.Key() == tcell.KeyESC {
 			// Quit
 			app.Stop()
 			return nil

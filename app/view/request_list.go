@@ -14,12 +14,12 @@ const (
 )
 
 type RequestListListener interface {
-	OnRequestListMethodSelected(entity.RequestBasic)
-	OnRequestListNameSelected(entity.RequestBasic)
-	OnRequestListRequestFocusChanged(entity.RequestBasic)
+	OnRequestListMethodSelected(request entity.RequestBasic)
+	OnRequestListNameSelected(request entity.RequestBasic)
+	OnRequestListRequestFocusChanged(request entity.RequestBasic)
 	OnRequestListAdd(position int) //  'position' indicates the position of the request currently in focus (i.e. not the position where the user expects the next request to be added)
-	OnRequestListRemove(entity.RequestBasic)
-	OnRequestListDuplicate(entity.RequestBasic)
+	OnRequestListRemove(request entity.RequestBasic, position int)
+	OnRequestListDuplicate(request entity.RequestBasic)
 }
 
 func (r *RequestsList) SetListener(listener RequestListListener) {
@@ -84,9 +84,9 @@ func (r *RequestsList) Init() {
 			row, _ := r.GetSelection()
 			r.listener.OnRequestListAdd(row)
 			return nil
-		} else if event.Rune() == 'r' {
+		} else if event.Key() == tcell.KeyDEL || event.Key() == tcell.KeyDelete {
 			row, column := r.GetSelection()
-			r.listener.OnRequestListRemove(r.getRequest(row, column))
+			r.listener.OnRequestListRemove(r.getRequest(row, column), row)
 			return nil
 		} else if event.Rune() == 'd' {
 			row, column := r.GetSelection()

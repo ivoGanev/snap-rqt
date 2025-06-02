@@ -40,3 +40,8 @@ func (m *RequestsService) CreateRequest(collectionId string, position int) {
 	m.repository.ShiftRequests(collectionId, position, repository.SHIFT_UP)
 	m.repository.CreateRequest(request)
 }
+
+func (m *RequestsService) DeleteRequest(collectionId, requestId string, position int) {
+	m.repository.ShiftRequests(collectionId, position, repository.SHIFT_DOWN)
+	m.repository.DeleteRequest(requestId)
+}
