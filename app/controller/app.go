@@ -5,13 +5,13 @@ import (
 	"snap-rq/app/entity"
 	"snap-rq/app/service"
 	"snap-rq/app/view"
+	"time"
 )
 
 type AppController struct {
 	rootView   *view.App
 	appService *service.AppService
 }
-
 
 func NewAppController(rootView view.App, appService service.AppService) AppController {
 	var controller = AppController{
@@ -47,9 +47,33 @@ func (a *AppController) OnRequestListMethodSelected(entity.RequestBasic) {
 }
 
 func (a *AppController) OnRequestListNameSelected(selected entity.RequestBasic) {
+	s := fmt.Sprintf("%s %s", selected.MethodType, selected.Url)
+	a.rootView.Views.StatusBar.SetText(s)
+
+	stop := make(chan struct{})
+	frames := []string{".", "..", "..."}
+	current := 0
+
 	go func() {
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				a.rootView.QueueUpdateDraw(func() {
+					a.rootView.Views.ResponseWindow.SetText(fmt.Sprintf("Requesting data%s", frames[current]))
+					current = (current + 1) % len(frames)
+				})
+				time.Sleep(500 * time.Millisecond)
+			}
+		}
+	}()
+
+	go func() {
+
 		response := a.appService.SendHttpRequestById(selected.Id)
 		a.rootView.QueueUpdateDraw(func() {
+			stop <- struct{}{}
 			a.rootView.Views.ResponseWindow.SetText(response)
 		})
 	}()

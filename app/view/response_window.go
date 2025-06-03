@@ -32,3 +32,4 @@ func (r *ResponseWindow) Init() {
 	r.SetBorder(true)
 	r.SetTitle("Response")
 }
+

@@ -34,7 +34,7 @@ func NewColletionsList() *CollectionsList {
 
 func (r *CollectionsList) Init() {
 	r.SetBorder(true)
-	r.SetTitle("(c) Collections")
+	r.SetTitle("(q) Collections")
 	r.SetSelectable(true, true)
 
 	r.SetSelectionChangedFunc(func(row, column int) {

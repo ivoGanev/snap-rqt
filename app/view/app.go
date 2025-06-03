@@ -92,7 +92,7 @@ func (app *App) Init() {
 		AddItem(views.UrlInputView, 3, 0, false).
 		AddItem(lrcontent, 0, 10, true)
 
-	body.AddItem(views.StatusBar, 2, 0, false)
+	body.AddItem(views.StatusBar, 1, 0, false)
 
 	if ENABLE_DEBUG {
 		body.AddItem(views.Debugger, 0, 1, false)
@@ -115,12 +115,12 @@ func (app *App) Init() {
 				return nil
 			}
 		}
-		if event.Rune() == 'c' {
+		if event.Rune() == 'q' {
 			// Collections focus hotkey
 			app.Focus(views.CollectionsList)
 			return nil
 		}
-		if event.Rune() == 'r' {
+		if event.Rune() == 'w' {
 			// Requests focus hotkey
 			app.Focus(views.RequestsList)
 			return nil

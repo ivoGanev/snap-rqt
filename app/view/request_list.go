@@ -63,7 +63,7 @@ func NewRequestsList(styles style.StyleProvider) *RequestsList {
 
 func (r *RequestsList) Init() {
 	r.SetBorder(true)
-	r.SetTitle("(r) Requests")
+	r.SetTitle("(w) Requests")
 	r.SetSelectable(true, true)
 
 	r.SetSelectedFunc(func(row int, column int) {
