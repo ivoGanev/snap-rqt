@@ -18,10 +18,12 @@ func NewHotkeysHelp() *HotkeysHelp {
 
 func (n *HotkeysHelp) Init() {
 	shortcuts := [][]string{
-		{"(e)", "Edit request"},
-		{"(c)", "Select collection"},
-		{"(q)", "Quit"},
-		{"(s)", "Save"},
+		{"(e)", "Edit selected item"},
+		{"(a)", "Add selected item"},
+		{"(d)", "Duplicate selected item"},
+		{"(Del)", "Delete selected item"},
+		{"(Tab)", "Switch windows"},
+		{"(Esc)", "Quit"},
 	}
 	mid := (len(shortcuts) + 1) / 2 // ceiling divide for uneven counts
 	for row := range mid {

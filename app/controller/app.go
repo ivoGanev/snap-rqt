@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"snap-rq/app/entity"
 	"snap-rq/app/service"
 	"snap-rq/app/view"
@@ -49,7 +50,7 @@ func (a *AppController) OnRequestListNameSelected(selected entity.RequestBasic) 
 	go func() {
 		response := a.appService.SendHttpRequestById(selected.Id)
 		a.rootView.QueueUpdateDraw(func() {
-			a.rootView.Views.ResponseWindow.SetText(response, false)
+			a.rootView.Views.ResponseWindow.SetText(response)
 		})
 	}()
 }
@@ -58,6 +59,7 @@ func (a *AppController) OnRequestListAdd(position int) {
 	a.appService.AddRequest(position)
 	d := a.appService.FetchBasicFocusData()
 	a.rootView.Views.RequestsList.RenderRequests(d.RequestsBasic)
+	a.rootView.Views.StatusBar.SetText("Added new request")
 }
 
 func (a *AppController) OnRequestListDuplicate(entity.RequestBasic) {
@@ -67,6 +69,9 @@ func (a *AppController) OnRequestListRemove(request entity.RequestBasic, positio
 	a.appService.RemoveRequest(request.Id, position)
 	d := a.appService.FetchBasicFocusData()
 	a.rootView.Views.RequestsList.RenderRequests(d.RequestsBasic)
+
+	s := fmt.Sprintf("Removed request %s", request.Name)
+	a.rootView.Views.StatusBar.SetText(s)
 }
 
 func (a *AppController) OnRequestListRequestFocusChanged(selectedRequest entity.RequestBasic) {

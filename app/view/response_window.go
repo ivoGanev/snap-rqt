@@ -6,12 +6,12 @@ import (
 )
 
 type ResponseWindow struct {
-	*tview.TextArea
+	*tview.TextView
 }
 
 func NewResponseWindow() *ResponseWindow {
 	responseView := ResponseWindow{
-		TextArea: tview.NewTextArea(),
+		TextView: tview.NewTextView(),
 	}
 
 	return &responseView
@@ -28,7 +28,7 @@ func (r *ResponseWindow) Init() {
 		return event
 	})
 
-	r.SetText("No response data", false)
+	r.SetText("No response data")
 	r.SetBorder(true)
 	r.SetTitle("Response")
 }

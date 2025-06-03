@@ -14,6 +14,7 @@ type Views struct {
 	MethodPickerModal *MethodPickerModal
 	UrlInputView      *UrlInputView
 	HotkeysHelp       *HotkeysHelp
+	StatusBar         *StatusBar
 	Debugger          *tview.TextArea
 }
 
@@ -42,6 +43,7 @@ func NewApp() App {
 	var requestsListView = NewRequestsList(&styleProvider)
 	var responseWindowView = NewResponseWindow()
 	var methodPickerView = NewMethodPickerModal()
+	var statusBar = NewStatusBar()
 
 	var views = Views{
 		CollectionsList:   collectionListView,
@@ -50,6 +52,7 @@ func NewApp() App {
 		RequestsList:      requestsListView,
 		ResponseWindow:    responseWindowView,
 		MethodPickerModal: methodPickerView,
+		StatusBar:         statusBar,
 		Debugger:          tview.NewTextArea(),
 	}
 
@@ -88,6 +91,8 @@ func (app *App) Init() {
 		AddItem(views.HotkeysHelp, 5, 0, false).
 		AddItem(views.UrlInputView, 3, 0, false).
 		AddItem(lrcontent, 0, 10, true)
+
+	body.AddItem(views.StatusBar, 2, 0, false)
 
 	if ENABLE_DEBUG {
 		body.AddItem(views.Debugger, 0, 1, false)
