@@ -5,7 +5,6 @@ import (
 	"snap-rq/app/entity"
 	"snap-rq/app/service"
 	"snap-rq/app/view"
-	"time"
 )
 
 type AppController struct {
@@ -13,10 +12,10 @@ type AppController struct {
 	appService *service.AppService
 }
 
-func NewAppController(rootView view.App, appService service.AppService) AppController {
+func NewAppController(rootView view.App, appService *service.AppService) AppController {
 	var controller = AppController{
 		&rootView,
-		&appService,
+		appService,
 	}
 
 	return controller
@@ -32,7 +31,7 @@ func (a *AppController) Start() {
 }
 
 func (a *AppController) OnUrlInputTextChanged(urlText string) {
-	a.appService.UpdateFocusedRequest(entity.PatchRequest{Url: &urlText})
+	a.appService.UpdateFocusedRequest(entity.ModRequest{Url: &urlText})
 }
 
 func (a *AppController) OnRequestMethodPickerSelected(method string) {
@@ -46,37 +45,32 @@ func (a *AppController) OnRequestListMethodSelected(entity.RequestBasic) {
 	a.rootView.ShowPage(view.PAGE_REQUEST_METHOD_PICKER_MODAL)
 }
 
+func (a *AppController) OnRequestListRequestFocusChanged(selectedRequest entity.RequestBasic) {
+	a.appService.ChangeFocusedRequest(selectedRequest)
+	a.rootView.Views.UrlInputView.SetUrlText(selectedRequest.Url)
+
+	// Once the user changes the selection, load the historical response from memory and set it
+	// TODO: Clean setting the empty response;
+	go func() {
+		a.appService.CancelSentHttpRequest() // Cancel any requests to prevent any side-effects.
+			// But at some point, we would not want to cancel the entire request but rather the side effects...Is there a better way to do this?
+		a.rootView.Views.ResponseWindow.SetHttpResponse(entity.HttpResponse{})
+	}()
+}
+
 func (a *AppController) OnRequestListNameSelected(selected entity.RequestBasic) {
 	s := fmt.Sprintf("%s %s", selected.MethodType, selected.Url)
 	a.rootView.Views.StatusBar.SetText(s)
 
-	stop := make(chan struct{})
-	frames := []string{".", "..", "..."}
-	current := 0
-
-	go func() {
-		for {
-			select {
-			case <-stop:
-				return
-			default:
-				a.rootView.QueueUpdateDraw(func() {
-					a.rootView.Views.ResponseWindow.SetText(fmt.Sprintf("Requesting data%s", frames[current]))
-					current = (current + 1) % len(frames)
-				})
-				time.Sleep(500 * time.Millisecond)
-			}
+	onHttpResult := func(result entity.HttpResult) {
+		if result.Error != nil {
+			a.rootView.Views.ResponseWindow.SetError(result.Error)
+		} else {
+			a.rootView.Views.ResponseWindow.SetHttpResponse(result.Response)
 		}
-	}()
-
-	go func() {
-
-		response := a.appService.SendHttpRequestById(selected.Id)
-		a.rootView.QueueUpdateDraw(func() {
-			stop <- struct{}{}
-			a.rootView.Views.ResponseWindow.SetText(response)
-		})
-	}()
+	}
+	a.appService.SendHttpRequest(selected.Id, onHttpResult)
+	a.rootView.Views.ResponseWindow.AwaitResponse()
 }
 
 func (a *AppController) OnRequestListAdd(position int) {
@@ -96,11 +90,6 @@ func (a *AppController) OnRequestListRemove(request entity.RequestBasic, positio
 
 	s := fmt.Sprintf("Removed request %s", request.Name)
 	a.rootView.Views.StatusBar.SetText(s)
-}
-
-func (a *AppController) OnRequestListRequestFocusChanged(selectedRequest entity.RequestBasic) {
-	a.appService.ChangeFocusedRequest(selectedRequest)
-	a.rootView.Views.UrlInputView.SetUrlText(selectedRequest.Url)
 }
 
 func (a *AppController) OnFocusedCollectionChanged(changedCollection entity.Collection) {

@@ -35,13 +35,15 @@ const (
 )
 
 func NewApp() App {
+	var application = tview.NewApplication()
+
 	var styleProvider = style.DefaultStylesProvider{}
 
 	var collectionListView = NewColletionsList()
 	var hotkeyHelpView = NewHotkeysHelp()
 	var urlInputView = NewUrlInput()
 	var requestsListView = NewRequestsList(&styleProvider)
-	var responseWindowView = NewResponseWindow()
+	var responseWindowView = NewResponseWindow(application)
 	var methodPickerView = NewMethodPickerModal()
 	var statusBar = NewStatusBar()
 
@@ -57,7 +59,7 @@ func NewApp() App {
 	}
 
 	app := App{
-		Application: tview.NewApplication(),
+		Application: application,
 		Pages:       tview.NewPages(),
 		Views:       views,
 	}
@@ -82,7 +84,7 @@ func (app *App) Init() {
 	lrcontent.
 		AddItem(views.CollectionsList, 0, 1, true).
 		AddItem(views.RequestsList, 0, 3, false).
-		AddItem(views.ResponseWindow, 0, 3, false)
+		AddItem(views.ResponseWindow.view, 0, 3, false)
 
 	var body = tview.NewFlex()
 

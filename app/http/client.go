@@ -5,44 +5,58 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"snap-rq/app/entity"
+	"time"
 )
 
-type HttpRequest struct {
-	Method       string            `json:"method"`
-	URL          string            `json:"url"`
-	Headers      map[string]string `json:"headers,omitempty"`
-	Body         string            `json:"body,omitempty"`
-}
+func SendRequest(ctx context.Context, request entity.RawHttpRequest) entity.HttpResult {
+	timestamp := time.Now().UnixMilli()
+	client := &http.Client{}
 
-func SendRequest(ctx context.Context, request HttpRequest) string {
-	var client = &http.Client{}
+	var body io.Reader
+	if request.Body != "" {
+		body = bytes.NewBuffer([]byte(request.Body))
+	}
 
-	var req *http.Request
-	var err error
-
-	if request.Method == "GET" || request.Method == "DELETE" {
-		req, err = http.NewRequestWithContext(ctx, string(request.Method), request.URL, nil)
-	} else {
-		req, err = http.NewRequestWithContext(ctx, string(request.Method), request.URL, bytes.NewBuffer([]byte(request.Body)))
-		for key, value := range request.Headers {
-			req.Header.Set(key, value)
+	req, err := http.NewRequestWithContext(ctx, request.Method, request.URL, body)
+	if err != nil {
+		return entity.HttpResult{
+			Response: entity.HttpResponse{Timestamp: timestamp},
+			Error:    err,
 		}
 	}
 
-	if err != nil {
-		return string(err.Error())
+	// Set headers
+	for key, value := range request.Headers {
+		req.Header.Set(key, value)
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return string(err.Error())
+		return entity.HttpResult{
+			Response: entity.HttpResponse{Timestamp: timestamp},
+			Error:    err,
+		}
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return string(err.Error())
+		return entity.HttpResult{
+			Response: entity.HttpResponse{
+				Timestamp:  timestamp,
+				StatusCode: resp.StatusCode,
+			},
+			Error: err,
+		}
 	}
 
-	return string(respBody)
+	return entity.HttpResult{
+		Response: entity.HttpResponse{
+			Timestamp:  timestamp,
+			StatusCode: resp.StatusCode,
+			Body:       string(respBody),
+		},
+		Error: nil,
+	}
 }

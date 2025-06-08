@@ -2,14 +2,20 @@ package entity
 
 import (
 	"fmt"
-	"snap-rq/app/http"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-type PatchRequest struct {
+type RawHttpRequest struct {
+	Method  string            `json:"method"`
+	URL     string            `json:"url"`
+	Headers map[string]string `json:"headers,omitempty"`
+	Body    string            `json:"body,omitempty"`
+}
+
+type ModRequest struct {
 	Name        *string            `json:"name,omitempty"`
 	Description *string            `json:"description,omitempty"`
 	MethodType  *string            `json:"method,omitempty"`
@@ -18,7 +24,7 @@ type PatchRequest struct {
 	Body        *string            `json:"body,omitempty"`
 }
 
-// Core request
+// Core request entity
 type Request struct {
 	Id           string            `json:"id"`
 	CollectionID string            `json:"collection_id"` // Foreign key
@@ -33,7 +39,7 @@ type Request struct {
 	RowPosition  int               `json:"row_position"` // User's logical position of the request
 }
 
-func (r *Request) ApplyPatch(patch PatchRequest) {
+func (r *Request) Mod(patch ModRequest) {
 	now := time.Now()
 
 	if patch.Name != nil {
@@ -58,8 +64,8 @@ func (r *Request) ApplyPatch(patch PatchRequest) {
 	r.ModifiedAt = &now
 }
 
-func (r Request) AsHttpRequest() http.HttpRequest {
-	return http.HttpRequest{
+func (r Request) AsHttpRequest() RawHttpRequest {
+	return RawHttpRequest{
 		Method:  r.MethodType,
 		Body:    r.Body,
 		URL:     r.Url,

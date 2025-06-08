@@ -1,24 +1,34 @@
 package view
 
 import (
+	"context"
+	"fmt"
+	"snap-rq/app/entity"
+	logger "snap-rq/app/log"
+	"time"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
 type ResponseWindow struct {
-	*tview.TextView
+	view                *tview.TextView
+	app                 *tview.Application
+	ctx         context.Context
+	cancelFunc  context.CancelFunc	
 }
 
-func NewResponseWindow() *ResponseWindow {
+func NewResponseWindow(app *tview.Application) *ResponseWindow {
 	responseView := ResponseWindow{
-		TextView: tview.NewTextView(),
+		view: tview.NewTextView(),
+		app:  app,
 	}
 
 	return &responseView
 }
 
 func (r *ResponseWindow) Init() {
-	r.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	r.view.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Rune() == 'p' {
 			return tcell.NewEventKey(tcell.KeyCtrlV, 'v', tcell.ModNone)
 		}
@@ -28,8 +38,53 @@ func (r *ResponseWindow) Init() {
 		return event
 	})
 
-	r.SetText("No response data")
-	r.SetBorder(true)
-	r.SetTitle("Response")
+	r.view.SetText("No response data")
+	r.view.SetBorder(true)
+	r.view.SetTitle("Response")
 }
 
+func (r *ResponseWindow) AwaitResponse() {
+	r.stopPreviousAnimation()
+
+	r.ctx, r.cancelFunc = context.WithCancel(context.Background())
+
+	frames := []string{".", "..", "..."}
+	current := 0
+	r.view.SetText(fmt.Sprintf("Requesting data%s", frames[current]))
+	current = (current + 1) % len(frames)
+
+	logger.Println("Awaiting response")
+	go func() {
+		for {
+			select {
+			case <-r.ctx.Done():
+				return
+			case <-time.After(500 * time.Millisecond):
+				r.app.QueueUpdateDraw(func() {
+					r.view.SetText(fmt.Sprintf("Requesting data%s", frames[current]))
+					current = (current + 1) % len(frames)
+				})
+			}
+		}
+	}()
+}
+
+func (r *ResponseWindow) SetError(err error) {
+	r.stopPreviousAnimation()
+	r.app.QueueUpdateDraw(func() {
+		r.view.SetText(err.Error())
+	})
+}
+
+func (r *ResponseWindow) SetHttpResponse(response entity.HttpResponse) {
+	r.stopPreviousAnimation()
+	r.app.QueueUpdateDraw(func() {
+		r.view.SetText(response.Body)
+	})
+}
+
+func (r *ResponseWindow) stopPreviousAnimation() {
+	if r.cancelFunc != nil {
+		r.cancelFunc()
+	}
+}

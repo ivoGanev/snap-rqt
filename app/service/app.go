@@ -12,11 +12,10 @@ type AppService struct {
 	stateService       *StateService
 	collectionsService *CollectionsService
 	requestsService    *RequestsService
+	cancelFunc         context.CancelFunc
 }
 
-
-
-func NewAppService() AppService {
+func NewAppService() *AppService {
 	collectionsRepository := memmock.NewCollectionRepository()
 	requestsRepository := memmock.NewRequestsRepository(collectionsRepository)
 	stateRepository := memmock.NewStateService(collectionsRepository, requestsRepository)
@@ -25,11 +24,12 @@ func NewAppService() AppService {
 	collectionService := NewCollectionService(collectionsRepository)
 	requestsService := NewRequestsService(requestsRepository)
 
-	appService := AppService{
-		stateService,
-		collectionService,
-		requestsService,
+	appService := &AppService{
+		stateService:       stateService,
+		collectionsService: collectionService,
+		requestsService:    requestsService,
 	}
+
 	return appService
 }
 
@@ -46,19 +46,33 @@ func (a *AppService) FetchLandingData() entity.BasicFocusData {
 	}
 }
 
-func (a *AppService) UpdateFocusedRequest(patchRequest entity.PatchRequest) {
+func (a *AppService) UpdateFocusedRequest(modRequest entity.ModRequest) {
 	rId := a.stateService.GetFocusedRequestId()
 	request := a.requestsService.GetRequest(rId)
-	request.ApplyPatch(patchRequest)
+	request.Mod(modRequest)
 	a.requestsService.UpdateRequest(request)
 }
 
-func (a *AppService) SendHttpRequestById(id string) string {
+func (a *AppService) SendHttpRequest(id string, onHttpResponse func(entity.HttpResult)) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	a.cancelFunc = cancel
 
-	req := a.requestsService.GetRequest(id)
-	return http.SendRequest(ctx, req.AsHttpRequest())
+	go func() {
+		req := a.requestsService.GetRequest(id)
+		httpResult := http.SendRequest(ctx, req.AsHttpRequest())
+
+		if ctx.Err() == context.Canceled {
+			return // User manually canceled – skip onHttpResponse
+		}
+
+		onHttpResponse(httpResult)
+	}()
+}
+
+func (a *AppService) CancelSentHttpRequest() {
+	if a.cancelFunc != nil {
+		a.cancelFunc()
+	}
 }
 
 func (a *AppService) ChangeFocusedCollection(focusedCollectionId string) entity.BasicFocusData {

@@ -4,11 +4,12 @@ import (
 	"snap-rq/app/controller"
 	"snap-rq/app/service"
 	"snap-rq/app/view"
-
+	"snap-rq/app/log"
 	"github.com/gdamore/tcell/v2"
 )
 
 func main() {
+	logger.Init("app.log")
 
 	// Set up services: should not perform any initialisation logic that would affect any views.
 	// Services are not hierarchical, they talk between each other, but don't need parent-child relationship
@@ -16,7 +17,6 @@ func main() {
 
 	// Load app
 	var app = view.NewApp()
-
 	// Init root app controller
 	var controller = controller.NewAppController(app, services)
 
