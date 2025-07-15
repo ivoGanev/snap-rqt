@@ -11,6 +11,7 @@ type Views struct {
 	CollectionsList   *CollectionsList
 	ResponseWindow    *ResponseWindow
 	RequestsList      *RequestsList
+	EditorView        *EditorView
 	MethodPickerModal *MethodPickerModal
 	UrlInputView      *UrlInputView
 	HotkeysHelp       *HotkeysHelp
@@ -20,9 +21,10 @@ type Views struct {
 
 type App struct {
 	*tview.Application
-	Pages  *tview.Pages
-	Styles style.StyleProvider
-	Views  Views
+	Pages    *tview.Pages
+	Styles   style.StyleProvider
+	Views    Views
+	ViewMode string
 }
 
 const (
@@ -32,6 +34,8 @@ const (
 	PAGE_REQUEST_METHOD_PICKER_MODAL = "request-method-picker"
 	PAGE_LANDING_VIEW                = "landing-view"
 	ENABLE_DEBUG                     = false
+	MODE_LANDING_VIEW                = "lv"
+	MODE_EDITOR_VIEW                 = "ev"
 )
 
 func NewApp() App {
@@ -41,6 +45,7 @@ func NewApp() App {
 
 	var collectionListView = NewColletionsList()
 	var hotkeyHelpView = NewHotkeysHelp()
+	var editorView = NewEditorView()
 	var urlInputView = NewUrlInput()
 	var requestsListView = NewRequestsList(&styleProvider)
 	var responseWindowView = NewResponseWindow(application)
@@ -55,6 +60,7 @@ func NewApp() App {
 		ResponseWindow:    responseWindowView,
 		MethodPickerModal: methodPickerView,
 		StatusBar:         statusBar,
+		EditorView:        editorView,
 		Debugger:          tview.NewTextArea(),
 	}
 
@@ -72,6 +78,7 @@ func NewApp() App {
 	requestsListView.Init()
 	responseWindowView.Init()
 	methodPickerView.Init()
+	editorView.Init()
 
 	return app
 }
@@ -79,12 +86,14 @@ func NewApp() App {
 func (app *App) Init() {
 	views := app.Views
 
-	// Build Editor Layout
+	// Build landing page
 	var lrcontent = tview.NewFlex()
 	lrcontent.
-		AddItem(views.CollectionsList, 0, 1, true).
-		AddItem(views.RequestsList, 0, 3, false).
-		AddItem(views.ResponseWindow.view, 0, 3, false)
+		AddItem(app.Views.CollectionsList, 0, 1, true).
+		AddItem(app.Views.RequestsList, 0, 3, false).
+		AddItem(app.Views.ResponseWindow.view, 0, 3, false)
+
+	app.ViewMode = MODE_LANDING_VIEW
 
 	var body = tview.NewFlex()
 
@@ -109,10 +118,11 @@ func (app *App) Init() {
 		// Swap collecti0n/request views
 		focus := app.GetFocus()
 		if focus != nil && event.Key() == tcell.KeyTAB {
-			if focus == views.CollectionsList {
+			switch focus {
+			case views.CollectionsList:
 				app.Focus(views.RequestsList)
 				return nil
-			} else if focus == views.RequestsList {
+			case views.RequestsList:
 				app.Focus(views.CollectionsList)
 				return nil
 			}
@@ -125,6 +135,15 @@ func (app *App) Init() {
 		if event.Rune() == 'w' {
 			// Requests focus hotkey
 			app.Focus(views.RequestsList)
+			return nil
+		}
+		if event.Rune() == 'e' {
+			// Swap between edit and landing views
+			if app.ViewMode == MODE_EDITOR_VIEW {
+				app.changeToLandingView(lrcontent)
+			} else {
+				app.changeToEditorView(lrcontent)
+			}
 			return nil
 		}
 		if event.Key() == tcell.KeyEsc || event.Key() == tcell.KeyEscape || event.Key() == tcell.KeyESC {
@@ -143,6 +162,30 @@ func (app *App) Init() {
 		Run(); err != nil {
 		panic(err)
 	}
+}
+
+func (app *App) changeToLandingView(lrcontent *tview.Flex) {
+	lrcontent.RemoveItem(app.Views.EditorView)
+	lrcontent.RemoveItem(app.Views.ResponseWindow.view)
+
+	lrcontent.
+		AddItem(app.Views.CollectionsList, 0, 1, true).
+		AddItem(app.Views.RequestsList, 0, 3, false).
+		AddItem(app.Views.ResponseWindow.view, 0, 3, false)
+
+	app.ViewMode = MODE_LANDING_VIEW
+}
+
+func (app *App) changeToEditorView(lrcontent *tview.Flex) {
+	lrcontent.RemoveItem(app.Views.CollectionsList)
+	lrcontent.RemoveItem(app.Views.RequestsList)
+	lrcontent.RemoveItem(app.Views.ResponseWindow.view)
+
+	lrcontent.
+		AddItem(app.Views.EditorView, 0, 4, true).
+		AddItem(app.Views.ResponseWindow.view, 0, 3, false)
+
+	app.ViewMode = MODE_EDITOR_VIEW
 }
 
 func (app *App) ShowPage(p string) {

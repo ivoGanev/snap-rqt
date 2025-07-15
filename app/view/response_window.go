@@ -12,10 +12,10 @@ import (
 )
 
 type ResponseWindow struct {
-	view                *tview.TextView
-	app                 *tview.Application
-	ctx         context.Context
-	cancelFunc  context.CancelFunc	
+	view       *tview.TextView
+	app        *tview.Application
+	ctx        context.Context
+	cancelFunc context.CancelFunc
 }
 
 func NewResponseWindow(app *tview.Application) *ResponseWindow {
