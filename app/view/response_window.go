@@ -12,7 +12,7 @@ import (
 )
 
 type ResponseWindow struct {
-	view       *tview.TextView
+	      *tview.TextView
 	app        *tview.Application
 	ctx        context.Context
 	cancelFunc context.CancelFunc
@@ -20,7 +20,7 @@ type ResponseWindow struct {
 
 func NewResponseWindow(app *tview.Application) *ResponseWindow {
 	responseView := ResponseWindow{
-		view: tview.NewTextView(),
+		TextView: tview.NewTextView(),
 		app:  app,
 	}
 
@@ -28,7 +28,7 @@ func NewResponseWindow(app *tview.Application) *ResponseWindow {
 }
 
 func (r *ResponseWindow) Init() {
-	r.view.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+	r.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Rune() == 'p' {
 			return tcell.NewEventKey(tcell.KeyCtrlV, 'v', tcell.ModNone)
 		}
@@ -38,9 +38,9 @@ func (r *ResponseWindow) Init() {
 		return event
 	})
 
-	r.view.SetText("No response data")
-	r.view.SetBorder(true)
-	r.view.SetTitle("Response")
+	r.SetText("No response data")
+	r.SetBorder(true)
+	r.SetTitle("Response")
 }
 
 func (r *ResponseWindow) AwaitResponse() {
@@ -50,7 +50,7 @@ func (r *ResponseWindow) AwaitResponse() {
 
 	frames := []string{".", "..", "..."}
 	current := 0
-	r.view.SetText(fmt.Sprintf("Requesting data%s", frames[current]))
+	r.SetText(fmt.Sprintf("Requesting data%s", frames[current]))
 	current = (current + 1) % len(frames)
 
 	logger.Println("Awaiting response")
@@ -61,7 +61,7 @@ func (r *ResponseWindow) AwaitResponse() {
 				return
 			case <-time.After(500 * time.Millisecond):
 				r.app.QueueUpdateDraw(func() {
-					r.view.SetText(fmt.Sprintf("Requesting data%s", frames[current]))
+					r.SetText(fmt.Sprintf("Requesting data%s", frames[current]))
 					current = (current + 1) % len(frames)
 				})
 			}
@@ -72,14 +72,14 @@ func (r *ResponseWindow) AwaitResponse() {
 func (r *ResponseWindow) SetError(err error) {
 	r.stopPreviousAnimation()
 	r.app.QueueUpdateDraw(func() {
-		r.view.SetText(err.Error())
+		r.SetText(err.Error())
 	})
 }
 
 func (r *ResponseWindow) SetHttpResponse(response entity.HttpResponse) {
 	r.stopPreviousAnimation()
 	r.app.QueueUpdateDraw(func() {
-		r.view.SetText(response.Body)
+		r.SetText(response.Body)
 	})
 }
 

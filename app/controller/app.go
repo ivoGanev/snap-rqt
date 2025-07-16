@@ -8,11 +8,11 @@ import (
 )
 
 type AppController struct {
-	rootView   *view.App
+	rootView   *view.AppView
 	appService *service.AppService
 }
 
-func NewAppController(rootView view.App, appService *service.AppService) AppController {
+func NewAppController(rootView view.AppView, appService *service.AppService) AppController {
 	var controller = AppController{
 		&rootView,
 		appService,
@@ -53,7 +53,7 @@ func (a *AppController) OnRequestListRequestFocusChanged(selectedRequest entity.
 	// TODO: Clean setting the empty response;
 	go func() {
 		a.appService.CancelSentHttpRequest() // Cancel any requests to prevent any side-effects.
-			// But at some point, we would not want to cancel the entire request but rather the side effects...Is there a better way to do this?
+		// But at some point, we would not want to cancel the entire request but rather the side effects...Is there a better way to do this?
 		a.rootView.Views.ResponseWindow.SetHttpResponse(entity.HttpResponse{})
 	}()
 }

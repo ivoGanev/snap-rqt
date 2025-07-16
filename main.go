@@ -2,9 +2,10 @@ package main
 
 import (
 	"snap-rq/app/controller"
+	logger "snap-rq/app/log"
 	"snap-rq/app/service"
 	"snap-rq/app/view"
-	"snap-rq/app/log"
+
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -16,7 +17,7 @@ func main() {
 	var services = service.NewAppService()
 
 	// Load app
-	var app = view.NewApp()
+	var app = view.NewAppView()
 	// Init root app controller
 	var controller = controller.NewAppController(app, services)
 

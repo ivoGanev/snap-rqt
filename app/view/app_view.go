@@ -19,7 +19,7 @@ type Views struct {
 	Debugger          *tview.TextArea
 }
 
-type App struct {
+type AppView struct {
 	*tview.Application
 	Pages    *tview.Pages
 	Styles   style.StyleProvider
@@ -38,14 +38,14 @@ const (
 	MODE_EDITOR_VIEW                 = "ev"
 )
 
-func NewApp() App {
+func NewAppView() AppView {
 	var application = tview.NewApplication()
 
 	var styleProvider = style.DefaultStylesProvider{}
 
 	var collectionListView = NewColletionsList()
 	var hotkeyHelpView = NewHotkeysHelp()
-	var editorView = NewEditorView()
+	var editorView = NewEditorView(application)
 	var urlInputView = NewUrlInput()
 	var requestsListView = NewRequestsList(&styleProvider)
 	var responseWindowView = NewResponseWindow(application)
@@ -64,12 +64,12 @@ func NewApp() App {
 		Debugger:          tview.NewTextArea(),
 	}
 
-	app := App{
+	appView := AppView{
 		Application: application,
 		Pages:       tview.NewPages(),
 		Views:       views,
 	}
-	app.Styles = &styleProvider
+	appView.Styles = &styleProvider
 
 	// Render UI
 	collectionListView.Init()
@@ -80,18 +80,18 @@ func NewApp() App {
 	methodPickerView.Init()
 	editorView.Init()
 
-	return app
+	return appView
 }
 
-func (app *App) Init() {
+func (app *AppView) Init() {
 	views := app.Views
-
+	
 	// Build landing page
 	var lrcontent = tview.NewFlex()
 	lrcontent.
 		AddItem(app.Views.CollectionsList, 0, 1, true).
 		AddItem(app.Views.RequestsList, 0, 3, false).
-		AddItem(app.Views.ResponseWindow.view, 0, 3, false)
+		AddItem(app.Views.ResponseWindow, 0, 3, false)
 
 	app.ViewMode = MODE_LANDING_VIEW
 
@@ -164,38 +164,40 @@ func (app *App) Init() {
 	}
 }
 
-func (app *App) changeToLandingView(lrcontent *tview.Flex) {
+func (app *AppView) changeToLandingView(lrcontent *tview.Flex) {
 	lrcontent.RemoveItem(app.Views.EditorView)
-	lrcontent.RemoveItem(app.Views.ResponseWindow.view)
+	lrcontent.RemoveItem(app.Views.ResponseWindow)
 
 	lrcontent.
 		AddItem(app.Views.CollectionsList, 0, 1, true).
 		AddItem(app.Views.RequestsList, 0, 3, false).
-		AddItem(app.Views.ResponseWindow.view, 0, 3, false)
+		AddItem(app.Views.ResponseWindow, 0, 3, false)
 
+	app.Focus(app.Views.RequestsList)
 	app.ViewMode = MODE_LANDING_VIEW
 }
 
-func (app *App) changeToEditorView(lrcontent *tview.Flex) {
+func (app *AppView) changeToEditorView(lrcontent *tview.Flex) {
 	lrcontent.RemoveItem(app.Views.CollectionsList)
 	lrcontent.RemoveItem(app.Views.RequestsList)
-	lrcontent.RemoveItem(app.Views.ResponseWindow.view)
+	lrcontent.RemoveItem(app.Views.ResponseWindow)
 
 	lrcontent.
 		AddItem(app.Views.EditorView, 0, 4, true).
-		AddItem(app.Views.ResponseWindow.view, 0, 3, false)
+		AddItem(app.Views.ResponseWindow, 0, 3, false)
 
+	app.Focus(app.Views.EditorView)
 	app.ViewMode = MODE_EDITOR_VIEW
 }
 
-func (app *App) ShowPage(p string) {
+func (app *AppView) ShowPage(p string) {
 	app.Pages.ShowPage(string(p))
 }
 
-func (app *App) HidePage(p string) {
+func (app *AppView) HidePage(p string) {
 	app.Pages.HidePage(string(p))
 }
 
-func (app *App) Focus(p tview.Primitive) {
+func (app *AppView) Focus(p tview.Primitive) {
 	app.SetFocus(p)
 }
