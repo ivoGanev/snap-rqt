@@ -71,21 +71,22 @@ func NewAppView() AppView {
 	}
 	appView.Styles = &styleProvider
 
-	// Render UI
-	collectionListView.Init()
-	hotkeyHelpView.Init()
-	urlInputView.Init()
-	requestsListView.Init()
-	responseWindowView.Init()
-	methodPickerView.Init()
-	editorView.Init()
 
 	return appView
 }
 
 func (app *AppView) Init() {
 	views := app.Views
-	
+
+	// Init UI
+	views.CollectionsList.Init()
+	views.HotkeysHelp.Init()
+	views.UrlInputView.Init()
+	views.RequestsList.Init()
+	views.ResponseWindow.Init()
+	views.MethodPickerModal.Init()
+	views.EditorView.Init()
+
 	// Build landing page
 	var lrcontent = tview.NewFlex()
 	lrcontent.

@@ -108,3 +108,8 @@ func (a *AppService) FetchBasicFocusData() entity.BasicFocusData {
 		SelectedRequestId:    a.stateService.GetFocusedRequestId(),
 	}
 }
+
+func (a *AppService) GetFocusedRequest() entity.Request {
+	rId := a.stateService.GetFocusedRequestId()
+	return a.requestsService.GetRequest(rId)
+}

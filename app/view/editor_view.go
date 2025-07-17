@@ -10,49 +10,87 @@ const (
 	EDITOR_VIEW_MODE_BODY    = 2
 )
 
+type EditorViewListener interface {
+	OnEditHeadersSelected()
+	OnEditBodySelected()
+}
+
+func (r *EditorView) SetListener(l EditorViewListener) {
+	r.listener = l
+}
+
 type EditorView struct {
 	*tview.Flex
 	app           *tview.Application
-	headersButton tview.Button
-	bodyButton    tview.Button
+	headersButton *tview.Button
+	bodyButton    *tview.Button
+	textArea      *tview.TextArea
 	currentMode   int
+	listener      EditorViewListener
 }
 
 func NewEditorView(app *tview.Application) *EditorView {
 	editorView := EditorView{
 		Flex:          tview.NewFlex(),
 		app:           app,
-		headersButton: *tview.NewButton("(h) Headers"),
-		bodyButton:    *tview.NewButton("(b) Body"),
+		headersButton: tview.NewButton("(h) Headers"),
+		bodyButton:    tview.NewButton("(b) Body"),
 		currentMode:   EDITOR_VIEW_MODE_HEADERS,
 	}
 	return &editorView
 }
 
-func (r EditorView) Init() {
+func (r *EditorView) Init() {
 	r.SetBorder(true)
 	r.SetTitle("Edit Request")
 	r.SetDirection(tview.FlexRow)
 
+	r.textArea = tview.NewTextArea()
+	r.textArea.SetBorder(true)
+
+	// Update buttons based on selected mode
+	r.updateButtonLabels()
+
 	r.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Rune() == 'b' {
-			r.app.SetFocus(&r.bodyButton)
+		switch event.Rune() {
+		case 'b':
+			r.currentMode = EDITOR_VIEW_MODE_BODY
+			r.updateButtonLabels()
+			r.app.SetFocus(r.textArea)
+			r.listener.OnEditBodySelected()
 			return nil
-		}
-		if event.Rune() == 'h' {
-			r.app.SetFocus(&r.headersButton)
+		case 'h':
+			r.currentMode = EDITOR_VIEW_MODE_HEADERS
+			r.updateButtonLabels()
+			r.app.SetFocus(r.textArea)
+			r.listener.OnEditHeadersSelected()
 			return nil
 		}
 		return event
 	})
 
 	top := tview.NewFlex().
-		AddItem(&r.headersButton, 0, 1, false).
-		AddItem(&r.bodyButton, 0, 1, false)
+		SetDirection(tview.FlexColumn).
+		AddItem(r.headersButton, 0, 1, false).
+		AddItem(r.bodyButton, 0, 1, false)
 
-	textArea := tview.NewTextArea()
-	textArea.SetBorder(true)
 	r.AddItem(top, 3, 0, false)
-	r.AddItem(textArea, 0, 1, true)
-	r.app.SetFocus(&r.headersButton)
+	r.AddItem(r.textArea, 0, 1, true)
+
+	// select the headers by default
+	r.listener.OnEditHeadersSelected()
+}
+
+func (r *EditorView) SetTextArea(text string) {
+	r.textArea.SetText(text, false)
+}
+
+func (r *EditorView) updateButtonLabels() {
+	if r.currentMode == EDITOR_VIEW_MODE_HEADERS {
+		r.headersButton.SetLabel("[::b][*] (h) Headers[::-]")
+		r.bodyButton.SetLabel("   (b) Body")
+	} else {
+		r.headersButton.SetLabel("   (h) Headers")
+		r.bodyButton.SetLabel("[::b][*] (b) Body[::-]")
+	}
 }

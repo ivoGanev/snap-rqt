@@ -6,7 +6,6 @@ import (
 	"snap-rq/app/service"
 	"snap-rq/app/view"
 
-	"github.com/gdamore/tcell/v2"
 )
 
 func main() {
@@ -25,10 +24,7 @@ func main() {
 	app.Views.RequestsList.SetListener(&controller)
 	app.Views.MethodPickerModal.SetListener(&controller)
 	app.Views.UrlInputView.SetListener(&controller)
-
-	app.SetBeforeDrawFunc(func(screen tcell.Screen) bool {
-		return false // Allow normal drawing to continue
-	})
+	app.Views.EditorView.SetListener(&controller)
 
 	controller.Start()
 	app.Init()
