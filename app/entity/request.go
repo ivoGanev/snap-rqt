@@ -39,6 +39,14 @@ type Request struct {
 	RowPosition  int               `json:"row_position"` // User's logical position of the request
 }
 
+func HeadersToString(headers map[string]string) string {
+	var b strings.Builder
+	for k, v := range headers {
+		fmt.Fprintf(&b, "%s: %s\n", k, v)
+	}
+	return b.String()
+}
+
 func (r *Request) Mod(patch ModRequest) {
 	now := time.Now()
 

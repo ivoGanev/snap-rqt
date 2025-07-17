@@ -24,7 +24,7 @@ func (s *StateService) SetFocusedRequest(collectionID string, requestId string) 
 	s.state.SetState(state)
 }
 
-func (s *StateService) GetFocusedRequest(collectionID string) string {
+func (s *StateService) GetFocusedRequestByCollection(collectionID string) string {
 	return s.state.GetState().FocusedRequestIds[collectionID]
 }
 

@@ -2,10 +2,10 @@ package main
 
 import (
 	"snap-rq/app/controller"
+	logger "snap-rq/app/log"
 	"snap-rq/app/service"
 	"snap-rq/app/view"
-	"snap-rq/app/log"
-	"github.com/gdamore/tcell/v2"
+
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 	var services = service.NewAppService()
 
 	// Load app
-	var app = view.NewApp()
+	var app = view.NewAppView()
 	// Init root app controller
 	var controller = controller.NewAppController(app, services)
 
@@ -24,10 +24,7 @@ func main() {
 	app.Views.RequestsList.SetListener(&controller)
 	app.Views.MethodPickerModal.SetListener(&controller)
 	app.Views.UrlInputView.SetListener(&controller)
-
-	app.SetBeforeDrawFunc(func(screen tcell.Screen) bool {
-		return false // Allow normal drawing to continue
-	})
+	app.Views.EditorView.SetListener(&controller)
 
 	controller.Start()
 	app.Init()
