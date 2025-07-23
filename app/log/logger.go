@@ -2,6 +2,8 @@ package logger
 
 import (
 	"log"
+	"os"
+
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -11,6 +13,12 @@ var (
 )
 
 func Init(logPath string) {
+	// Truncate the log file before the logger starts writing
+	err := os.Truncate(logPath, 0)
+	if err != nil && !os.IsNotExist(err) {
+		log.Fatalf("failed to truncate log file: %v", err)
+	}
+
 	logger = log.New(&lumberjack.Logger{
 		Filename:   logPath,
 		MaxSize:    10,
@@ -19,7 +27,7 @@ func Init(logPath string) {
 		Compress:   false,
 	}, "", log.LstdFlags)
 
-	Println = logger.Println
-	logger.Println("")
-	logger.Println("---- Logger Init")
+	Println = func(v ...any) {
+		logger.Println(v...)
+	}
 }

@@ -20,6 +20,7 @@ func main() {
 	// Init root app controller
 	var controller = controller.NewAppController(app, services)
 
+	app.SetAppViewListener(&controller)
 	app.Views.CollectionsList.SetListener(&controller)
 	app.Views.RequestsList.SetListener(&controller)
 	app.Views.MethodPickerModal.SetListener(&controller)

@@ -1,6 +1,8 @@
 package view
 
 import (
+	"snap-rq/app/entity"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -11,8 +13,8 @@ const (
 )
 
 type EditorViewListener interface {
-	OnEditHeadersSelected()
-	OnEditBodySelected()
+	OnEditorModeChanged()
+	OnEditTextArea(editorMode int, edit string)
 }
 
 func (r *EditorView) SetListener(l EditorViewListener) {
@@ -48,6 +50,10 @@ func (r *EditorView) Init() {
 	r.textArea = tview.NewTextArea()
 	r.textArea.SetBorder(true)
 
+	r.textArea.SetChangedFunc(func() {
+		r.listener.OnEditTextArea(r.currentMode, r.textArea.GetText())
+	})
+
 	// Update buttons based on selected mode
 	r.updateButtonLabels()
 
@@ -57,13 +63,13 @@ func (r *EditorView) Init() {
 			r.currentMode = EDITOR_VIEW_MODE_BODY
 			r.updateButtonLabels()
 			r.app.SetFocus(r.textArea)
-			r.listener.OnEditBodySelected()
+			r.listener.OnEditorModeChanged()
 			return nil
 		case 'h':
 			r.currentMode = EDITOR_VIEW_MODE_HEADERS
 			r.updateButtonLabels()
 			r.app.SetFocus(r.textArea)
-			r.listener.OnEditHeadersSelected()
+			r.listener.OnEditorModeChanged()
 			return nil
 		}
 		return event
@@ -76,13 +82,14 @@ func (r *EditorView) Init() {
 
 	r.AddItem(top, 3, 0, false)
 	r.AddItem(r.textArea, 0, 1, true)
-
-	// select the headers by default
-	r.listener.OnEditHeadersSelected()
 }
 
-func (r *EditorView) SetTextArea(text string) {
-	r.textArea.SetText(text, false)
+func (r *EditorView) SetTextArea(request entity.Request) {
+	if r.currentMode == EDITOR_VIEW_MODE_HEADERS {
+		r.textArea.SetText(entity.HeadersToString(request.Headers), false)
+	} else {
+		r.textArea.SetText(request.Body, false)
+	}
 }
 
 func (r *EditorView) updateButtonLabels() {

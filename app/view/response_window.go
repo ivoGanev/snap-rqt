@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"snap-rq/app/entity"
-	logger "snap-rq/app/log"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -53,7 +52,6 @@ func (r *ResponseWindow) AwaitResponse() {
 	r.SetText(fmt.Sprintf("Requesting data%s", frames[current]))
 	current = (current + 1) % len(frames)
 
-	logger.Println("Awaiting response")
 	go func() {
 		for {
 			select {
