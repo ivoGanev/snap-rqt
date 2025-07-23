@@ -47,6 +47,7 @@ func HeadersToString(headers map[string]string) string {
 	return b.String()
 }
 
+
 func StringToHeaders(headers string) map[string]string {
 	result := make(map[string]string)
 	lines := strings.Split(headers, "\n")
@@ -71,6 +72,7 @@ func StringToHeaders(headers string) map[string]string {
 	// TODO: return errors in case of invalid content
 	return result
 }
+
 
 func (r *Request) Mod(patch ModRequest) {
 	now := time.Now()

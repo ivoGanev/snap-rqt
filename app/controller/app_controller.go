@@ -13,6 +13,15 @@ type AppController struct {
 	service *service.AppService
 }
 
+func (a *AppController) OnEditBodySelected() {
+	request := a.service.GetFocusedRequest()
+	a.views.EditorView.SetTextArea(request.Body)
+}
+
+func (a *AppController) OnEditHeadersSelected() {
+	request := a.service.GetFocusedRequest()
+	a.views.EditorView.SetTextArea(entity.HeadersToString(request.Headers))
+}
 
 func NewAppController(app view.AppView, appService *service.AppService) AppController {
 	var controller = AppController{
@@ -66,6 +75,7 @@ func (a *AppController) OnUrlInputTextChanged(urlText string) {
 }
 
 // Landing View (Request List)
+
 
 func (a *AppController) OnRequestMethodPickerSelected(method string) {
 	d := a.service.FetchBasicFocusData()
@@ -127,6 +137,7 @@ func (a *AppController) OnRequestListRemove(request entity.RequestBasic, positio
 
 
 // Collection list (Request List)
+
 
 func (a *AppController) OnFocusedCollectionChanged(changedCollection entity.Collection) {
 	d := a.service.ChangeFocusedCollection(changedCollection.Id)

@@ -2,7 +2,6 @@ package view
 
 import (
 	"snap-rq/app/entity"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -49,7 +48,6 @@ func (r *EditorView) Init() {
 
 	r.textArea = tview.NewTextArea()
 	r.textArea.SetBorder(true)
-
 	r.textArea.SetChangedFunc(func() {
 		r.listener.OnEditTextArea(r.currentMode, r.textArea.GetText())
 	})
