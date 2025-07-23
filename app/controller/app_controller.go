@@ -13,15 +13,6 @@ type AppController struct {
 	service *service.AppService
 }
 
-func (a *AppController) OnEditBodySelected() {
-	request := a.service.GetFocusedRequest()
-	a.views.EditorView.SetTextArea(request.Body)
-}
-
-func (a *AppController) OnEditHeadersSelected() {
-	request := a.service.GetFocusedRequest()
-	a.views.EditorView.SetTextArea(entity.HeadersToString(request.Headers))
-}
 
 func NewAppController(app view.AppView, appService *service.AppService) AppController {
 	var controller = AppController{
