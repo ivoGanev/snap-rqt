@@ -2,11 +2,12 @@ package memmock
 
 import (
 	"errors"
+	"slices"
 	"snap-rq/app/entity"
+	logger "snap-rq/app/log"
 	"snap-rq/app/repository"
 	"snap-rq/app/repository/memmock/random"
 	"sort"
-	"slices"
 )
 
 type MemMockRequestsRepository struct {
@@ -109,6 +110,7 @@ func (m *MemMockRequestsRepository) UpdateRequest(updated entity.Request) (entit
 	for i, r := range m.StoredRequests {
 		if r.Id == updated.Id {
 			m.StoredRequests[i] = updated
+			logger.Println("[MEMMOCK Requests Repository]", "Updated ", m.StoredRequests[i].String(), "Id: ", r.Id)
 			return updated, nil
 		}
 	}

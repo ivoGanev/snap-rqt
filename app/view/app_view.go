@@ -25,6 +25,7 @@ type AppView struct {
 	Styles   style.StyleProvider
 	Views    Views
 	ViewMode string
+	listener AppViewListener
 }
 
 const (
@@ -37,6 +38,14 @@ const (
 	MODE_LANDING_VIEW                = "lv"
 	MODE_EDITOR_VIEW                 = "ev"
 )
+
+type AppViewListener interface {
+	OnViewModeChange(mode string)
+}
+
+func (app *AppView) SetAppViewListener(l AppViewListener) {
+	app.listener = l
+}
 
 func NewAppView() AppView {
 	var application = tview.NewApplication()
@@ -176,6 +185,7 @@ func (app *AppView) changeToLandingView(lrcontent *tview.Flex) {
 
 	app.Focus(app.Views.RequestsList)
 	app.ViewMode = MODE_LANDING_VIEW
+	app.listener.OnViewModeChange(app.ViewMode)
 }
 
 func (app *AppView) changeToEditorView(lrcontent *tview.Flex) {
@@ -189,6 +199,7 @@ func (app *AppView) changeToEditorView(lrcontent *tview.Flex) {
 
 	app.Focus(app.Views.EditorView)
 	app.ViewMode = MODE_EDITOR_VIEW
+	app.listener.OnViewModeChange(app.ViewMode)
 }
 
 func (app *AppView) ShowPage(p string) {

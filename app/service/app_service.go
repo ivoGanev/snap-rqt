@@ -18,7 +18,7 @@ type AppService struct {
 func NewAppService() *AppService {
 	collectionsRepository := memmock.NewCollectionRepository()
 	requestsRepository := memmock.NewRequestsRepository(collectionsRepository)
-	stateRepository := memmock.NewStateService(collectionsRepository, requestsRepository)
+	stateRepository := memmock.NewStateRepository(collectionsRepository, requestsRepository)
 
 	stateService := NewStateService(stateRepository)
 	collectionService := NewCollectionService(collectionsRepository)

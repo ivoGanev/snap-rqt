@@ -8,20 +8,11 @@ import (
 )
 
 type AppController struct {
-	app   *view.AppView
-	views      *view.Views
+	app     *view.AppView
+	views   *view.Views
 	service *service.AppService
 }
 
-func (a *AppController) OnEditBodySelected() {
-	request := a.service.GetFocusedRequest()
-	a.views.EditorView.SetTextArea(request.Body)
-}
-
-func (a *AppController) OnEditHeadersSelected() {
-	request := a.service.GetFocusedRequest()
-	a.views.EditorView.SetTextArea(entity.HeadersToString(request.Headers))
-}
 
 func NewAppController(app view.AppView, appService *service.AppService) AppController {
 	var controller = AppController{
@@ -42,9 +33,40 @@ func (a *AppController) Start() {
 	a.views.CollectionsList.SelectCollection(d.SelectedCollectionId)
 }
 
+// App View
+
+
+func (a *AppController) OnViewModeChange(mode string) {
+	request := a.service.GetFocusedRequest()
+	a.views.EditorView.SetTextArea(request)
+}
+
+
+// Editor View
+
+func (a *AppController) OnEditTextArea(editorMode int, edit string) {
+	// change the body|header of current HTTP method selected
+	switch editorMode {
+	case view.EDITOR_VIEW_MODE_BODY:
+		a.service.UpdateFocusedRequest(entity.ModRequest{Body: &edit})
+	case view.EDITOR_VIEW_MODE_HEADERS:
+		headers := entity.StringToHeaders(edit)
+		a.service.UpdateFocusedRequest(entity.ModRequest{Headers: &headers})
+	}
+}
+
+func (a *AppController) OnEditorModeChanged() {
+	request := a.service.GetFocusedRequest()
+	a.views.EditorView.SetTextArea(request)
+}
+
+
 func (a *AppController) OnUrlInputTextChanged(urlText string) {
 	a.service.UpdateFocusedRequest(entity.ModRequest{Url: &urlText})
 }
+
+// Landing View (Request List)
+
 
 func (a *AppController) OnRequestMethodPickerSelected(method string) {
 	d := a.service.FetchBasicFocusData()
@@ -103,6 +125,10 @@ func (a *AppController) OnRequestListRemove(request entity.RequestBasic, positio
 	s := fmt.Sprintf("Removed request %s", request.Name)
 	a.views.StatusBar.SetText(s)
 }
+
+
+// Collection list (Request List)
+
 
 func (a *AppController) OnFocusedCollectionChanged(changedCollection entity.Collection) {
 	d := a.service.ChangeFocusedCollection(changedCollection.Id)

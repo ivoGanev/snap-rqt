@@ -1,6 +1,7 @@
 package service
 
 import (
+	logger "snap-rq/app/log"
 	"snap-rq/app/repository"
 )
 
@@ -21,6 +22,7 @@ func (s *StateService) SetFocusedCollection(collectionId string) {
 func (s *StateService) SetFocusedRequest(collectionID string, requestId string) {
 	state := s.state.GetState()
 	state.FocusedRequestIds[collectionID] = requestId
+	logger.Println("[State Service]", "Setting focused request to", requestId)
 	s.state.SetState(state)
 }
 

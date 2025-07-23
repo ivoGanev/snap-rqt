@@ -47,6 +47,33 @@ func HeadersToString(headers map[string]string) string {
 	return b.String()
 }
 
+
+func StringToHeaders(headers string) map[string]string {
+	result := make(map[string]string)
+	lines := strings.Split(headers, "\n")
+
+	for _, line := range lines {
+		// TODO: skip invalid characters, e.g. @
+
+		if line == "" {
+			continue // skip empty lines
+		}
+
+		parts := strings.SplitN(line, ":", 2)
+		if len(parts) != 2 {
+			continue // skip malformed lines
+		}
+
+		key := strings.TrimSpace(parts[0])
+		value := strings.TrimSpace(parts[1])
+		result[key] = value
+	}
+
+	// TODO: return errors in case of invalid content
+	return result
+}
+
+
 func (r *Request) Mod(patch ModRequest) {
 	now := time.Now()
 
@@ -87,14 +114,14 @@ func (r Request) String() string {
 	if len(r.Headers) > 0 {
 		var headers []string
 		for key, value := range r.Headers {
-			headers = append(headers, fmt.Sprintf("%s: %s", key, value))
+			headers = append(headers, fmt.Sprintf("  %s: %s", key, value))
 		}
 		headersStr = strings.Join(headers, "\n  ")
 	}
 
 	// Format request as a string
 	return fmt.Sprintf(
-		"Request{\n  Method: %s\n  URL: %s\n  Headers:\n  %s\n  Body:\n  %s\n}",
+		"Request {\n  Method: %s\n  URL: %s\n  Headers:\n  %s\n  Body:\n  %s\n}",
 		r.MethodType,
 		r.Url,
 		headersStr,
