@@ -4,9 +4,12 @@ import (
 	"context"
 	"snap-rq/app/entity"
 	"snap-rq/app/http"
-	"snap-rq/app/repository/memmock"
+	logger "snap-rq/app/log"
+	"snap-rq/app/repository/sqlite"
 	"time"
 )
+
+const APP_SERVICE_LOG_TAG = "[App Service]"
 
 type AppService struct {
 	stateService       *StateService
@@ -16,9 +19,17 @@ type AppService struct {
 }
 
 func NewAppService() *AppService {
-	collectionsRepository := memmock.NewCollectionRepository()
-	requestsRepository := memmock.NewRequestsRepository(collectionsRepository)
-	stateRepository := memmock.NewStateRepository(collectionsRepository, requestsRepository)
+	// collectionsRepository := memmock.NewCollectionRepository()
+	// requestsRepository := memmock.NewRequestsRepository(collectionsRepository)
+	// stateRepository := memmock.NewStateRepository(collectionsRepository, requestsRepository)
+
+	db, err := sqlite.NewDb("requests.db")
+	if err != nil {
+		 logger.Println(STATE_SERVICE_LOG_TAG, "Failed to initialise SQLite DB:", err)
+	}
+	collectionsRepository := sqlite.NewCollectionRepository(db)
+	requestsRepository := sqlite.NewRequestsRepository(db)
+	stateRepository := sqlite.NewStateRepository(db, collectionsRepository, requestsRepository)
 
 	stateService := NewStateService(stateRepository)
 	collectionService := NewCollectionService(collectionsRepository)

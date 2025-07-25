@@ -39,6 +39,7 @@ type RequestsList struct {
 }
 
 func (r *RequestsList) RenderRequests(requests []entity.RequestBasic) {
+	r.Clear()
 	for _, request := range requests {
 		row := request.RowPosition
 		r.requests[request.Id] = row

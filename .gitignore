@@ -1,2 +1,4 @@
 snap-rq.exe
 build
+requests.db
+app.log

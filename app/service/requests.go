@@ -36,7 +36,7 @@ func (m *RequestsService) GetRequestsBasic(collectionId string) []entity.Request
 }
 
 func (m *RequestsService) CreateRequest(collectionId string, position int) {
-	request := entity.NewRequest(collectionId, "New Request", "", string(constants.GET), "", make(map[string]string), "", position)
+	request := entity.NewRequest(collectionId, "New Request", "", string(constants.GET), "", "", "", position)
 	m.repository.ShiftRequests(collectionId, position, repository.SHIFT_UP)
 	m.repository.CreateRequest(request)
 }

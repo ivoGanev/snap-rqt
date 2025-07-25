@@ -3,18 +3,17 @@ package repository
 import "snap-rq/app/entity"
 
 type StateRepository interface {
-	GetState() entity.AppViewState
-	SetState(state entity.AppViewState)
+	GetState() (entity.AppViewState, error)
+	SetState(state entity.AppViewState) error
 }
 
 type RequestsRepository interface {
-	GetRequests() ([]entity.Request, error)
 	GetRequest(id string) (entity.Request, error)
 	CreateRequest(r entity.Request) error
 	DeleteRequest(id string) error
 	UpdateRequest(updated entity.Request) (entity.Request, error)
 	GetRequestsBasic(collectionId string) ([]entity.RequestBasic, error)
-	ShiftRequests(collectionId string, startingPosition int, direction string)
+	ShiftRequests(collectionId string, startingPosition int, direction string) error
 }
 
 type CollectionsRepository interface {
