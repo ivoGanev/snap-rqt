@@ -16,27 +16,27 @@ type RawHttpRequest struct {
 }
 
 type ModRequest struct {
-	Name        *string            `json:"name,omitempty"`
-	Description *string            `json:"description,omitempty"`
-	MethodType  *string            `json:"method,omitempty"`
-	Url         *string            `json:"url,omitempty"`
-	Headers     *map[string]string `json:"headers,omitempty"`
-	Body        *string            `json:"body,omitempty"`
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+	MethodType  *string `json:"method,omitempty"`
+	Url         *string `json:"url,omitempty"`
+	Headers     *string `json:"headers,omitempty"`
+	Body        *string `json:"body,omitempty"`
 }
 
 // Core request entity
 type Request struct {
-	Id           string            `json:"id"`
-	CollectionID string            `json:"collection_id"` // Foreign key
-	Name         string            `json:"name"`
-	Description  string            `json:"description"`
-	MethodType   string            `json:"method"`
-	Url          string            `json:"url"`
-	Headers      map[string]string `json:"headers,omitempty"`
-	Body         string            `json:"body,omitempty"`
-	CreatedAt    time.Time         `json:"created_at"`
-	ModifiedAt   *time.Time        `json:"modified_at,omitempty"`
-	RowPosition  int               `json:"row_position"` // User's logical position of the request
+	Id           string     `json:"id"`
+	CollectionID string     `json:"collection_id"` // Foreign key
+	Name         string     `json:"name"`
+	Description  string     `json:"description"`
+	MethodType   string     `json:"method"`
+	Url          string     `json:"url"`
+	Headers      string     `json:"headers,omitempty"`
+	Body         string     `json:"body,omitempty"`
+	CreatedAt    time.Time  `json:"created_at"`
+	ModifiedAt   *time.Time `json:"modified_at,omitempty"`
+	RowPosition  int        `json:"row_position"` // User's logical position of the request
 }
 
 func HeadersToString(headers map[string]string) string {
@@ -46,7 +46,6 @@ func HeadersToString(headers map[string]string) string {
 	}
 	return b.String()
 }
-
 
 func StringToHeaders(headers string) map[string]string {
 	result := make(map[string]string)
@@ -72,7 +71,6 @@ func StringToHeaders(headers string) map[string]string {
 	// TODO: return errors in case of invalid content
 	return result
 }
-
 
 func (r *Request) Mod(patch ModRequest) {
 	now := time.Now()
@@ -104,7 +102,7 @@ func (r Request) AsHttpRequest() RawHttpRequest {
 		Method:  r.MethodType,
 		Body:    r.Body,
 		URL:     r.Url,
-		Headers: r.Headers,
+		Headers: StringToHeaders(r.Headers),
 	}
 }
 
@@ -131,11 +129,11 @@ func (r Request) String() string {
 
 func NewRequest(
 	collectionID, name, description, method, url string,
-	headers map[string]string,
+	headers string,
 	body string,
 	rowPosition int,
 ) Request {
-	requestID := fmt.Sprintf("%s-%s", collectionID, uuid.New().String())
+	requestID :=  uuid.New().String()
 	return Request{
 		Id:           requestID,
 		CollectionID: collectionID,

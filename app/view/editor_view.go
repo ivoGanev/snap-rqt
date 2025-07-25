@@ -84,7 +84,7 @@ func (r *EditorView) Init() {
 
 func (r *EditorView) SetTextArea(request entity.Request) {
 	if r.currentMode == EDITOR_VIEW_MODE_HEADERS {
-		r.textArea.SetText(entity.HeadersToString(request.Headers), false)
+		r.textArea.SetText(request.Headers, false)
 	} else {
 		r.textArea.SetText(request.Body, false)
 	}

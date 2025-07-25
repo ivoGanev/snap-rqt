@@ -59,7 +59,7 @@ func Requests(count int, collectionId string) []entity.Request {
 			body = generateRandomBody()
 		}
 
-		request := entity.NewRequest(collectionId, name, entry.description, string(method), entry.url, headers, body, index)
+		request := entity.NewRequest(collectionId, name, entry.description, string(method), entry.url, entity.HeadersToString(headers), body, index)
 
 		nodes = append(nodes, request)
 	}

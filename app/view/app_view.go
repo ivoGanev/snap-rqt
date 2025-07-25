@@ -1,6 +1,7 @@
 package view
 
 import (
+	logger "snap-rq/app/log"
 	"snap-rq/app/style"
 
 	"github.com/gdamore/tcell/v2"
@@ -170,6 +171,7 @@ func (app *AppView) Init() {
 		SetRoot(app.Pages, true).
 		EnableMouse(true).
 		Run(); err != nil {
+		logger.Println(err)
 		panic(err)
 	}
 }

@@ -50,8 +50,7 @@ func (a *AppController) OnEditTextArea(editorMode int, edit string) {
 	case view.EDITOR_VIEW_MODE_BODY:
 		a.service.UpdateFocusedRequest(entity.ModRequest{Body: &edit})
 	case view.EDITOR_VIEW_MODE_HEADERS:
-		headers := entity.StringToHeaders(edit)
-		a.service.UpdateFocusedRequest(entity.ModRequest{Headers: &headers})
+		a.service.UpdateFocusedRequest(entity.ModRequest{Headers: &edit})
 	}
 }
 
@@ -121,7 +120,7 @@ func (a *AppController) OnRequestListRemove(request entity.RequestBasic, positio
 	a.service.RemoveRequest(request.Id, position)
 	d := a.service.FetchBasicFocusData()
 	a.views.RequestsList.RenderRequests(d.RequestsBasic)
-
+	
 	s := fmt.Sprintf("Removed request %s", request.Name)
 	a.views.StatusBar.SetText(s)
 }
