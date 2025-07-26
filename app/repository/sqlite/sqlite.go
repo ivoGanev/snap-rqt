@@ -6,7 +6,6 @@ import (
 	_ "github.com/glebarez/go-sqlite"
 )
 
-
 type SQLiteDb struct {
 	db *sql.DB
 }
@@ -19,7 +18,10 @@ func NewDb(path string) (*SQLiteDb, error) {
 
 	database := &SQLiteDb{db: db}
 
+	_, err = db.Exec("PRAGMA foreign_keys = ON;")
+	if err != nil {
+		return nil, fmt.Errorf("failed to enable foreign keys: %v", err)
+	}
 
 	return database, nil
 }
-

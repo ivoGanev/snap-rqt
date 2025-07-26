@@ -13,6 +13,8 @@ type AppController struct {
 	service *service.AppService
 }
 
+
+
 func NewAppController(app view.AppView, appService *service.AppService) AppController {
 	var controller = AppController{
 		&app,
@@ -129,4 +131,16 @@ func (a *AppController) OnFocusedCollectionChanged(changedCollection entity.Coll
 	// when user selects a collection, a request item would be automatically changed
 	a.views.RequestsList.RenderRequests(d.RequestsBasic)
 	a.views.RequestsList.SelectRequest(d.SelectedRequest)
+}
+
+func (a *AppController) OnCollectionAdd(position int) {
+	a.service.CreateCollection(position)
+	d := a.service.FetchBasicFocusData()
+	a.views.CollectionsList.RenderCollections(d.Collections)
+}
+
+func (a *AppController) OnCollectionRemove(collection entity.Collection, position int) {
+	a.service.DeleteCollection(collection.Id, position)
+	d := a.service.FetchBasicFocusData()
+	a.views.CollectionsList.RenderCollections(d.Collections)
 }

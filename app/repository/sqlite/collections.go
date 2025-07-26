@@ -5,12 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"snap-rq/app/entity"
+	"snap-rq/app/repository"
 	"time"
 )
 
 type SQLiteCollectionRepository struct {
 	db *sql.DB
 }
+
 
 func NewCollectionRepository(sqliteDb *SQLiteDb) *SQLiteCollectionRepository {
 	repo := &SQLiteCollectionRepository{
@@ -24,7 +26,8 @@ func NewCollectionRepository(sqliteDb *SQLiteDb) *SQLiteCollectionRepository {
 		name TEXT NOT NULL,
 		description TEXT,
 		created_at DATETIME NOT NULL,
-		modified_at DATETIME
+		modified_at DATETIME,
+		row_position INTEGER
 	);`
 
 	if _, err := repo.db.Exec(createTableQuery); err != nil {
@@ -40,15 +43,42 @@ func NewCollectionRepository(sqliteDb *SQLiteDb) *SQLiteCollectionRepository {
 
 	// Insert default collection if none exists
 	if count == 0 {
-		defaultCol := entity.NewCollection("Default Collection", "Automatically created")
-		_, err := repo.db.Exec(`INSERT INTO collections (id, name, description, created_at) VALUES (?, ?, ?, ?)`,
-			defaultCol.Id, defaultCol.Name, defaultCol.Description, defaultCol.CreatedAt)
+		defaultCol := entity.NewCollection("Default Collection", "Automatically created", 0)
+		_, err := repo.db.Exec(`INSERT INTO collections (id, name, description, created_at, row_position) VALUES (?, ?, ?, ?, ?)`,
+			defaultCol.Id, defaultCol.Name, defaultCol.Description, defaultCol.CreatedAt, defaultCol.RowPosition)
 		if err != nil {
 			panic(fmt.Errorf("failed to insert default collection: %w", err))
 		}
 	}
 
 	return repo
+}
+
+func (m *SQLiteCollectionRepository) ShiftCollections(position int, direction string) error  {
+	tx, err := m.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	var query string
+	switch direction {
+	case repository.SHIFT_UP:
+		query = `UPDATE collections SET row_position = row_position + 1 WHERE row_position >= ?`
+	case repository.SHIFT_DOWN:
+		query = `UPDATE collections SET row_position = row_position - 1 WHERE row_position >= ?`
+	}
+
+	_, err = tx.Exec(query, position)
+	if err != nil {
+		return fmt.Errorf("failed to shift requests: %w", err)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit shift transaction: %w", err)
+	}
+
+	return nil
 }
 
 func (s *SQLiteCollectionRepository) GetCollections() ([]entity.Collection, error) {
@@ -82,14 +112,8 @@ func (s *SQLiteCollectionRepository) GetCollections() ([]entity.Collection, erro
 }
 
 func (s *SQLiteCollectionRepository) CreateCollection(c *entity.Collection) error {
-	if c.Id == "" {
-		newCol := entity.NewCollection(c.Name, c.Description)
-		*c = newCol
-	}
-	c.CreatedAt = time.Now()
-
-	query := `INSERT INTO collections (Id, Name, Description, CreatedAt) VALUES (?, ?, ?, ?)`
-	_, err := s.db.Exec(query, c.Id, c.Name, c.Description, c.CreatedAt)
+	query := `INSERT INTO collections (id, name, description, created_at, row_position) VALUES (?, ?, ?, ?, ?)`
+	_, err := s.db.Exec(query, c.Id, c.Name, c.Description, c.CreatedAt, c.RowPosition)
 	if err != nil {
 		return fmt.Errorf("failed to insert collection: %w", err)
 	}
@@ -116,9 +140,9 @@ func (s *SQLiteCollectionRepository) GetCollection(id string) (entity.Collection
 	var col entity.Collection
 	var modifiedAt sql.NullTime
 
-	query := `SELECT id, name, description, created_at, modified_at FROM collections WHERE id = ?`
+	query := `SELECT id, name, description, created_at, modified_at, row_position FROM collections WHERE id = ?`
 
-	err := s.db.QueryRow(query, id).Scan(&col.Id, &col.Name, &col.Description, &col.CreatedAt, &modifiedAt)
+	err := s.db.QueryRow(query, id).Scan(&col.Id, &col.Name, &col.Description, &col.CreatedAt, &modifiedAt, &col.RowPosition)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return entity.Collection{}, errors.New("collection not found")

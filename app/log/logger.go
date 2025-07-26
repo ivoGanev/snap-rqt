@@ -10,6 +10,9 @@ import (
 var (
 	logger  *log.Logger
 	Println func(v ...any)
+	Info    func(v ...any)
+	Warning func(v ...any)
+	Error   func(v ...any)
 )
 
 func Init(logPath string) {
@@ -21,13 +24,25 @@ func Init(logPath string) {
 
 	logger = log.New(&lumberjack.Logger{
 		Filename:   logPath,
-		MaxSize:    10,
+		MaxSize:    10, // megabytes
 		MaxBackups: 3,
-		MaxAge:     28,
+		MaxAge:     28, // days
 		Compress:   false,
 	}, "", log.LstdFlags)
 
 	Println = func(v ...any) {
 		logger.Println(v...)
+	}
+
+	Info = func(v ...any) {
+		logger.Println(append([]any{"[INFO]"}, v...)...)
+	}
+
+	Warning = func(v ...any) {
+		logger.Println(append([]any{"[WARNING]"}, v...)...)
+	}
+
+	Error = func(v ...any) {
+		logger.Println(append([]any{"[ERROR]"}, v...)...)
 	}
 }
