@@ -77,6 +77,9 @@ func (r *RequestsList) Init() {
 	})
 
 	r.SetSelectionChangedFunc(func(row, column int) {
+		if row == -1 || column == -1 {
+			return // no op when selection doesn't contain any requests
+		}
 		r.listener.OnRequestListRequestFocusChanged(r.getRequest(row, column))
 	})
 

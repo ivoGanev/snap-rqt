@@ -3,23 +3,30 @@ package service
 import (
 	"snap-rq/app/constants"
 	"snap-rq/app/entity"
+	logger "snap-rq/app/log"
 	"snap-rq/app/repository"
 )
+
+const REQUEST_SERVICE_LOG_TAG = "[Request Service]"
 
 type RequestsService struct {
 	repository repository.RequestsRepository
 }
 
-func (m RequestsService) UpdateRequest(request entity.Request) {
-	m.repository.UpdateRequest(request)
+func (m RequestsService) UpdateRequest(request entity.Request) entity.Request {
+	request, err := m.repository.UpdateRequest(request)
+	if err != nil {
+		logger.Println(REQUEST_SERVICE_LOG_TAG, err)
+	}
+	return request
 }
 
-func (m RequestsService) GetRequest(rId string) entity.Request {
-	storedRequests, err := m.repository.GetRequest(rId)
+func (m RequestsService) GetRequest(rId string) entity.Request  {
+	storedRequest, err := m.repository.GetRequest(rId)
 	if err != nil {
-		panic(err)
+		logger.Println(REQUEST_SERVICE_LOG_TAG, err)
 	}
-	return storedRequests
+	return storedRequest
 }
 
 func NewRequestsService(requests repository.RequestsRepository) *RequestsService {
@@ -29,7 +36,7 @@ func NewRequestsService(requests repository.RequestsRepository) *RequestsService
 func (m *RequestsService) GetRequestsBasic(collectionId string) []entity.RequestBasic {
 	storedRequests, err := m.repository.GetRequestsBasic(collectionId)
 	if err != nil {
-		panic(err)
+		logger.Println(REQUEST_SERVICE_LOG_TAG, err)
 	}
 
 	return storedRequests
