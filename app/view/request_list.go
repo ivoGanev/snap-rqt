@@ -14,7 +14,6 @@ const (
 )
 
 type RequestListListener interface {
-	OnRequestListMethodSelected(request entity.RequestBasic)
 	OnRequestListNameSelected(request entity.RequestBasic)
 	OnRequestListRequestFocusChanged(request entity.RequestBasic)
 	OnRequestListAdd(position int) //  'position' indicates the position of the request currently in focus (i.e. not the position where the user expects the next request to be added)
@@ -44,10 +43,11 @@ func (r *RequestsList) RenderRequests(requests []entity.RequestBasic) {
 		row := request.RowPosition
 		r.requests[request.Id] = row
 
-		methodText := r.styles.GetStyledRequestMethod(string(request.MethodType))
+		methodText := r.styles.GetStyledRequestMethod(string(request.Method))
 		methodCell := tview.NewTableCell(methodText).SetReference(request)
 		requestCell := tview.NewTableCell(request.Name).SetReference(request)
 
+		methodCell.SetSelectable(false)
 		r.SetCell(row, METHOD_COLUMN, methodCell)
 		r.SetCell(row, REQUEST_COLUMN, requestCell)
 	}
@@ -69,9 +69,7 @@ func (r *RequestsList) Init() {
 
 	r.SetSelectedFunc(func(row int, column int) {
 		request := r.getRequest(row, column)
-		if column == METHOD_COLUMN {
-			r.listener.OnRequestListMethodSelected(request)
-		} else {
+		if column == REQUEST_COLUMN {
 			r.listener.OnRequestListNameSelected(request)
 		}
 	})
@@ -102,21 +100,10 @@ func (r *RequestsList) Init() {
 }
 
 // Selects an item from the request list
-func (r *RequestsList) SelectRequest(requestId string) {
-	requestRow := r.requests[requestId]
+func (r *RequestsList) SelectRequest(request entity.Request) {
+	requestRow := r.requests[request.Id]
 	r.Select(requestRow, REQUEST_COLUMN)
-}
-
-// Selects the request method table item on a specific row of the requests list
-func (r *RequestsList) SelectMethod(requestId string) {
-	requestRow := r.requests[requestId]
-	r.Select(requestRow, METHOD_COLUMN)
-}
-
-func (r *RequestsList) ChangeRequestMethod(requestId string, requestMethod string) {
-	requestRow := r.requests[requestId]
-	r.GetCell(requestRow, 0).
-		SetText(r.styles.GetStyledRequestMethod(string(requestMethod)))
+	r.GetCell(requestRow, METHOD_COLUMN).SetText(r.styles.GetStyledRequestMethod(string(request.Method)))
 }
 
 func (r *RequestsList) getRequest(row int, column int) entity.RequestBasic {

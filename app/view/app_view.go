@@ -13,8 +13,7 @@ type Views struct {
 	ResponseWindow    *ResponseWindow
 	RequestsList      *RequestsList
 	EditorView        *EditorView
-	MethodPickerModal *MethodPickerModal
-	UrlInputView      *UrlInputView
+	RequestHeaderBar  *RequestHeaderBar
 	HotkeysHelp       *HotkeysHelp
 	StatusBar         *StatusBar
 	Debugger          *tview.TextArea
@@ -33,7 +32,6 @@ const (
 	VIEW_NAME_REQUESTS               = "requests"
 	VIEW_NAME_RESPONSE               = "response"
 	VIEW_NAME_COLLECTIONS            = "collections"
-	PAGE_REQUEST_METHOD_PICKER_MODAL = "request-method-picker"
 	PAGE_LANDING_VIEW                = "landing-view"
 	ENABLE_DEBUG                     = false
 	MODE_LANDING_VIEW                = "lv"
@@ -56,19 +54,17 @@ func NewAppView() AppView {
 	var collectionListView = NewColletionsList()
 	var hotkeyHelpView = NewHotkeysHelp()
 	var editorView = NewEditorView(application)
-	var urlInputView = NewUrlInput()
+	var requestHeaderBar = NewRequestHeaderBar(&styleProvider)
 	var requestsListView = NewRequestsList(&styleProvider)
 	var responseWindowView = NewResponseWindow(application)
-	var methodPickerView = NewMethodPickerModal()
 	var statusBar = NewStatusBar()
 
 	var views = Views{
 		CollectionsList:   collectionListView,
 		HotkeysHelp:       hotkeyHelpView,
-		UrlInputView:      urlInputView,
+		RequestHeaderBar:  requestHeaderBar,
 		RequestsList:      requestsListView,
 		ResponseWindow:    responseWindowView,
-		MethodPickerModal: methodPickerView,
 		StatusBar:         statusBar,
 		EditorView:        editorView,
 		Debugger:          tview.NewTextArea(),
@@ -81,7 +77,6 @@ func NewAppView() AppView {
 	}
 	appView.Styles = &styleProvider
 
-
 	return appView
 }
 
@@ -91,17 +86,16 @@ func (app *AppView) Init() {
 	// Init UI
 	views.CollectionsList.Init()
 	views.HotkeysHelp.Init()
-	views.UrlInputView.Init()
+	views.RequestHeaderBar.Init()
 	views.RequestsList.Init()
 	views.ResponseWindow.Init()
-	views.MethodPickerModal.Init()
 	views.EditorView.Init()
 
 	// Build landing page
 	var lrcontent = tview.NewFlex()
 	lrcontent.
-		AddItem(app.Views.CollectionsList, 0, 1, true).
-		AddItem(app.Views.RequestsList, 0, 3, false).
+		AddItem(app.Views.CollectionsList, 0, 1, false).
+		AddItem(app.Views.RequestsList, 0, 3, true).
 		AddItem(app.Views.ResponseWindow, 0, 3, false)
 
 	app.ViewMode = MODE_LANDING_VIEW
@@ -111,7 +105,7 @@ func (app *AppView) Init() {
 	body.
 		SetDirection(tview.FlexRow).
 		AddItem(views.HotkeysHelp, 5, 0, false).
-		AddItem(views.UrlInputView, 3, 0, false).
+		AddItem(views.RequestHeaderBar, 3, 0, false).
 		AddItem(lrcontent, 0, 10, true)
 
 	body.AddItem(views.StatusBar, 1, 0, false)
@@ -121,8 +115,7 @@ func (app *AppView) Init() {
 	}
 
 	app.Pages.
-		AddPage(string(PAGE_LANDING_VIEW), body, true, true).
-		AddPage(string(PAGE_REQUEST_METHOD_PICKER_MODAL), views.MethodPickerModal, true, false)
+		AddPage(string(PAGE_LANDING_VIEW), body, true, true) // keeping this as separate page since we may need additional overlays
 
 	// set hotkeys
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {

@@ -27,9 +27,9 @@ func (a *AppController) Start() {
 	// Load and render app data on load
 	d := a.service.FetchLandingData()
 	a.views.RequestsList.RenderRequests(d.RequestsBasic)
-	a.views.RequestsList.SelectRequest(d.SelectedRequestId)
+	a.views.RequestsList.SelectRequest(d.SelectedRequest)
 	a.views.CollectionsList.RenderCollections(d.Collections)
-	a.views.CollectionsList.SelectCollection(d.SelectedCollectionId)
+	a.views.CollectionsList.SelectCollection(d.SelectedCollection)
 }
 
 // App View
@@ -60,23 +60,23 @@ func (a *AppController) OnUrlInputTextChanged(urlText string) {
 	a.service.UpdateFocusedRequest(entity.ModRequest{Url: &urlText})
 }
 
-// Landing View (Request List)
+// Landing View (Request Header Bar)
 
-func (a *AppController) OnRequestMethodPickerSelected(method string) {
+func (a *AppController) OnMethodSelection(method string) {
+	a.service.UpdateFocusedRequest(entity.ModRequest{Method: &method})
+
 	d := a.service.FetchBasicFocusData()
-	a.views.RequestsList.ChangeRequestMethod(d.SelectedRequestId, method)
-	a.app.HidePage(view.PAGE_REQUEST_METHOD_PICKER_MODAL)
-	a.app.Focus(a.views.RequestsList)
+	a.views.RequestsList.RenderRequests(d.RequestsBasic)
 }
 
-func (a *AppController) OnRequestListMethodSelected(entity.RequestBasic) {
-	a.app.ShowPage(view.PAGE_REQUEST_METHOD_PICKER_MODAL)
-}
+// Landing View (Request List)
 
 func (a *AppController) OnRequestListRequestFocusChanged(selectedRequest entity.RequestBasic) {
 	a.service.ChangeFocusedRequest(selectedRequest)
 	focusedRequest := a.service.GetFocusedRequest()
-	a.views.UrlInputView.SetUrlText(focusedRequest.Url)
+
+	a.views.RequestHeaderBar.SetUrlText(focusedRequest.Url)
+	a.views.RequestHeaderBar.SetRequestMethod(focusedRequest.Method)
 
 	// Once the user changes the selection, load the historical response from memory and set it
 	// TODO: Clean setting the empty response;
@@ -88,7 +88,7 @@ func (a *AppController) OnRequestListRequestFocusChanged(selectedRequest entity.
 }
 
 func (a *AppController) OnRequestListNameSelected(selected entity.RequestBasic) {
-	s := fmt.Sprintf("%s %s", selected.MethodType, selected.Url)
+	s := fmt.Sprintf("%s %s", selected.Method, selected.Url)
 	a.views.StatusBar.SetText(s)
 
 	onHttpResult := func(result entity.HttpResult) {
@@ -121,12 +121,12 @@ func (a *AppController) OnRequestListRemove(request entity.RequestBasic, positio
 	a.views.StatusBar.SetText(s)
 }
 
-// Collection list (Request List)
+// Landing View (Collection list)
 
 func (a *AppController) OnFocusedCollectionChanged(changedCollection entity.Collection) {
 	d := a.service.ChangeFocusedCollection(changedCollection.Id)
 
 	// when user selects a collection, a request item would be automatically changed
 	a.views.RequestsList.RenderRequests(d.RequestsBasic)
-	a.views.RequestsList.SelectRequest(d.SelectedRequestId)
+	a.views.RequestsList.SelectRequest(d.SelectedRequest)
 }

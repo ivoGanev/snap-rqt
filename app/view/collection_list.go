@@ -20,8 +20,8 @@ type CollectionsList struct {
 	collections map[string]int // Mapping: collection id -> collection row
 }
 
-func (r *CollectionsList) SelectCollection(collectionId string) {
-	collectionRow := r.collections[collectionId]
+func (r *CollectionsList) SelectCollection(collection entity.Collection) {
+	collectionRow := r.collections[collection.Id]
 	r.Select(collectionRow, 0)
 }
 

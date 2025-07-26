@@ -18,7 +18,7 @@ type RawHttpRequest struct {
 type ModRequest struct {
 	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
-	MethodType  *string `json:"method,omitempty"`
+	Method      *string `json:"method,omitempty"`
 	Url         *string `json:"url,omitempty"`
 	Headers     *string `json:"headers,omitempty"`
 	Body        *string `json:"body,omitempty"`
@@ -30,7 +30,7 @@ type Request struct {
 	CollectionID string     `json:"collection_id"` // Foreign key
 	Name         string     `json:"name"`
 	Description  string     `json:"description"`
-	MethodType   string     `json:"method"`
+	Method       string     `json:"method"`
 	Url          string     `json:"url"`
 	Headers      string     `json:"headers,omitempty"`
 	Body         string     `json:"body,omitempty"`
@@ -81,8 +81,8 @@ func (r *Request) Mod(patch ModRequest) {
 	if patch.Description != nil {
 		r.Description = *patch.Description
 	}
-	if patch.MethodType != nil {
-		r.MethodType = *patch.MethodType
+	if patch.Method != nil {
+		r.Method = *patch.Method
 	}
 	if patch.Url != nil {
 		r.Url = *patch.Url
@@ -99,7 +99,7 @@ func (r *Request) Mod(patch ModRequest) {
 
 func (r Request) AsHttpRequest() RawHttpRequest {
 	return RawHttpRequest{
-		Method:  r.MethodType,
+		Method:  r.Method,
 		Body:    r.Body,
 		URL:     r.Url,
 		Headers: StringToHeaders(r.Headers),
@@ -120,7 +120,7 @@ func (r Request) String() string {
 	// Format request as a string
 	return fmt.Sprintf(
 		"Request {\n  Method: %s\n  URL: %s\n  Headers:\n  %s\n  Body:\n  %s\n}",
-		r.MethodType,
+		r.Method,
 		r.Url,
 		headersStr,
 		strings.TrimSpace(r.Body),
@@ -133,13 +133,13 @@ func NewRequest(
 	body string,
 	rowPosition int,
 ) Request {
-	requestID :=  uuid.New().String()
+	requestID := uuid.New().String()
 	return Request{
 		Id:           requestID,
 		CollectionID: collectionID,
 		Name:         name,
 		Description:  description,
-		MethodType:   method,
+		Method:       method,
 		Url:          url,
 		Headers:      headers,
 		Body:         body,
@@ -153,7 +153,7 @@ type RequestBasic struct {
 	Id          string
 	Url         string
 	Name        string
-	MethodType  string
+	Method      string
 	RowPosition int
 }
 
@@ -162,7 +162,7 @@ func NewRequestBasicFromRequest(r Request) RequestBasic {
 		Id:          r.Id,
 		Url:         r.Url,
 		Name:        r.Name,
-		MethodType:  r.MethodType,
+		Method:      r.Method,
 		RowPosition: r.RowPosition,
 	}
 }
