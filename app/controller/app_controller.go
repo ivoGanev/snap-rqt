@@ -13,7 +13,6 @@ type AppController struct {
 	service *service.AppService
 }
 
-
 func NewAppController(app view.AppView, appService *service.AppService) AppController {
 	var controller = AppController{
 		&app,
@@ -35,12 +34,10 @@ func (a *AppController) Start() {
 
 // App View
 
-
 func (a *AppController) OnViewModeChange(mode string) {
 	request := a.service.GetFocusedRequest()
 	a.views.EditorView.SetTextArea(request)
 }
-
 
 // Editor View
 
@@ -59,13 +56,11 @@ func (a *AppController) OnEditorModeChanged() {
 	a.views.EditorView.SetTextArea(request)
 }
 
-
 func (a *AppController) OnUrlInputTextChanged(urlText string) {
 	a.service.UpdateFocusedRequest(entity.ModRequest{Url: &urlText})
 }
 
 // Landing View (Request List)
-
 
 func (a *AppController) OnRequestMethodPickerSelected(method string) {
 	d := a.service.FetchBasicFocusData()
@@ -80,7 +75,8 @@ func (a *AppController) OnRequestListMethodSelected(entity.RequestBasic) {
 
 func (a *AppController) OnRequestListRequestFocusChanged(selectedRequest entity.RequestBasic) {
 	a.service.ChangeFocusedRequest(selectedRequest)
-	a.views.UrlInputView.SetUrlText(selectedRequest.Url)
+	focusedRequest := a.service.GetFocusedRequest()
+	a.views.UrlInputView.SetUrlText(focusedRequest.Url)
 
 	// Once the user changes the selection, load the historical response from memory and set it
 	// TODO: Clean setting the empty response;
@@ -120,14 +116,12 @@ func (a *AppController) OnRequestListRemove(request entity.RequestBasic, positio
 	a.service.RemoveRequest(request.Id, position)
 	d := a.service.FetchBasicFocusData()
 	a.views.RequestsList.RenderRequests(d.RequestsBasic)
-	
+
 	s := fmt.Sprintf("Removed request %s", request.Name)
 	a.views.StatusBar.SetText(s)
 }
 
-
 // Collection list (Request List)
-
 
 func (a *AppController) OnFocusedCollectionChanged(changedCollection entity.Collection) {
 	d := a.service.ChangeFocusedCollection(changedCollection.Id)

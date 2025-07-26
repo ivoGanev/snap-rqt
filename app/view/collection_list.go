@@ -14,10 +14,9 @@ func (r *CollectionsList) SetListener(listener CollectionListListener) {
 	r.listener = listener
 }
 
-
 type CollectionsList struct {
 	*tview.Table
-	listener CollectionListListener
+	listener    CollectionListListener
 	collections map[string]int // Mapping: collection id -> collection row
 }
 
@@ -38,6 +37,10 @@ func (r *CollectionsList) Init() {
 	r.SetSelectable(true, true)
 
 	r.SetSelectionChangedFunc(func(row, column int) {
+		if row == -1 {
+			return // no-op when the clicked row doesn't have any collection
+		}
+
 		collection := r.GetCell(row, 0).GetReference().(entity.Collection)
 		r.listener.OnFocusedCollectionChanged(collection)
 	})

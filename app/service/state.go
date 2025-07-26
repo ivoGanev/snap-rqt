@@ -71,6 +71,7 @@ func (s *StateService) GetFocusedCollectionId() string {
 func (s *StateService) GetFocusedRequestId() string {
     collectionID := s.GetFocusedCollectionId()
     if collectionID == "" {
+        logger.Println(STATE_SERVICE_LOG_TAG, "No focused request found for collection:", collectionID)
         return ""
     }
     requestID := s.GetFocusedRequestByCollection(collectionID)
