@@ -25,7 +25,7 @@ func NewAppService() *AppService {
 
 	db, err := sqlite.NewDb("requests.db")
 	if err != nil {
-		 logger.Println(STATE_SERVICE_LOG_TAG, "Failed to initialise SQLite DB:", err)
+		logger.Println(STATE_SERVICE_LOG_TAG, "Failed to initialise SQLite DB:", err)
 	}
 	collectionsRepository := sqlite.NewCollectionRepository(db)
 	requestsRepository := sqlite.NewRequestsRepository(db)
@@ -50,10 +50,10 @@ func (a *AppService) FetchLandingData() entity.BasicFocusData {
 	requests := a.requestsService.GetRequestsBasic(cId)
 
 	return entity.BasicFocusData{
-		Collections:          collections,
-		RequestsBasic:        requests,
-		SelectedCollectionId: a.stateService.GetFocusedCollectionId(),
-		SelectedRequestId:    a.stateService.GetFocusedRequestId(),
+		Collections:        collections,
+		RequestsBasic:      requests,
+		SelectedCollection: a.GetFocusedCollection(),
+		SelectedRequest:    a.GetFocusedRequest(),
 	}
 }
 
@@ -113,14 +113,19 @@ func (a *AppService) FetchBasicFocusData() entity.BasicFocusData {
 	requests := a.requestsService.GetRequestsBasic(cId)
 
 	return entity.BasicFocusData{
-		Collections:          collections,
-		RequestsBasic:        requests,
-		SelectedCollectionId: a.stateService.GetFocusedCollectionId(),
-		SelectedRequestId:    a.stateService.GetFocusedRequestId(),
+		Collections:        collections,
+		RequestsBasic:      requests,
+		SelectedCollection: a.GetFocusedCollection(),
+		SelectedRequest:    a.GetFocusedRequest(),
 	}
 }
 
 func (a *AppService) GetFocusedRequest() entity.Request {
 	rId := a.stateService.GetFocusedRequestId()
 	return a.requestsService.GetRequest(rId)
+}
+
+func (a *AppService) GetFocusedCollection() entity.Collection {
+	cId := a.stateService.GetFocusedCollectionId()
+	return a.collectionsService.GetCollection(cId)
 }

@@ -24,7 +24,7 @@ func NewRequestsRepository(sqliteDb *SQLiteDb) *SQLiteRequestsRepository {
 		collection_id TEXT NOT NULL,
 		name TEXT,
 		description TEXT,
-		method_type TEXT,
+		method TEXT,
 		url TEXT,
 		headers TEXT, -- JSON
 		body TEXT,
@@ -87,7 +87,7 @@ func (m *SQLiteRequestsRepository) DeleteRequest(id string) error {
 
 func (m *SQLiteRequestsRepository) CreateRequest(request entity.Request) error {
 	query := `
-	INSERT INTO requests (id, name, description, modified_at, created_at, collection_id, row_position, method_type, url, headers, body)
+	INSERT INTO requests (id, name, description, modified_at, created_at, collection_id, row_position, method, url, headers, body)
 	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `
 
@@ -99,7 +99,7 @@ func (m *SQLiteRequestsRepository) CreateRequest(request entity.Request) error {
 		request.CreatedAt,
 		request.CollectionID,
 		request.RowPosition,
-		request.MethodType,
+		request.Method,
 		request.Url,
 		request.Headers,
 		request.Body,
@@ -113,7 +113,7 @@ func (m *SQLiteRequestsRepository) CreateRequest(request entity.Request) error {
 // GetRequestsBasic returns minimal request info for a collection
 func (m *SQLiteRequestsRepository) GetRequestsBasic(collectionId string) ([]entity.RequestBasic, error) {
 	query := `
-	SELECT id, name, row_position, method_type, url
+	SELECT id, name, row_position, method, url
 	FROM requests
 	WHERE collection_id = ?
 	ORDER BY row_position ASC
@@ -132,7 +132,7 @@ func (m *SQLiteRequestsRepository) GetRequestsBasic(collectionId string) ([]enti
 			&rb.Id,
 			&rb.Name,
 			&rb.RowPosition,
-			&rb.MethodType,
+			&rb.Method,
 			&rb.Url,
 		)
 		if err != nil {
@@ -147,12 +147,11 @@ func (m *SQLiteRequestsRepository) GetRequestsBasic(collectionId string) ([]enti
 	return items, nil
 }
 
-
 func (m *SQLiteRequestsRepository) GetRequest(id string) (entity.Request, error) {
 	var r entity.Request
 
 	query := `
-	SELECT id, collection_id, name, description, method_type, url, headers, body, created_at, modified_at, row_position
+	SELECT id, collection_id, name, description, method, url, headers, body, created_at, modified_at, row_position
 	FROM requests
 	WHERE id = ?
 	`
@@ -162,7 +161,7 @@ func (m *SQLiteRequestsRepository) GetRequest(id string) (entity.Request, error)
 		&r.CollectionID,
 		&r.Name,
 		&r.Description,
-		&r.MethodType,
+		&r.Method,
 		&r.Url,
 		&r.Headers,
 		&r.Body,
@@ -181,18 +180,17 @@ func (m *SQLiteRequestsRepository) GetRequest(id string) (entity.Request, error)
 	return r, nil
 }
 
-
 func (m *SQLiteRequestsRepository) UpdateRequest(updated entity.Request) (entity.Request, error) {
 	query := `
 	UPDATE requests
-	SET collection_id = ?, row_position = ?, method_type = ?, url = ?, headers = ?, body = ?
+	SET collection_id = ?, row_position = ?, method = ?, url = ?, headers = ?, body = ?
 	WHERE id = ?
 `
 
 	res, err := m.db.Exec(query,
 		updated.CollectionID,
 		updated.RowPosition,
-		updated.MethodType,
+		updated.Method,
 		updated.Url,
 		updated.Headers,
 		updated.Body,

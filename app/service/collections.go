@@ -20,3 +20,11 @@ func (c *CollectionsService) GetCollections() []entity.Collection {
 	}
 	return collections
 }
+
+func (c *CollectionsService) GetCollection(cId string) entity.Collection {
+	collections, err := c.collections.GetCollection(cId)
+	if err != nil {
+		panic(err)
+	}
+	return collections
+}

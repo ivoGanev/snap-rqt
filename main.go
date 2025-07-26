@@ -5,7 +5,6 @@ import (
 	logger "snap-rq/app/log"
 	"snap-rq/app/service"
 	"snap-rq/app/view"
-
 )
 
 func main() {
@@ -23,8 +22,7 @@ func main() {
 	app.SetAppViewListener(&controller)
 	app.Views.CollectionsList.SetListener(&controller)
 	app.Views.RequestsList.SetListener(&controller)
-	app.Views.MethodPickerModal.SetListener(&controller)
-	app.Views.UrlInputView.SetListener(&controller)
+	app.Views.RequestHeaderBar.SetListener(&controller)
 	app.Views.EditorView.SetListener(&controller)
 
 	controller.Start()
