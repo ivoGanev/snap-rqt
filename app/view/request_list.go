@@ -14,7 +14,6 @@ const (
 )
 
 type RequestListListener interface {
-	OnRequestListMethodSelected(request entity.RequestBasic)
 	OnRequestListNameSelected(request entity.RequestBasic)
 	OnRequestListRequestFocusChanged(request entity.RequestBasic)
 	OnRequestListAdd(position int) //  'position' indicates the position of the request currently in focus (i.e. not the position where the user expects the next request to be added)
@@ -48,6 +47,7 @@ func (r *RequestsList) RenderRequests(requests []entity.RequestBasic) {
 		methodCell := tview.NewTableCell(methodText).SetReference(request)
 		requestCell := tview.NewTableCell(request.Name).SetReference(request)
 
+		methodCell.SetSelectable(false)
 		r.SetCell(row, METHOD_COLUMN, methodCell)
 		r.SetCell(row, REQUEST_COLUMN, requestCell)
 	}
@@ -69,9 +69,7 @@ func (r *RequestsList) Init() {
 
 	r.SetSelectedFunc(func(row int, column int) {
 		request := r.getRequest(row, column)
-		if column == METHOD_COLUMN {
-			r.listener.OnRequestListMethodSelected(request)
-		} else {
+		if column == REQUEST_COLUMN {
 			r.listener.OnRequestListNameSelected(request)
 		}
 	})
