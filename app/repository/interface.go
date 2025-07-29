@@ -22,9 +22,11 @@ type CollectionsRepository interface {
 	DeleteCollection(id string) error
 	GetCollection(id string) (entity.Collection, error)
 	UpdateCollection(updated entity.Collection) (entity.Collection, error)
+	ShiftCollections(position int, direction string) error
 }
 
+
 const (
-	SHIFT_UP = "UP"
+	SHIFT_UP   = "UP"
 	SHIFT_DOWN = "DOWN"
 )

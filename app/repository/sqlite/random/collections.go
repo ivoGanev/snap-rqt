@@ -24,7 +24,7 @@ func Collection(collectionCount int) []entity.Collection {
 	for range collectionCount {
 		collectionName := collectionNames[rand.Intn(len(collectionNames))]
 		collectionDescription := "A collection of API requests for " + collectionName
-		collection := entity.NewCollection(collectionName, collectionDescription)
+		collection := entity.NewCollection(collectionName, collectionDescription, 0)
 		collections = append(collections, collection)
 	}
 

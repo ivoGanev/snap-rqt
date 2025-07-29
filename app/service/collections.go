@@ -6,7 +6,7 @@ import (
 )
 
 type CollectionsService struct {
-	collections repository.CollectionsRepository
+	repository repository.CollectionsRepository
 }
 
 func NewCollectionService(collections repository.CollectionsRepository) *CollectionsService {
@@ -14,17 +14,36 @@ func NewCollectionService(collections repository.CollectionsRepository) *Collect
 }
 
 func (c *CollectionsService) GetCollections() []entity.Collection {
-	collections, err := c.collections.GetCollections()
+	collections, err := c.repository.GetCollections()
 	if err != nil {
 		panic(err)
 	}
 	return collections
 }
 
-func (c *CollectionsService) GetCollection(cId string) entity.Collection {
-	collections, err := c.collections.GetCollection(cId)
-	if err != nil {
+func (c *CollectionsService) GetCollection(cId string) (entity.Collection, error) {
+	return c.repository.GetCollection(cId)
+}
+
+func (m *CollectionsService) CreateCollection(position int) {
+	collection := entity.NewCollection("New Collection", "", position)
+
+	if err := m.repository.ShiftCollections(position, repository.SHIFT_UP); err != nil {
 		panic(err)
 	}
-	return collections
+
+	if err := m.repository.CreateCollection(&collection); err != nil {
+		panic(err)
+	}
 }
+
+func (m *CollectionsService) DeleteCollection(cId string, position int) {
+	if err := m.repository.ShiftCollections(position, repository.SHIFT_DOWN); err != nil {
+		panic(err)
+	}
+
+	if err := m.repository.DeleteCollection(cId); err != nil {
+		panic(err)
+	}
+}
+

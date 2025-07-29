@@ -127,5 +127,21 @@ func (a *AppService) GetFocusedRequest() entity.Request {
 
 func (a *AppService) GetFocusedCollection() entity.Collection {
 	cId := a.stateService.GetFocusedCollectionId()
-	return a.collectionsService.GetCollection(cId)
+	col, err := a.collectionsService.GetCollection(cId)
+	if err != nil {
+		// self-heal if we didn't find a collection and fallback to the first one available
+		cols := a.collectionsService.GetCollections()
+		col = cols[0]
+		logger.Error(APP_SERVICE_LOG_TAG, "Collection Self-Heal: the focused collection was not found")
+	}
+	return col
+}
+
+
+func (a *AppService) CreateCollection(position int) {
+	a.collectionsService.CreateCollection(position)
+}
+
+func (a *AppService) DeleteCollection(cId string, position int) {
+	a.collectionsService.DeleteCollection(cId, position)
 }

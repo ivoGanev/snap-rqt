@@ -3,11 +3,14 @@ package view
 import (
 	"snap-rq/app/entity"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
 type CollectionListListener interface {
 	OnFocusedCollectionChanged(entity.Collection)
+	OnCollectionAdd(position int)
+	OnCollectionRemove(collection entity.Collection, position int)
 }
 
 func (r *CollectionsList) SetListener(listener CollectionListListener) {
@@ -44,9 +47,28 @@ func (r *CollectionsList) Init() {
 		collection := r.GetCell(row, 0).GetReference().(entity.Collection)
 		r.listener.OnFocusedCollectionChanged(collection)
 	})
+
+	r.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Rune() == 'a' {
+			row, _ := r.GetSelection()
+			r.listener.OnCollectionAdd(row)
+			return nil
+		} else if event.Key() == tcell.KeyDEL || event.Key() == tcell.KeyDelete {
+			row, _ := r.GetSelection()
+			cell := r.GetCell(row, 0)
+			if cell != nil {
+				if col, ok := cell.GetReference().(entity.Collection); ok {
+					r.listener.OnCollectionRemove(col, row)
+				}
+			}
+			return nil
+		}
+		return event
+	})
 }
 
 func (r *CollectionsList) RenderCollections(collections []entity.Collection) {
+	r.Clear()
 	for i, collection := range collections {
 		nameCell := tview.NewTableCell(collection.Name).
 			SetReference(collection)
