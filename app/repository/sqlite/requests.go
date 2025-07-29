@@ -9,6 +9,8 @@ import (
 	"snap-rq/app/repository"
 )
 
+const SQLITE_REQUEST_REPO_LOG_TAG = "[SQLite Requests Repository]"
+
 type SQLiteRequestsRepository struct {
 	db *sql.DB
 }
@@ -80,7 +82,7 @@ func (m *SQLiteRequestsRepository) DeleteRequest(id string) error {
 		return fmt.Errorf("failed to get rows affected: %w", err)
 	}
 	if rowsAffected == 0 {
-		return errors.New("request not found")
+		return fmt.Errorf("request id not found: %s", id)
 	}
 	return nil
 }
@@ -172,7 +174,7 @@ func (m *SQLiteRequestsRepository) GetRequest(id string) (entity.Request, error)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return entity.Request{}, errors.New("request not found")
+			return entity.Request{}, fmt.Errorf("request id not found: %s", id)
 		}
 		return entity.Request{}, fmt.Errorf("failed to get request: %w", err)
 	}
@@ -196,6 +198,8 @@ func (m *SQLiteRequestsRepository) UpdateRequest(updated entity.Request) (entity
 		updated.Body,
 		updated.Id,
 	)
+	logger.Info(SQLITE_REQUEST_REPO_LOG_TAG, "Trying to update request with Id:", updated.Id, "The updated data is ", updated)
+
 	if err != nil {
 		return entity.Request{}, fmt.Errorf("failed to update request: %w", err)
 	}
@@ -204,9 +208,8 @@ func (m *SQLiteRequestsRepository) UpdateRequest(updated entity.Request) (entity
 		return entity.Request{}, fmt.Errorf("failed to get affected rows: %w", err)
 	}
 	if affected == 0 {
-		return entity.Request{}, errors.New("request not found")
+		return entity.Request{}, fmt.Errorf("request id not found: %s", updated.Id)
 	}
 
-	logger.Println("[SQLite Requests Repository]", "Updated request with Id:", updated.Id)
 	return updated, nil
 }

@@ -13,6 +13,7 @@ var (
 	Info    func(v ...any)
 	Warning func(v ...any)
 	Error   func(v ...any)
+	Debug   func(v ...any)
 )
 
 func Init(logPath string) {
@@ -44,5 +45,9 @@ func Init(logPath string) {
 
 	Error = func(v ...any) {
 		logger.Println(append([]any{"[ERROR]"}, v...)...)
+	}
+
+	Debug = func(v ...any) {
+		logger.Println(append([]any{"[DEBUG]"}, v...)...)
 	}
 }

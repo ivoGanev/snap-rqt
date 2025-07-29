@@ -108,7 +108,7 @@ func (a *AppService) ChangeFocusedRequest(selectedRequest entity.RequestBasic) {
 	tryHandleGenericError(err)
 
 	state.FocusedRequestIds[cId] = selectedRequest.Id
-	logger.Info(APP_SERVICE_LOG_TAG, "Setting focused request to", selectedRequest.Id)
+	logger.Debug(APP_SERVICE_LOG_TAG, "Setting focused request to", selectedRequest.Id)
 
 	err = a.repoState.SetState(state)
 	tryHandleGenericError(err)
@@ -119,12 +119,14 @@ func (a *AppService) AddRequest(position int) {
 	request := entity.NewRequest(cId, "New Request", "", string(constants.GET), "", "", "", position)
 	a.repoRequests.ShiftRequests(cId, position, repository.SHIFT_UP)
 	a.repoRequests.CreateRequest(request)
+	logger.Debug(APP_SERVICE_LOG_TAG, "Add new request to repository", request, "for collection id", cId)
 }
 
 func (a *AppService) RemoveRequest(requestId string, position int) {
 	cId := a.getFocusedCollectionId()
 	a.repoRequests.ShiftRequests(cId, position, repository.SHIFT_DOWN)
 	a.repoRequests.DeleteRequest(requestId)
+	logger.Debug(APP_SERVICE_LOG_TAG, "Remove request from repository with id", requestId, "belonging to collection id", requestId)
 }
 
 func (a *AppService) FetchBasicFocusData() entity.BasicFocusData {
@@ -146,6 +148,8 @@ func (a *AppService) FetchBasicFocusData() entity.BasicFocusData {
 
 func (a *AppService) GetFocusedRequest() entity.Request {
 	rId := a.getFocusedRequestId()
+	logger.Info(APP_SERVICE_LOG_TAG, "Fetched focused request id", rId)
+
 	request, err := a.repoRequests.GetRequest(rId)
 	tryHandleGenericError(err)
 	return request
@@ -153,6 +157,8 @@ func (a *AppService) GetFocusedRequest() entity.Request {
 
 func (a *AppService) GetFocusedCollection() entity.Collection {
 	cId := a.getFocusedCollectionId()
+	logger.Info(APP_SERVICE_LOG_TAG, "Fetched focused collection id", cId)
+
 	col, err := a.repoCollections.GetCollection(cId)
 	if err != nil {
 		// self-heal if we didn't find a collection and fallback to the first one available

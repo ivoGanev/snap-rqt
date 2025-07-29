@@ -3,9 +3,12 @@ package controller
 import (
 	"fmt"
 	"snap-rq/app/entity"
+	logger "snap-rq/app/log"
 	"snap-rq/app/service"
 	"snap-rq/app/view"
 )
+
+const APP_CONTROLLER_LOG_TAG = "[App Controller]"
 
 type AppController struct {
 	app     *view.AppView
@@ -74,6 +77,7 @@ func (a *AppController) OnMethodSelection(method string) {
 // Landing View (Request List)
 
 func (a *AppController) OnRequestListRequestFocusChanged(selectedRequest entity.RequestBasic) {
+	logger.Info(APP_CONTROLLER_LOG_TAG, "User selected request", selectedRequest)
 	a.service.ChangeFocusedRequest(selectedRequest)
 	focusedRequest := a.service.GetFocusedRequest()
 
@@ -107,6 +111,9 @@ func (a *AppController) OnRequestListNameSelected(selected entity.RequestBasic) 
 func (a *AppController) OnRequestListAdd(position int) {
 	a.service.AddRequest(position)
 	d := a.service.FetchBasicFocusData()
+
+	logger.Info(APP_CONTROLLER_LOG_TAG, "User requested to add a request at user position", position)
+
 	a.views.RequestsList.RenderRequests(d.RequestsBasic)
 	a.views.StatusBar.SetText("Added new request")
 }
@@ -115,12 +122,14 @@ func (a *AppController) OnRequestListDuplicate(entity.RequestBasic) {
 }
 
 func (a *AppController) OnRequestListRemove(request entity.RequestBasic, position int) {
+	logger.Info(APP_CONTROLLER_LOG_TAG, "User requested to delete request", request, "at user position", position)
 	a.service.RemoveRequest(request.Id, position)
 	d := a.service.FetchBasicFocusData()
 	a.views.RequestsList.RenderRequests(d.RequestsBasic)
 
 	s := fmt.Sprintf("Removed request %s", request.Name)
 	a.views.StatusBar.SetText(s)
+
 }
 
 // Landing View (Collection list)

@@ -107,19 +107,19 @@ func (r Request) AsHttpRequest() RawHttpRequest {
 }
 
 func (r Request) String() string {
-	// Convert headers to a formatted string
+	// Convert headers to a single-line formatted string
 	headersStr := "None"
 	if len(r.Headers) > 0 {
 		var headers []string
 		for key, value := range r.Headers {
-			headers = append(headers, fmt.Sprintf("  %s: %s", key, value))
+			headers = append(headers, fmt.Sprintf("%s: %s", key, value))
 		}
-		headersStr = strings.Join(headers, "\n  ")
+		headersStr = strings.Join(headers, ", ")
 	}
 
 	// Format request as a string
 	return fmt.Sprintf(
-		"Request {\n  Method: %s\n  URL: %s\n  Headers:\n  %s\n  Body:\n  %s\n}",
+		"Request { Method: %s  URL: %s  Headers: [%s]  Body: %s }",
 		r.Method,
 		r.Url,
 		headersStr,
@@ -165,4 +165,15 @@ func NewRequestBasicFromRequest(r Request) RequestBasic {
 		Method:      r.Method,
 		RowPosition: r.RowPosition,
 	}
+}
+
+func (r RequestBasic) String() string {
+	return fmt.Sprintf(
+		"RequestBasic { ID: %s  Name: %s  Method: %s  URL: %s  Position: %d }",
+		r.Id,
+		r.Name,
+		r.Method,
+		r.Url,
+		r.RowPosition,
+	)
 }
