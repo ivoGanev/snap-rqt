@@ -129,7 +129,6 @@ func (a *AppController) OnRequestListRemove(request entity.RequestBasic, positio
 
 	s := fmt.Sprintf("Removed request %s", request.Name)
 	a.views.StatusBar.SetText(s)
-
 }
 
 // Landing View (Collection list)
@@ -143,12 +142,14 @@ func (a *AppController) OnFocusedCollectionChanged(changedCollection entity.Coll
 }
 
 func (a *AppController) OnCollectionAdd(position int) {
+	logger.Info(APP_CONTROLLER_LOG_TAG, "User requested to add a collection at user position", position)
 	a.service.CreateCollection(position)
 	d := a.service.FetchBasicFocusData()
 	a.views.CollectionsList.RenderCollections(d.Collections)
 }
 
 func (a *AppController) OnCollectionRemove(collection entity.Collection, position int) {
+	logger.Info(APP_CONTROLLER_LOG_TAG, "User requested to remove a collection", collection, "at position", position)
 	a.service.DeleteCollection(collection.Id, position)
 	d := a.service.FetchBasicFocusData()
 	a.views.CollectionsList.RenderCollections(d.Collections)

@@ -14,9 +14,10 @@ type AppViewState struct {
 func (s AppViewState) String() string {
 	var builder strings.Builder
 
-	builder.WriteString("FocusedView: " + s.FocusedView + "\n")
-	builder.WriteString("FocusedCollectionId: " + s.FocusedCollectionId + "\n")
-	// builder.WriteString("FocusedRequestIds:\n")
+	builder.WriteString("\n")
+	builder.WriteString("  Focused View: " + s.FocusedView + "\n")
+	builder.WriteString("  Focused Collection Id: " + s.FocusedCollectionId + "\n")
+	builder.WriteString("  Collection with Focused Requests:"+ "\n")
 
 	for collectionID, requestID := range s.FocusedRequestIds {
 		builder.WriteString(fmt.Sprintf("  [%s] -> %s\n", collectionID, requestID))
