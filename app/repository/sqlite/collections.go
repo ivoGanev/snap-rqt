@@ -13,6 +13,7 @@ type SQLiteCollectionRepository struct {
 	db *sql.DB
 }
 
+var ErrCollectionNotFound = errors.New("collection_not_found")
 
 func NewCollectionRepository(sqliteDb *SQLiteDb) *SQLiteCollectionRepository {
 	repo := &SQLiteCollectionRepository{
@@ -145,7 +146,7 @@ func (s *SQLiteCollectionRepository) GetCollection(id string) (entity.Collection
 	err := s.db.QueryRow(query, id).Scan(&col.Id, &col.Name, &col.Description, &col.CreatedAt, &modifiedAt, &col.RowPosition)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return entity.Collection{}, errors.New("collection not found")
+			return entity.Collection{}, ErrCollectionNotFound
 		}
 		return entity.Collection{}, fmt.Errorf("failed to query collection: %w", err)
 	}

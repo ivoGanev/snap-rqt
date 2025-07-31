@@ -95,7 +95,7 @@ func (app *AppView) Init() {
 	var lrcontent = tview.NewFlex()
 	lrcontent.
 		AddItem(app.Views.CollectionsList, 0, 1, false).
-		AddItem(app.Views.RequestsList, 0, 3, true).
+		AddItem(app.Views.RequestsList, 0, 3, false).
 		AddItem(app.Views.ResponseWindow, 0, 3, false)
 
 	app.ViewMode = MODE_LANDING_VIEW
@@ -106,7 +106,7 @@ func (app *AppView) Init() {
 		SetDirection(tview.FlexRow).
 		AddItem(views.HotkeysHelp, 5, 0, false).
 		AddItem(views.RequestHeaderBar, 3, 0, false).
-		AddItem(lrcontent, 0, 10, true)
+		AddItem(lrcontent, 0, 10, false)
 
 	body.AddItem(views.StatusBar, 1, 0, false)
 
@@ -157,7 +157,9 @@ func (app *AppView) Init() {
 		}
 		return event
 	})
+}
 
+func (app *AppView) Start(){	
 	// Start the app
 	if err := app.
 		SetFocus(app.Pages).

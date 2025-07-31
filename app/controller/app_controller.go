@@ -16,8 +16,6 @@ type AppController struct {
 	service *service.AppService
 }
 
-
-
 func NewAppController(app view.AppView, appService *service.AppService) AppController {
 	var controller = AppController{
 		&app,
@@ -29,12 +27,14 @@ func NewAppController(app view.AppView, appService *service.AppService) AppContr
 }
 
 func (a *AppController) Start() {
-	// Load and render app data on load
-	d := a.service.FetchLandingData()
-	a.views.RequestsList.RenderRequests(d.RequestsBasic)
-	a.views.RequestsList.SelectRequest(d.SelectedRequest)
+	logger.Debug("Controller starting")
+
+	// Load where the user last left
+	d := a.service.GetBasicFocusData()
 	a.views.CollectionsList.RenderCollections(d.Collections)
 	a.views.CollectionsList.SelectCollection(d.SelectedCollection)
+	a.views.RequestsList.RenderRequests(d.RequestsBasic)
+	a.views.RequestsList.SelectRequest(d.SelectedRequest)
 }
 
 // App View

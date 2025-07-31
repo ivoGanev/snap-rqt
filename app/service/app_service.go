@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"snap-rq/app/constants"
 	"snap-rq/app/entity"
 	"snap-rq/app/http"
@@ -23,10 +24,33 @@ type AppService struct {
 	cancelFunc      context.CancelFunc
 }
 
+func (a *AppService) Start() {
+	// purge any focus focus data that doesn't match with the actual stored data
+	logger.Info(APP_SERVICE_LOG_TAG, "Verifying app view state integrity")
+	_, err := a.repoCollections.GetCollections()
+	tryHandleGenericError(err)
+
+	appState, err := a.repoState.GetState()
+	tryHandleGenericError(err)
+
+	for collectionId := range appState.FocusedRequestIds {
+		_, err := a.repoCollections.GetCollection(collectionId)
+		if errors.Is(err, sqlite.ErrCollectionNotFound) {
+			delete(appState.FocusedRequestIds, collectionId)
+			logger.Warning(APP_SERVICE_LOG_TAG, "Verifying app view state integrity failed: deleting non-existing focus collection id",  collectionId)
+			if appState.FocusedCollectionId == collectionId {
+				appState.FocusedCollectionId = ""
+			}
+		}
+	}
+	a.repoState.SetState(appState)
+}
+
 func NewAppService() *AppService {
 	db, err := sqlite.NewDb(DB_FILENAME)
 	if err != nil {
 		logger.Error(APP_SERVICE_LOG_TAG, "Failed to initialise SQLite DB:", err)
+		panic(err)
 	}
 	collectionsRepository := sqlite.NewCollectionRepository(db)
 	requestsRepository := sqlite.NewRequestsRepository(db)
@@ -41,7 +65,7 @@ func NewAppService() *AppService {
 	return appService
 }
 
-func (a *AppService) FetchLandingData() entity.BasicFocusData {
+func (a *AppService) GetBasicFocusData() entity.BasicFocusData {
 	collections, err := a.repoCollections.GetCollections()
 	tryHandleGenericError(err)
 
