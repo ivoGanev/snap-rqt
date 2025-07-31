@@ -37,7 +37,7 @@ func (a *AppService) Start() {
 		_, err := a.repoCollections.GetCollection(collectionId)
 		if errors.Is(err, sqlite.ErrCollectionNotFound) {
 			delete(appState.FocusedRequestIds, collectionId)
-			logger.Warning(APP_SERVICE_LOG_TAG, "Verifying app view state integrity failed: deleting non-existing focus collection id",  collectionId)
+			logger.Warning(APP_SERVICE_LOG_TAG, "Verifying app view state integrity failed: deleting non-existing focus collection id", collectionId)
 			if appState.FocusedCollectionId == collectionId {
 				appState.FocusedCollectionId = ""
 			}
@@ -69,14 +69,25 @@ func (a *AppService) GetBasicFocusData() entity.BasicFocusData {
 	collections, err := a.repoCollections.GetCollections()
 	tryHandleGenericError(err)
 
-	cId := collections[0].Id
+	// we cannot leave the app without a collection
+	if len(collections) == 0 {
+		collection := entity.NewCollection("Default Collection", "default collection for requests", 0)
+		a.repoCollections.CreateCollection(&collection)
+
+		// refresh the collections data
+		collections, err = a.repoCollections.GetCollections()
+		tryHandleGenericError(err)
+	}
+
+	cId := a.getFocusedCollectionId()
+
 	requests, err := a.repoRequests.GetRequestsBasic(cId)
 	tryHandleGenericError(err)
 
 	return entity.BasicFocusData{
 		Collections:        collections,
 		RequestsBasic:      requests,
-		SelectedCollection: a.GetFocusedCollection(),
+		SelectedCollection: a.getFocusedCollection(),
 		SelectedRequest:    a.GetFocusedRequest(),
 	}
 }
@@ -122,7 +133,7 @@ func (a *AppService) ChangeFocusedCollection(focusedCollectionId string) entity.
 	err = a.repoState.SetState(state)
 	tryHandleGenericError(err)
 
-	return a.FetchBasicFocusData()
+	return a.GetBasicFocusData()
 }
 
 func (a *AppService) ChangeFocusedRequest(selectedRequest entity.RequestBasic) {
@@ -153,23 +164,6 @@ func (a *AppService) RemoveRequest(requestId string, position int) {
 	logger.Debug(APP_SERVICE_LOG_TAG, "Remove request from repository with id", requestId, "belonging to collection id", requestId)
 }
 
-func (a *AppService) FetchBasicFocusData() entity.BasicFocusData {
-	collections, err := a.repoCollections.GetCollections()
-	tryHandleGenericError(err)
-
-	cId := a.getFocusedCollectionId()
-
-	requests, err := a.repoRequests.GetRequestsBasic(cId)
-	tryHandleGenericError(err)
-
-	return entity.BasicFocusData{
-		Collections:        collections,
-		RequestsBasic:      requests,
-		SelectedCollection: a.GetFocusedCollection(),
-		SelectedRequest:    a.GetFocusedRequest(),
-	}
-}
-
 func (a *AppService) GetFocusedRequest() entity.Request {
 	rId := a.getFocusedRequestId()
 	logger.Info(APP_SERVICE_LOG_TAG, "Fetched focused request id", rId)
@@ -177,22 +171,6 @@ func (a *AppService) GetFocusedRequest() entity.Request {
 	request, err := a.repoRequests.GetRequest(rId)
 	tryHandleGenericError(err)
 	return request
-}
-
-func (a *AppService) GetFocusedCollection() entity.Collection {
-	cId := a.getFocusedCollectionId()
-	logger.Info(APP_SERVICE_LOG_TAG, "Fetched focused collection id", cId)
-
-	col, err := a.repoCollections.GetCollection(cId)
-	if err != nil {
-		// self-heal if we didn't find a collection and fallback to the first one available
-		cols, err := a.repoCollections.GetCollections()
-		tryHandleGenericError(err)
-
-		col = cols[0]
-		logger.Error(APP_SERVICE_LOG_TAG, "Collection Self-Heal: the focused collection was not found")
-	}
-	return col
 }
 
 func (a *AppService) CreateCollection(position int) {
@@ -231,6 +209,23 @@ func (a *AppService) getFocusedRequestId() string {
 	collectionID := a.getFocusedCollectionId()
 	requestID := a.getFocusedRequestByCollection(collectionID)
 	return requestID
+}
+
+func (a *AppService) getFocusedCollection() entity.Collection {
+	cId := a.getFocusedCollectionId()
+	logger.Info(APP_SERVICE_LOG_TAG, "Fetched focused collection id", cId)
+
+	col, err := a.repoCollections.GetCollection(cId)
+	if err != nil {
+		logger.Error(APP_SERVICE_LOG_TAG, "Collection Self-Heal: the focused collection was not found")
+
+		// self-heal if we didn't find a collection and fallback to the first one available
+		cols, err := a.repoCollections.GetCollections()
+		tryHandleGenericError(err)
+
+		col = cols[0]
+	}
+	return col
 }
 
 // Generic error handler

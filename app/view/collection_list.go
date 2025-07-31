@@ -20,12 +20,10 @@ func (r *CollectionsList) SetListener(listener CollectionListListener) {
 type CollectionsList struct {
 	*tview.Table
 	listener    CollectionListListener
-	collections map[string]int // Mapping: collection id -> collection row
 }
 
 func (r *CollectionsList) SelectCollection(collection entity.Collection) {
-	collectionRow := r.collections[collection.Id]
-	r.Select(collectionRow, 0)
+	r.Select(collection.RowPosition, 0)
 }
 
 func NewColletionsList() *CollectionsList {
@@ -59,6 +57,7 @@ func (r *CollectionsList) Init() {
 			if cell != nil {
 				if col, ok := cell.GetReference().(entity.Collection); ok {
 					r.listener.OnCollectionRemove(col, row)
+					r.Select(row-1, 0)
 				}
 			}
 			return nil

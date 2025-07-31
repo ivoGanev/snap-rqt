@@ -89,6 +89,7 @@ func (r *RequestsList) Init() {
 		} else if event.Key() == tcell.KeyDEL || event.Key() == tcell.KeyDelete {
 			row, column := r.GetSelection()
 			r.listener.OnRequestListRemove(r.getRequest(row, column), row)
+			r.Select(row-1, column)
 			return nil
 		} else if event.Rune() == 'd' {
 			row, column := r.GetSelection()

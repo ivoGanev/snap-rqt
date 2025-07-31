@@ -70,7 +70,7 @@ func (a *AppController) OnUrlInputTextChanged(urlText string) {
 func (a *AppController) OnMethodSelection(method string) {
 	a.service.UpdateFocusedRequest(entity.ModRequest{Method: &method})
 
-	d := a.service.FetchBasicFocusData()
+	d := a.service.GetBasicFocusData()
 	a.views.RequestsList.RenderRequests(d.RequestsBasic)
 }
 
@@ -110,7 +110,7 @@ func (a *AppController) OnRequestListNameSelected(selected entity.RequestBasic) 
 
 func (a *AppController) OnRequestListAdd(position int) {
 	a.service.AddRequest(position)
-	d := a.service.FetchBasicFocusData()
+	d := a.service.GetBasicFocusData()
 
 	logger.Info(APP_CONTROLLER_LOG_TAG, "User requested to add a request at user position", position)
 
@@ -124,7 +124,7 @@ func (a *AppController) OnRequestListDuplicate(entity.RequestBasic) {
 func (a *AppController) OnRequestListRemove(request entity.RequestBasic, position int) {
 	logger.Info(APP_CONTROLLER_LOG_TAG, "User requested to delete request", request, "at user position", position)
 	a.service.RemoveRequest(request.Id, position)
-	d := a.service.FetchBasicFocusData()
+	d := a.service.GetBasicFocusData()
 	a.views.RequestsList.RenderRequests(d.RequestsBasic)
 
 	s := fmt.Sprintf("Removed request %s", request.Name)
@@ -144,13 +144,13 @@ func (a *AppController) OnFocusedCollectionChanged(changedCollection entity.Coll
 func (a *AppController) OnCollectionAdd(position int) {
 	logger.Info(APP_CONTROLLER_LOG_TAG, "User requested to add a collection at user position", position)
 	a.service.CreateCollection(position)
-	d := a.service.FetchBasicFocusData()
+	d := a.service.GetBasicFocusData()
 	a.views.CollectionsList.RenderCollections(d.Collections)
 }
 
 func (a *AppController) OnCollectionRemove(collection entity.Collection, position int) {
 	logger.Info(APP_CONTROLLER_LOG_TAG, "User requested to remove a collection", collection, "at position", position)
 	a.service.DeleteCollection(collection.Id, position)
-	d := a.service.FetchBasicFocusData()
+	d := a.service.GetBasicFocusData()
 	a.views.CollectionsList.RenderCollections(d.Collections)
 }
