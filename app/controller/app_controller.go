@@ -16,6 +16,7 @@ type AppController struct {
 	service *service.AppService
 }
 
+
 func NewAppController(app view.AppView, appService *service.AppService) AppController {
 	var controller = AppController{
 		&app,
@@ -35,7 +36,7 @@ func (c *AppController) Start() {
 	// Selecting a collection will automatically render the requests
 	c.views.CollectionsList.RenderCollections(d.Collections)
 	c.views.CollectionsList.SelectCollection(d.SelectedCollection)
-	
+
 	logger.Debug("Element focus: ", c.app.Application.GetFocus())
 }
 
@@ -133,6 +134,12 @@ func (c *AppController) OnRequestListRemove(request entity.RequestBasic, positio
 	c.views.StatusBar.SetText(s)
 }
 
+// OnRequestListEditName implements view.RequestListListener.
+func (c *AppController) OnRequestListEditName(request entity.RequestBasic) {
+	c.app.ShowEditNamePage()
+}
+
+
 // Landing View (Collection list)
 
 func (c *AppController) OnFocusedCollectionChanged(changedCollection entity.Collection) {
@@ -156,4 +163,9 @@ func (c *AppController) OnCollectionRemove(collection entity.Collection, positio
 	d := c.service.GetBasicFocusData()
 	c.views.CollectionsList.RenderCollections(d.Collections)
 	c.views.RequestsList.RenderRequests(d.RequestsBasic)
+}
+
+// OnCollectionEditName implements view.CollectionListListener.
+func (c *AppController) OnCollectionEditName(entity.Collection) {
+	c.app.ShowPage(view.PAGE_EDIT_NAME)
 }
