@@ -15,6 +15,13 @@ type Collection struct {
 	RowPosition int        `json:"row_position"` // User's logical position of the collection
 }
 
+type UpdateCollection struct {
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+	RowPosition *int    `json:"row_position,omitempty"`
+}
+
+
 func NewCollection(name string, description string, rowPosition int) Collection {
 	return Collection{
 		Id:          uuid.New().String(),
@@ -23,4 +30,20 @@ func NewCollection(name string, description string, rowPosition int) Collection 
 		CreatedAt:   time.Now(),
 		RowPosition: rowPosition,
 	}
+}
+
+func (c *Collection) Update(update UpdateCollection) {
+	now := time.Now()
+
+	if update.Name != nil {
+		c.Name = *update.Name
+	}
+	if update.Description != nil {
+		c.Description = *update.Description
+	}
+	if update.RowPosition != nil {
+		c.RowPosition = *update.RowPosition
+	}
+
+	c.ModifiedAt = &now
 }

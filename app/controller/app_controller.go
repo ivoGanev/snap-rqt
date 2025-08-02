@@ -16,7 +16,6 @@ type AppController struct {
 	service *service.AppService
 }
 
-
 func NewAppController(app view.AppView, appService *service.AppService) AppController {
 	var controller = AppController{
 		&app,
@@ -45,6 +44,38 @@ func (c *AppController) Start() {
 func (c *AppController) OnViewModeChange(mode string) {
 	request := c.service.GetFocusedRequest()
 	c.views.EditorView.SetTextArea(request)
+}
+
+// Edit name modal
+
+func (c *AppController) OnEditorModalCancel() {
+	c.app.HidePage(view.PAGE_EDIT_NAME)
+}
+
+func (c *AppController) OnEditorModalSave(text string, component int) {
+	c.app.HidePage(view.PAGE_EDIT_NAME)
+	switch component {
+	case view.EDITOR_MODAL_COMPONENT_REQUESTS:
+		c.service.UpdateFocusedRequest(entity.UpdateRequest{Name: &text})
+		d := c.service.GetBasicFocusData()
+		c.views.RequestsList.RenderRequests(d.RequestsBasic)
+	case view.EDITOR_MODAL_COMPONENT_COLLETIONS:
+		c.service.UpdateFocusedCollection(entity.UpdateCollection{Name: &text})
+		d := c.service.GetBasicFocusData()
+		c.views.CollectionsList.RenderCollections(d.Collections)
+	}
+}
+
+func (c *AppController) OnRequestListEditName(request entity.RequestBasic) {
+	c.app.ShowPage(view.PAGE_EDIT_NAME)
+	c.views.NameEditorModal.Edit(view.EDITOR_MODAL_COMPONENT_REQUESTS)
+	c.app.Focus(c.views.NameEditorModal.Input)
+}
+
+func (c *AppController) OnCollectionEditName(entity.Collection) {
+	c.app.ShowPage(view.PAGE_EDIT_NAME)
+	c.views.NameEditorModal.Edit(view.EDITOR_MODAL_COMPONENT_COLLETIONS)
+	c.app.Focus(c.views.NameEditorModal.Input)
 }
 
 // Editor View
@@ -134,12 +165,6 @@ func (c *AppController) OnRequestListRemove(request entity.RequestBasic, positio
 	c.views.StatusBar.SetText(s)
 }
 
-// OnRequestListEditName implements view.RequestListListener.
-func (c *AppController) OnRequestListEditName(request entity.RequestBasic) {
-	c.app.ShowEditNamePage()
-}
-
-
 // Landing View (Collection list)
 
 func (c *AppController) OnFocusedCollectionChanged(changedCollection entity.Collection) {
@@ -163,9 +188,4 @@ func (c *AppController) OnCollectionRemove(collection entity.Collection, positio
 	d := c.service.GetBasicFocusData()
 	c.views.CollectionsList.RenderCollections(d.Collections)
 	c.views.RequestsList.RenderRequests(d.RequestsBasic)
-}
-
-// OnCollectionEditName implements view.CollectionListListener.
-func (c *AppController) OnCollectionEditName(entity.Collection) {
-	c.app.ShowPage(view.PAGE_EDIT_NAME)
 }

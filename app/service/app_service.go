@@ -92,13 +92,23 @@ func (a *AppService) GetBasicFocusData() entity.BasicFocusData {
 	}
 }
 
-func (a *AppService) UpdateFocusedRequest(updateRequest entity.UpdateRequest) {
+func (a *AppService) UpdateFocusedRequest(update entity.UpdateRequest) {
 	rId := a.getFocusedRequestId()
 	request, err := a.repoRequests.GetRequest(rId)
 	tryHandleGenericError(err)
 
-	request.Update(updateRequest)
+	request.Update(update)
 	a.repoRequests.UpdateRequest(request)
+}
+
+
+func (a *AppService) UpdateFocusedCollection(update entity.UpdateCollection) {
+	cId := a.getFocusedCollectionId()
+	collection, err := a.repoCollections.GetCollection(cId)
+	tryHandleGenericError(err)
+
+	collection.Update(update)
+	a.repoCollections.UpdateCollection(collection)
 }
 
 func (a *AppService) SendHttpRequest(id string, onHttpResponse func(entity.HttpResult)) {

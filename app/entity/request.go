@@ -72,26 +72,26 @@ func StringToHeaders(headers string) map[string]string {
 	return result
 }
 
-func (r *Request) Update(patch UpdateRequest) {
+func (r *Request) Update(update UpdateRequest) {
 	now := time.Now()
 
-	if patch.Name != nil {
-		r.Name = *patch.Name
+	if update.Name != nil {
+		r.Name = *update.Name
 	}
-	if patch.Description != nil {
-		r.Description = *patch.Description
+	if update.Description != nil {
+		r.Description = *update.Description
 	}
-	if patch.Method != nil {
-		r.Method = *patch.Method
+	if update.Method != nil {
+		r.Method = *update.Method
 	}
-	if patch.Url != nil {
-		r.Url = *patch.Url
+	if update.Url != nil {
+		r.Url = *update.Url
 	}
-	if patch.Headers != nil {
-		r.Headers = *patch.Headers
+	if update.Headers != nil {
+		r.Headers = *update.Headers
 	}
-	if patch.Body != nil {
-		r.Body = *patch.Body
+	if update.Body != nil {
+		r.Body = *update.Body
 	}
 
 	r.ModifiedAt = &now
