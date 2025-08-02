@@ -185,12 +185,13 @@ func (m *SQLiteRequestsRepository) GetRequest(id string) (entity.Request, error)
 func (m *SQLiteRequestsRepository) UpdateRequest(updated entity.Request) (entity.Request, error) {
 	query := `
 	UPDATE requests
-	SET collection_id = ?, row_position = ?, method = ?, url = ?, headers = ?, body = ?
+	SET collection_id = ?, name = ?, row_position = ?, method = ?, url = ?, headers = ?, body = ?
 	WHERE id = ?
 `
 
 	res, err := m.db.Exec(query,
 		updated.CollectionID,
+		updated.Name,
 		updated.RowPosition,
 		updated.Method,
 		updated.Url,

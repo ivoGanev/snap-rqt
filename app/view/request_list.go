@@ -19,6 +19,7 @@ type RequestListListener interface {
 	OnRequestListAdd(position int) //  'position' indicates the position of the request currently in focus (i.e. not the position where the user expects the next request to be added)
 	OnRequestListRemove(request entity.RequestBasic, position int)
 	OnRequestListDuplicate(request entity.RequestBasic)
+	OnRequestListEditName(request entity.RequestBasic)
 }
 
 func (r *RequestsList) SetListener(listener RequestListListener) {
@@ -87,6 +88,10 @@ func (r *RequestsList) Init() {
 		} else if event.Rune() == 'd' {
 			row, column := r.GetSelection()
 			r.listener.OnRequestListDuplicate(r.getRequest(row, column))
+			return nil
+		} else if event.Rune() == 'n' {
+			row, column := r.GetSelection()
+			r.listener.OnRequestListEditName(r.getRequest(row, column))
 			return nil
 		}
 		return event

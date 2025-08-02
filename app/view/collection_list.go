@@ -1,16 +1,17 @@
 package view
 
 import (
-	"sort"
-	"snap-rq/app/entity"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"snap-rq/app/entity"
+	"sort"
 )
 
 type CollectionListListener interface {
 	OnFocusedCollectionChanged(entity.Collection)
 	OnCollectionAdd(position int)
 	OnCollectionRemove(collection entity.Collection, position int)
+	OnCollectionEditName(entity.Collection)
 }
 
 func (r *CollectionsList) SetListener(listener CollectionListListener) {
@@ -19,7 +20,7 @@ func (r *CollectionsList) SetListener(listener CollectionListListener) {
 
 type CollectionsList struct {
 	*tview.Table
-	listener    CollectionListListener
+	listener CollectionListListener
 }
 
 func (r *CollectionsList) SelectCollection(collection entity.Collection) {
@@ -51,6 +52,13 @@ func (r *CollectionsList) Init() {
 			row, _ := r.GetSelection()
 			r.listener.OnCollectionAdd(row)
 			r.Select(row, 0)
+			return nil
+		} else if event.Rune() == 'n' {
+			row, _ := r.GetSelection()
+			cell := r.GetCell(row, 0)
+			if col, ok := cell.GetReference().(entity.Collection); ok {
+				r.listener.OnCollectionEditName(col)
+			}
 			return nil
 		} else if event.Key() == tcell.KeyDEL || event.Key() == tcell.KeyDelete {
 			row, _ := r.GetSelection()

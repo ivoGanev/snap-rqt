@@ -21,7 +21,7 @@ func main() {
 	app.Views.RequestsList.SetListener(&controller)
 	app.Views.RequestHeaderBar.SetListener(&controller)
 	app.Views.EditorView.SetListener(&controller)
-
+	app.Views.NameEditorModal.SetListener(&controller)
 	app.Init()
 	service.Start()
 	controller.Start()

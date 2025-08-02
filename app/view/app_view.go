@@ -17,6 +17,7 @@ type Views struct {
 	HotkeysHelp      *HotkeysHelp
 	StatusBar        *StatusBar
 	Debugger         *tview.TextArea
+	NameEditorModal  *NameEditorModal
 }
 
 type AppView struct {
@@ -33,6 +34,7 @@ const (
 	VIEW_NAME_RESPONSE    = "response"
 	VIEW_NAME_COLLECTIONS = "collections"
 	PAGE_LANDING_VIEW     = "landing-view"
+	PAGE_EDIT_NAME        = "edit-name"
 	ENABLE_DEBUG          = false
 	MODE_LANDING_VIEW     = "lv"
 	MODE_EDITOR_VIEW      = "ev"
@@ -58,6 +60,7 @@ func NewAppView() AppView {
 	var requestsListView = NewRequestsList(&styleProvider)
 	var responseWindowView = NewResponseWindow(application)
 	var statusBar = NewStatusBar()
+	var nameEditor = NewNameEditorModal()
 
 	var views = Views{
 		CollectionsList:  collectionListView,
@@ -68,6 +71,7 @@ func NewAppView() AppView {
 		StatusBar:        statusBar,
 		EditorView:       editorView,
 		Debugger:         tview.NewTextArea(),
+		NameEditorModal:  nameEditor,
 	}
 
 	appView := AppView{
@@ -112,7 +116,8 @@ func (app *AppView) Init() {
 		body.AddItem(views.Debugger, 0, 1, false)
 	}
 
-	app.Pages.AddPage(string(PAGE_LANDING_VIEW), body, true, true) // keeping this as separate page since we may need additional overlays
+	app.Pages.AddPage(string(PAGE_LANDING_VIEW), body, true, true)
+	app.Pages.AddPage(string(PAGE_EDIT_NAME), views.NameEditorModal, true, false)
 
 	// set hotkeys
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
