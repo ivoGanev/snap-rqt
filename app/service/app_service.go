@@ -37,7 +37,7 @@ func (a *AppService) Start() {
 		_, err := a.repoCollections.GetCollection(collectionId)
 		if errors.Is(err, sqlite.ErrCollectionNotFound) {
 			delete(appState.FocusedRequestIds, collectionId)
-			logger.Warning(APP_SERVICE_LOG_TAG, "Verifying app view state integrity failed: deleting non-existing focus collection id", collectionId)
+			logger.Warning(APP_SERVICE_LOG_TAG, "Verifying app view state integrity status: deleting non-existing focus collection id", collectionId)
 			if appState.FocusedCollectionId == collectionId {
 				appState.FocusedCollectionId = ""
 			}
@@ -92,12 +92,12 @@ func (a *AppService) GetBasicFocusData() entity.BasicFocusData {
 	}
 }
 
-func (a *AppService) UpdateFocusedRequest(modRequest entity.ModRequest) {
+func (a *AppService) UpdateFocusedRequest(updateRequest entity.UpdateRequest) {
 	rId := a.getFocusedRequestId()
 	request, err := a.repoRequests.GetRequest(rId)
 	tryHandleGenericError(err)
 
-	request.Mod(modRequest)
+	request.Update(updateRequest)
 	a.repoRequests.UpdateRequest(request)
 }
 
@@ -157,7 +157,7 @@ func (a *AppService) AddRequest(position int) {
 	logger.Debug(APP_SERVICE_LOG_TAG, "Add new request to repository", request, "for collection id", cId)
 }
 
-func (a *AppService) RemoveRequest(requestId string, position int) {
+func (a *AppService) DeleteRequest(requestId string, position int) {
 	cId := a.getFocusedCollectionId()
 	a.repoRequests.ShiftRequests(cId, position, repository.SHIFT_DOWN)
 	a.repoRequests.DeleteRequest(requestId)
@@ -173,7 +173,8 @@ func (a *AppService) GetFocusedRequest() entity.Request {
 	return request
 }
 
-func (a *AppService) CreateCollection(position int) {
+func (a *AppService) AddCollection(position int) {
+	position += 1
 	collection := entity.NewCollection("New Collection", "", position)
 
 	err := a.repoCollections.ShiftCollections(position, repository.SHIFT_UP)
@@ -189,9 +190,18 @@ func (a *AppService) DeleteCollection(cId string, position int) {
 
 	err = a.repoCollections.DeleteCollection(cId)
 	tryHandleGenericError(err)
+
+	a.deleteFocusedCollection(cId)
 }
 
-// State Getters
+// State
+
+func (a *AppService) deleteFocusedCollection(cId string) {
+	state, err := a.repoState.GetState()
+	tryHandleGenericError(err)
+	delete(state.FocusedRequestIds, cId)
+	a.repoState.SetState(state)
+}
 
 func (a *AppService) getFocusedRequestByCollection(cId string) string {
 	state, err := a.repoState.GetState()

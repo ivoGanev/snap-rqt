@@ -9,14 +9,14 @@ import (
 )
 
 type Views struct {
-	CollectionsList   *CollectionsList
-	ResponseWindow    *ResponseWindow
-	RequestsList      *RequestsList
-	EditorView        *EditorView
-	RequestHeaderBar  *RequestHeaderBar
-	HotkeysHelp       *HotkeysHelp
-	StatusBar         *StatusBar
-	Debugger          *tview.TextArea
+	CollectionsList  *CollectionsList
+	ResponseWindow   *ResponseWindow
+	RequestsList     *RequestsList
+	EditorView       *EditorView
+	RequestHeaderBar *RequestHeaderBar
+	HotkeysHelp      *HotkeysHelp
+	StatusBar        *StatusBar
+	Debugger         *tview.TextArea
 }
 
 type AppView struct {
@@ -29,13 +29,13 @@ type AppView struct {
 }
 
 const (
-	VIEW_NAME_REQUESTS               = "requests"
-	VIEW_NAME_RESPONSE               = "response"
-	VIEW_NAME_COLLECTIONS            = "collections"
-	PAGE_LANDING_VIEW                = "landing-view"
-	ENABLE_DEBUG                     = false
-	MODE_LANDING_VIEW                = "lv"
-	MODE_EDITOR_VIEW                 = "ev"
+	VIEW_NAME_REQUESTS    = "requests"
+	VIEW_NAME_RESPONSE    = "response"
+	VIEW_NAME_COLLECTIONS = "collections"
+	PAGE_LANDING_VIEW     = "landing-view"
+	ENABLE_DEBUG          = false
+	MODE_LANDING_VIEW     = "lv"
+	MODE_EDITOR_VIEW      = "ev"
 )
 
 type AppViewListener interface {
@@ -60,14 +60,14 @@ func NewAppView() AppView {
 	var statusBar = NewStatusBar()
 
 	var views = Views{
-		CollectionsList:   collectionListView,
-		HotkeysHelp:       hotkeyHelpView,
-		RequestHeaderBar:  requestHeaderBar,
-		RequestsList:      requestsListView,
-		ResponseWindow:    responseWindowView,
-		StatusBar:         statusBar,
-		EditorView:        editorView,
-		Debugger:          tview.NewTextArea(),
+		CollectionsList:  collectionListView,
+		HotkeysHelp:      hotkeyHelpView,
+		RequestHeaderBar: requestHeaderBar,
+		RequestsList:     requestsListView,
+		ResponseWindow:   responseWindowView,
+		StatusBar:        statusBar,
+		EditorView:       editorView,
+		Debugger:         tview.NewTextArea(),
 	}
 
 	appView := AppView{
@@ -93,20 +93,18 @@ func (app *AppView) Init() {
 
 	// Build landing page
 	var lrcontent = tview.NewFlex()
-	lrcontent.
-		AddItem(app.Views.CollectionsList, 0, 1, false).
-		AddItem(app.Views.RequestsList, 0, 3, false).
-		AddItem(app.Views.ResponseWindow, 0, 3, false)
+	lrcontent.AddItem(app.Views.CollectionsList, 0, 1, false)
+	lrcontent.AddItem(app.Views.RequestsList, 0, 3, false)
+	lrcontent.AddItem(app.Views.ResponseWindow, 0, 3, false)
 
 	app.ViewMode = MODE_LANDING_VIEW
 
 	var body = tview.NewFlex()
 
-	body.
-		SetDirection(tview.FlexRow).
-		AddItem(views.HotkeysHelp, 5, 0, false).
-		AddItem(views.RequestHeaderBar, 3, 0, false).
-		AddItem(lrcontent, 0, 10, false)
+	body.SetDirection(tview.FlexRow)
+	body.AddItem(views.HotkeysHelp, 5, 0, false)
+	body.AddItem(views.RequestHeaderBar, 3, 0, false)
+	body.AddItem(lrcontent, 0, 10, false)
 
 	body.AddItem(views.StatusBar, 1, 0, false)
 
@@ -114,8 +112,7 @@ func (app *AppView) Init() {
 		body.AddItem(views.Debugger, 0, 1, false)
 	}
 
-	app.Pages.
-		AddPage(string(PAGE_LANDING_VIEW), body, true, true) // keeping this as separate page since we may need additional overlays
+	app.Pages.AddPage(string(PAGE_LANDING_VIEW), body, true, true) // keeping this as separate page since we may need additional overlays
 
 	// set hotkeys
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
@@ -159,10 +156,9 @@ func (app *AppView) Init() {
 	})
 }
 
-func (app *AppView) Start(){	
+func (app *AppView) Start() {
 	// Start the app
 	if err := app.
-		SetFocus(app.Pages).
 		SetRoot(app.Pages, true).
 		EnableMouse(true).
 		Run(); err != nil {

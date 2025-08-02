@@ -15,7 +15,7 @@ type RawHttpRequest struct {
 	Body    string            `json:"body,omitempty"`
 }
 
-type ModRequest struct {
+type UpdateRequest struct {
 	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
 	Method      *string `json:"method,omitempty"`
@@ -72,7 +72,7 @@ func StringToHeaders(headers string) map[string]string {
 	return result
 }
 
-func (r *Request) Mod(patch ModRequest) {
+func (r *Request) Update(patch UpdateRequest) {
 	now := time.Now()
 
 	if patch.Name != nil {

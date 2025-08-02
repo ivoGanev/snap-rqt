@@ -13,7 +13,7 @@ const (
 
 type EditorViewListener interface {
 	OnEditorModeChanged()
-	OnEditTextArea(editorMode int, edit string)
+	OnEditorEditTextArea(editorMode int, edit string)
 }
 
 func (r *EditorView) SetListener(l EditorViewListener) {
@@ -49,7 +49,7 @@ func (r *EditorView) Init() {
 	r.textArea = tview.NewTextArea()
 	r.textArea.SetBorder(true)
 	r.textArea.SetChangedFunc(func() {
-		r.listener.OnEditTextArea(r.currentMode, r.textArea.GetText())
+		r.listener.OnEditorEditTextArea(r.currentMode, r.textArea.GetText())
 	})
 
 	// Update buttons based on selected mode

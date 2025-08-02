@@ -1,8 +1,8 @@
 package view
 
 import (
+	"sort"
 	"snap-rq/app/entity"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -50,6 +50,7 @@ func (r *CollectionsList) Init() {
 		if event.Rune() == 'a' {
 			row, _ := r.GetSelection()
 			r.listener.OnCollectionAdd(row)
+			r.Select(row, 0)
 			return nil
 		} else if event.Key() == tcell.KeyDEL || event.Key() == tcell.KeyDelete {
 			row, _ := r.GetSelection()
@@ -68,6 +69,12 @@ func (r *CollectionsList) Init() {
 
 func (r *CollectionsList) RenderCollections(collections []entity.Collection) {
 	r.Clear()
+
+	// Sort collections by RowPosition ascending
+	sort.Slice(collections, func(i, j int) bool {
+		return collections[i].RowPosition < collections[j].RowPosition
+	})
+
 	for i, collection := range collections {
 		nameCell := tview.NewTableCell(collection.Name).
 			SetReference(collection)
