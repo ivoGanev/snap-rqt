@@ -13,6 +13,7 @@ var (
 	Info    func(v ...any)
 	Warning func(v ...any)
 	Error   func(v ...any)
+	Debug   func(v ...any)
 )
 
 func Init(logPath string) {
@@ -35,14 +36,29 @@ func Init(logPath string) {
 	}
 
 	Info = func(v ...any) {
-		logger.Println(append([]any{"[INFO]"}, v...)...)
+		logger.Println(append([]any{"[INFO]"}, sanitizeArgs(v)...)...)
 	}
 
 	Warning = func(v ...any) {
-		logger.Println(append([]any{"[WARNING]"}, v...)...)
+		logger.Println(append([]any{"[WARNING]"}, sanitizeArgs(v)...)...)
 	}
 
 	Error = func(v ...any) {
-		logger.Println(append([]any{"[ERROR]"}, v...)...)
+		logger.Println(append([]any{"[ERROR]"}, sanitizeArgs(v)...)...)
 	}
+
+	Debug = func(v ...any) {
+		logger.Println(append([]any{"[DEBUG]"}, sanitizeArgs(v)...)...)
+	}
+}
+
+func sanitizeArgs(args []any) []any {
+	for i, arg := range args {
+		if arg == nil {
+			args[i] = "??? (nil)"
+		} else if str, ok := arg.(string); ok && str == "" {
+			args[i] = "??? (empty string)"
+		}
+	}
+	return args
 }

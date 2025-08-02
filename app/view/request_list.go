@@ -25,15 +25,9 @@ func (r *RequestsList) SetListener(listener RequestListListener) {
 	r.listener = listener
 }
 
-type RequestRow struct {
-	Row     int
-	Request entity.RequestBasic
-}
-
 type RequestsList struct {
 	*tview.Table
 	styles   style.StyleProvider
-	requests map[string]int // Mapping: request id -> request row
 	listener RequestListListener
 }
 
@@ -41,7 +35,6 @@ func (r *RequestsList) RenderRequests(requests []entity.RequestBasic) {
 	r.Clear()
 	for _, request := range requests {
 		row := request.RowPosition
-		r.requests[request.Id] = row
 
 		methodText := r.styles.GetStyledRequestMethod(string(request.Method))
 		methodCell := tview.NewTableCell(methodText).SetReference(request)
@@ -57,7 +50,6 @@ func NewRequestsList(styles style.StyleProvider) *RequestsList {
 	requestsView := RequestsList{
 		Table:    tview.NewTable(),
 		styles:   styles,
-		requests: make(map[string]int),
 	}
 	return &requestsView
 }
@@ -85,10 +77,12 @@ func (r *RequestsList) Init() {
 		if event.Rune() == 'a' {
 			row, _ := r.GetSelection()
 			r.listener.OnRequestListAdd(row)
+			r.Select(row, REQUEST_COLUMN)
 			return nil
 		} else if event.Key() == tcell.KeyDEL || event.Key() == tcell.KeyDelete {
 			row, column := r.GetSelection()
 			r.listener.OnRequestListRemove(r.getRequest(row, column), row)
+			r.Select(row-1, REQUEST_COLUMN)
 			return nil
 		} else if event.Rune() == 'd' {
 			row, column := r.GetSelection()
@@ -101,9 +95,8 @@ func (r *RequestsList) Init() {
 
 // Selects an item from the request list
 func (r *RequestsList) SelectRequest(request entity.Request) {
-	requestRow := r.requests[request.Id]
-	r.Select(requestRow, REQUEST_COLUMN)
-	r.GetCell(requestRow, METHOD_COLUMN).SetText(r.styles.GetStyledRequestMethod(string(request.Method)))
+	r.Select(request.RowPosition, REQUEST_COLUMN)
+	r.GetCell(request.RowPosition, METHOD_COLUMN).SetText(r.styles.GetStyledRequestMethod(string(request.Method)))
 }
 
 func (r *RequestsList) getRequest(row int, column int) entity.RequestBasic {

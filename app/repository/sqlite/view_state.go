@@ -84,7 +84,7 @@ func (m *SQLiteViewStateRepository) SetState(state entity.AppViewState) error {
 		return fmt.Errorf("failed to store view state: %w", err)
 	}
 
-	logger.Println(VIEW_STATE_LOG_TAG, "Set state:", state)
+	logger.Debug(VIEW_STATE_LOG_TAG, "App State Snapshot", state)
 	return nil
 }
 

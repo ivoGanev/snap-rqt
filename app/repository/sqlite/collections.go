@@ -13,6 +13,7 @@ type SQLiteCollectionRepository struct {
 	db *sql.DB
 }
 
+var ErrCollectionNotFound = errors.New("collection_not_found")
 
 func NewCollectionRepository(sqliteDb *SQLiteDb) *SQLiteCollectionRepository {
 	repo := &SQLiteCollectionRepository{
@@ -82,7 +83,7 @@ func (m *SQLiteCollectionRepository) ShiftCollections(position int, direction st
 }
 
 func (s *SQLiteCollectionRepository) GetCollections() ([]entity.Collection, error) {
-	query := `SELECT id, name, description, created_at, modified_at FROM collections ORDER BY created_at DESC`
+	query := `SELECT id, name, description, created_at, modified_at, row_position FROM collections ORDER BY created_at DESC`
 
 	rows, err := s.db.Query(query)
 	if err != nil {
@@ -94,7 +95,7 @@ func (s *SQLiteCollectionRepository) GetCollections() ([]entity.Collection, erro
 	for rows.Next() {
 		var col entity.Collection
 		var modifiedAt sql.NullTime
-		err := rows.Scan(&col.Id, &col.Name, &col.Description, &col.CreatedAt, &modifiedAt)
+		err := rows.Scan(&col.Id, &col.Name, &col.Description, &col.CreatedAt, &modifiedAt, &col.RowPosition)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan collection: %w", err)
 		}
@@ -145,7 +146,7 @@ func (s *SQLiteCollectionRepository) GetCollection(id string) (entity.Collection
 	err := s.db.QueryRow(query, id).Scan(&col.Id, &col.Name, &col.Description, &col.CreatedAt, &modifiedAt, &col.RowPosition)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return entity.Collection{}, errors.New("collection not found")
+			return entity.Collection{}, ErrCollectionNotFound
 		}
 		return entity.Collection{}, fmt.Errorf("failed to query collection: %w", err)
 	}

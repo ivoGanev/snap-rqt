@@ -3,17 +3,18 @@ package controller
 import (
 	"fmt"
 	"snap-rq/app/entity"
+	logger "snap-rq/app/log"
 	"snap-rq/app/service"
 	"snap-rq/app/view"
 )
+
+const APP_CONTROLLER_LOG_TAG = "[App Controller]"
 
 type AppController struct {
 	app     *view.AppView
 	views   *view.Views
 	service *service.AppService
 }
-
-
 
 func NewAppController(app view.AppView, appService *service.AppService) AppController {
 	var controller = AppController{
@@ -25,122 +26,134 @@ func NewAppController(app view.AppView, appService *service.AppService) AppContr
 	return controller
 }
 
-func (a *AppController) Start() {
-	// Load and render app data on load
-	d := a.service.FetchLandingData()
-	a.views.RequestsList.RenderRequests(d.RequestsBasic)
-	a.views.RequestsList.SelectRequest(d.SelectedRequest)
-	a.views.CollectionsList.RenderCollections(d.Collections)
-	a.views.CollectionsList.SelectCollection(d.SelectedCollection)
+func (c *AppController) Start() {
+	logger.Debug("Controller starting")
+
+	// Load where the user last left
+	d := c.service.GetBasicFocusData()
+
+	// Selecting a collection will automatically render the requests
+	c.views.CollectionsList.RenderCollections(d.Collections)
+	c.views.CollectionsList.SelectCollection(d.SelectedCollection)
+	
+	logger.Debug("Element focus: ", c.app.Application.GetFocus())
 }
 
 // App View
 
-func (a *AppController) OnViewModeChange(mode string) {
-	request := a.service.GetFocusedRequest()
-	a.views.EditorView.SetTextArea(request)
+func (c *AppController) OnViewModeChange(mode string) {
+	request := c.service.GetFocusedRequest()
+	c.views.EditorView.SetTextArea(request)
 }
 
 // Editor View
 
-func (a *AppController) OnEditTextArea(editorMode int, edit string) {
+func (c *AppController) OnEditorEditTextArea(editorMode int, edit string) {
 	// change the body|header of current HTTP method selected
 	switch editorMode {
 	case view.EDITOR_VIEW_MODE_BODY:
-		a.service.UpdateFocusedRequest(entity.ModRequest{Body: &edit})
+		c.service.UpdateFocusedRequest(entity.UpdateRequest{Body: &edit})
 	case view.EDITOR_VIEW_MODE_HEADERS:
-		a.service.UpdateFocusedRequest(entity.ModRequest{Headers: &edit})
+		c.service.UpdateFocusedRequest(entity.UpdateRequest{Headers: &edit})
 	}
 }
 
-func (a *AppController) OnEditorModeChanged() {
-	request := a.service.GetFocusedRequest()
-	a.views.EditorView.SetTextArea(request)
+func (c *AppController) OnEditorModeChanged() {
+	request := c.service.GetFocusedRequest()
+	c.views.EditorView.SetTextArea(request)
 }
 
-func (a *AppController) OnUrlInputTextChanged(urlText string) {
-	a.service.UpdateFocusedRequest(entity.ModRequest{Url: &urlText})
+func (c *AppController) OnUrlInputTextChanged(urlText string) {
+	c.service.UpdateFocusedRequest(entity.UpdateRequest{Url: &urlText})
 }
 
 // Landing View (Request Header Bar)
 
-func (a *AppController) OnMethodSelection(method string) {
-	a.service.UpdateFocusedRequest(entity.ModRequest{Method: &method})
+func (c *AppController) OnMethodSelection(method string) {
+	c.service.UpdateFocusedRequest(entity.UpdateRequest{Method: &method})
 
-	d := a.service.FetchBasicFocusData()
-	a.views.RequestsList.RenderRequests(d.RequestsBasic)
+	d := c.service.GetBasicFocusData()
+	c.views.RequestsList.RenderRequests(d.RequestsBasic)
 }
 
 // Landing View (Request List)
 
-func (a *AppController) OnRequestListRequestFocusChanged(selectedRequest entity.RequestBasic) {
-	a.service.ChangeFocusedRequest(selectedRequest)
-	focusedRequest := a.service.GetFocusedRequest()
+func (c *AppController) OnRequestListRequestFocusChanged(selectedRequest entity.RequestBasic) {
+	logger.Info(APP_CONTROLLER_LOG_TAG, "User selected request", selectedRequest)
+	c.service.ChangeFocusedRequest(selectedRequest)
+	focusedRequest := c.service.GetFocusedRequest()
 
-	a.views.RequestHeaderBar.SetUrlText(focusedRequest.Url)
-	a.views.RequestHeaderBar.SetRequestMethod(focusedRequest.Method)
+	c.views.RequestHeaderBar.SetUrlText(focusedRequest.Url)
+	c.views.RequestHeaderBar.SetRequestMethod(focusedRequest.Method, true)
 
 	// Once the user changes the selection, load the historical response from memory and set it
 	// TODO: Clean setting the empty response;
 	go func() {
-		a.service.CancelSentHttpRequest() // Cancel any requests to prevent any side-effects.
+		c.service.CancelSentHttpRequest() // Cancel any requests to prevent any side-effects.
 		// But at some point, we would not want to cancel the entire request but rather the side effects...Is there a better way to do this?
-		a.views.ResponseWindow.SetHttpResponse(entity.HttpResponse{})
+		c.views.ResponseWindow.SetHttpResponse(entity.HttpResponse{})
 	}()
 }
 
-func (a *AppController) OnRequestListNameSelected(selected entity.RequestBasic) {
+func (c *AppController) OnRequestListNameSelected(selected entity.RequestBasic) {
 	s := fmt.Sprintf("%s %s", selected.Method, selected.Url)
-	a.views.StatusBar.SetText(s)
+	c.views.StatusBar.SetText(s)
 
 	onHttpResult := func(result entity.HttpResult) {
 		if result.Error != nil {
-			a.views.ResponseWindow.SetError(result.Error)
+			c.views.ResponseWindow.SetError(result.Error)
 		} else {
-			a.views.ResponseWindow.SetHttpResponse(result.Response)
+			c.views.ResponseWindow.SetHttpResponse(result.Response)
 		}
 	}
-	a.service.SendHttpRequest(selected.Id, onHttpResult)
-	a.views.ResponseWindow.AwaitResponse()
+	c.service.SendHttpRequest(selected.Id, onHttpResult)
+	c.views.ResponseWindow.AwaitResponse()
 }
 
-func (a *AppController) OnRequestListAdd(position int) {
-	a.service.AddRequest(position)
-	d := a.service.FetchBasicFocusData()
-	a.views.RequestsList.RenderRequests(d.RequestsBasic)
-	a.views.StatusBar.SetText("Added new request")
+func (c *AppController) OnRequestListAdd(position int) {
+	c.service.AddRequest(position)
+	d := c.service.GetBasicFocusData()
+
+	logger.Info(APP_CONTROLLER_LOG_TAG, "User requested to add a request at user position", position)
+
+	c.views.RequestsList.RenderRequests(d.RequestsBasic)
+	c.views.StatusBar.SetText("Added new request")
 }
 
-func (a *AppController) OnRequestListDuplicate(entity.RequestBasic) {
+func (c *AppController) OnRequestListDuplicate(entity.RequestBasic) {
 }
 
-func (a *AppController) OnRequestListRemove(request entity.RequestBasic, position int) {
-	a.service.RemoveRequest(request.Id, position)
-	d := a.service.FetchBasicFocusData()
-	a.views.RequestsList.RenderRequests(d.RequestsBasic)
+func (c *AppController) OnRequestListRemove(request entity.RequestBasic, position int) {
+	logger.Info(APP_CONTROLLER_LOG_TAG, "User requested to delete request", request, "at user position", position)
+	c.service.DeleteRequest(request.Id, position)
+	d := c.service.GetBasicFocusData()
+	c.views.RequestsList.RenderRequests(d.RequestsBasic)
 
 	s := fmt.Sprintf("Removed request %s", request.Name)
-	a.views.StatusBar.SetText(s)
+	c.views.StatusBar.SetText(s)
 }
 
 // Landing View (Collection list)
 
-func (a *AppController) OnFocusedCollectionChanged(changedCollection entity.Collection) {
-	d := a.service.ChangeFocusedCollection(changedCollection.Id)
+func (c *AppController) OnFocusedCollectionChanged(changedCollection entity.Collection) {
+	d := c.service.ChangeFocusedCollection(changedCollection.Id)
 
 	// when user selects a collection, a request item would be automatically changed
-	a.views.RequestsList.RenderRequests(d.RequestsBasic)
-	a.views.RequestsList.SelectRequest(d.SelectedRequest)
+	c.views.RequestsList.RenderRequests(d.RequestsBasic)
+	c.views.RequestsList.SelectRequest(d.SelectedRequest)
 }
 
-func (a *AppController) OnCollectionAdd(position int) {
-	a.service.CreateCollection(position)
-	d := a.service.FetchBasicFocusData()
-	a.views.CollectionsList.RenderCollections(d.Collections)
+func (c *AppController) OnCollectionAdd(position int) {
+	logger.Info(APP_CONTROLLER_LOG_TAG, "User requested to add a collection at user position", position)
+	c.service.AddCollection(position)
+	d := c.service.GetBasicFocusData()
+	c.views.CollectionsList.RenderCollections(d.Collections)
 }
 
-func (a *AppController) OnCollectionRemove(collection entity.Collection, position int) {
-	a.service.DeleteCollection(collection.Id, position)
-	d := a.service.FetchBasicFocusData()
-	a.views.CollectionsList.RenderCollections(d.Collections)
+func (c *AppController) OnCollectionRemove(collection entity.Collection, position int) {
+	logger.Info(APP_CONTROLLER_LOG_TAG, "User requested to remove a collection", collection, "at position", position)
+	c.service.DeleteCollection(collection.Id, position)
+	d := c.service.GetBasicFocusData()
+	c.views.CollectionsList.RenderCollections(d.Collections)
+	c.views.RequestsList.RenderRequests(d.RequestsBasic)
 }

@@ -18,10 +18,11 @@ func (r *RequestHeaderBar) SetListener(listener RequestHeaderBarListener) {
 
 type RequestHeaderBar struct {
 	*tview.Flex
-	listener      RequestHeaderBarListener
-	styles        *style.StyleProvider
-	requestMethod *tview.DropDown
-	urlInput      *tview.InputField
+	listener               RequestHeaderBarListener
+	styles                 *style.StyleProvider
+	requestMethod          *tview.DropDown
+	urlInput               *tview.InputField
+	suppressMethodCallback bool
 }
 
 func NewRequestHeaderBar(styles style.StyleProvider) *RequestHeaderBar {
@@ -49,6 +50,9 @@ func (r *RequestHeaderBar) Init() {
 	})
 
 	r.requestMethod.SetOptions(constants.RequestMethodStrings(), func(text string, index int) {
+		if r.suppressMethodCallback {
+			return
+		}
 		r.listener.OnMethodSelection(text)
 	})
 }
@@ -57,7 +61,15 @@ func (r *RequestHeaderBar) SetUrlText(text string) {
 	r.urlInput.SetText(text)
 }
 
-func (r *RequestHeaderBar) SetRequestMethod(method string) {
+// with silent mode, selecting a method will not trigger its callback.
+// This is useful when we don't want to wake up other UI element callbacks and introduce double calls
+func (r *RequestHeaderBar) SetRequestMethod(method string, silent bool) {
+	if silent {
+		r.suppressMethodCallback = true
+	}
 	methodIndex := constants.RequestMethodIndex(constants.RequestMethod(method))
 	r.requestMethod.SetCurrentOption(methodIndex)
+	if silent {
+		r.suppressMethodCallback = false
+	}
 }

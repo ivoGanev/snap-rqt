@@ -10,14 +10,11 @@ import (
 func main() {
 	logger.Init("app.log")
 
-	// Set up services: should not perform any initialisation logic that would affect any views.
-	// Services are not hierarchical, they talk between each other, but don't need parent-child relationship
-	var services = service.NewAppService()
+	var service = service.NewAppService()
 
-	// Load app
 	var app = view.NewAppView()
-	// Init root app controller
-	var controller = controller.NewAppController(app, services)
+
+	var controller = controller.NewAppController(app, service)
 
 	app.SetAppViewListener(&controller)
 	app.Views.CollectionsList.SetListener(&controller)
@@ -25,6 +22,9 @@ func main() {
 	app.Views.RequestHeaderBar.SetListener(&controller)
 	app.Views.EditorView.SetListener(&controller)
 
-	controller.Start()
 	app.Init()
+	service.Start()
+	controller.Start()
+
+	app.Start() // no function can run beyond this point due to UI loop start
 }
