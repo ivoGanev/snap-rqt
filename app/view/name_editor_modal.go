@@ -1,6 +1,9 @@
 package view
 
 import (
+	"snap-rq/app/constants"
+	"snap-rq/app/input"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -30,12 +33,12 @@ func (n *NameEditorModal) SetListener(listener EditorModalListener) {
 	n.listener = listener
 }
 
-func NewNameEditorModal() *NameEditorModal {
-	input := tview.NewInputField().
+func NewNameEditorModal(inputHandler *input.Handler) *NameEditorModal {
+	inputBox := tview.NewInputField().
 		SetLabelColor(tcell.ColorYellow).
 		SetFieldBackgroundColor(tcell.ColorWhite).
 		SetFieldTextColor(tcell.ColorBlack)
-	input.SetBackgroundColor(tcell.ColorBlue)
+	inputBox.SetBackgroundColor(tcell.ColorBlue)
 
 	saveBtn := tview.NewButton("(Enter) Save")
 	saveBtn.SetBorder(true)
@@ -53,7 +56,7 @@ func NewNameEditorModal() *NameEditorModal {
 	// Main modal body with border and title
 	form := tview.NewFlex().
 		SetDirection(tview.FlexRow).
-		AddItem(input, 0, 1, true).
+		AddItem(inputBox, 0, 1, true).
 		AddItem(buttons, 0, 1, false)
 
 	form.SetBorder(true).SetTitle("Edit Name")
@@ -72,7 +75,7 @@ func NewNameEditorModal() *NameEditorModal {
 
 	modal := &NameEditorModal{
 		Flex:      hCenter,
-		Input:     input,
+		Input:     inputBox,
 		Save:      saveBtn,
 		Cancel:    cancelBtn,
 		Form:      form,
@@ -81,18 +84,15 @@ func NewNameEditorModal() *NameEditorModal {
 
 	// Hook key events to listener
 	hCenter.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if modal.listener == nil {
-			return event
-		}
-		switch event.Key() {
-		case tcell.KeyEnter:
+		return inputHandler.SetInputCapture(constants.ViewModalEditor, event)
+	})
+	inputHandler.AddListener(func(action input.Action) {
+		switch action {
+		case input.ActionModalSave:
 			modal.listener.OnEditorModalSave(modal.Input.GetText(), modal.component)
-			return nil
-		case tcell.KeyEsc:
+		case input.ActionModalCancel:
 			modal.listener.OnEditorModalCancel()
-			return nil
 		}
-		return event
 	})
 
 	// Hook button presses to listener

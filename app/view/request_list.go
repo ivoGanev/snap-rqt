@@ -1,7 +1,9 @@
 package view
 
 import (
+	"snap-rq/app/constants"
 	"snap-rq/app/entity"
+	"snap-rq/app/input"
 	"snap-rq/app/style"
 
 	"github.com/gdamore/tcell/v2"
@@ -30,6 +32,7 @@ type RequestsList struct {
 	*tview.Table
 	styles   style.StyleProvider
 	listener RequestListListener
+	input    *input.Handler
 }
 
 func (r *RequestsList) RenderRequests(requests []entity.RequestBasic) {
@@ -47,15 +50,20 @@ func (r *RequestsList) RenderRequests(requests []entity.RequestBasic) {
 	}
 }
 
-func NewRequestsList(styles style.StyleProvider) *RequestsList {
+func NewRequestsList(styles style.StyleProvider, input *input.Handler) *RequestsList {
 	requestsView := RequestsList{
-		Table:    tview.NewTable(),
-		styles:   styles,
+		Table:  tview.NewTable(),
+		styles: styles,
+		input:  input,
 	}
 	return &requestsView
 }
 
 func (r *RequestsList) Init() {
+	r.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		return r.input.SetInputCapture(constants.ViewRequests, event)
+	})
+	
 	r.SetBorder(true)
 	r.SetTitle("(w) Requests")
 	r.SetSelectable(true, true)
@@ -74,27 +82,20 @@ func (r *RequestsList) Init() {
 		r.listener.OnRequestListRequestFocusChanged(r.getRequest(row, column))
 	})
 
-	r.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Rune() == 'a' {
-			row, _ := r.GetSelection()
+	r.input.AddListener(func(action input.Action) {
+		row, column := r.GetSelection()
+		switch action {
+		case input.ActionAddRequest:
 			r.listener.OnRequestListAdd(row)
 			r.Select(row, REQUEST_COLUMN)
-			return nil
-		} else if event.Key() == tcell.KeyDEL || event.Key() == tcell.KeyDelete {
-			row, column := r.GetSelection()
+		case input.ActionRemoveRequest:
 			r.listener.OnRequestListRemove(r.getRequest(row, column), row)
 			r.Select(row-1, REQUEST_COLUMN)
-			return nil
-		} else if event.Rune() == 'd' {
-			row, column := r.GetSelection()
+		case input.ActionDuplicateRequest:
 			r.listener.OnRequestListDuplicate(r.getRequest(row, column))
-			return nil
-		} else if event.Rune() == 'n' {
-			row, column := r.GetSelection()
+		case input.ActionEditRequestName:
 			r.listener.OnRequestListEditName(r.getRequest(row, column))
-			return nil
 		}
-		return event
 	})
 }
 

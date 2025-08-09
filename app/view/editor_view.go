@@ -1,7 +1,10 @@
 package view
 
 import (
+	"snap-rq/app/constants"
 	"snap-rq/app/entity"
+	"snap-rq/app/input"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -28,15 +31,17 @@ type EditorView struct {
 	textArea      *tview.TextArea
 	currentMode   int
 	listener      EditorViewListener
+	inputHandler  *input.Handler
 }
 
-func NewEditorView(app *tview.Application) *EditorView {
+func NewEditorView(app *tview.Application, inputHandler *input.Handler) *EditorView {
 	editorView := EditorView{
 		Flex:          tview.NewFlex(),
 		app:           app,
 		headersButton: tview.NewButton("(h) Headers"),
 		bodyButton:    tview.NewButton("(b) Body"),
 		currentMode:   EDITOR_VIEW_MODE_HEADERS,
+		inputHandler:  inputHandler,
 	}
 	return &editorView
 }
@@ -55,22 +60,23 @@ func (r *EditorView) Init() {
 	// Update buttons based on selected mode
 	r.updateButtonLabels()
 
+	// Set input capture
 	r.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Rune() {
-		case 'b':
+		return r.inputHandler.SetInputCapture(constants.ViewRequestEditor, event)
+	})
+	r.inputHandler.AddListener(func(action input.Action) {
+		switch action {
+		case input.ActionSwitchToBody:
 			r.currentMode = EDITOR_VIEW_MODE_BODY
 			r.updateButtonLabels()
 			r.app.SetFocus(r.textArea)
 			r.listener.OnEditorModeChanged()
-			return nil
-		case 'h':
+		case input.ActionSwitchToHeaders:
 			r.currentMode = EDITOR_VIEW_MODE_HEADERS
 			r.updateButtonLabels()
 			r.app.SetFocus(r.textArea)
 			r.listener.OnEditorModeChanged()
-			return nil
 		}
-		return event
 	})
 
 	top := tview.NewFlex().
