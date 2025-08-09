@@ -1,11 +1,10 @@
 package view
 
 import (
+	"github.com/rivo/tview"
+	"snap-rq/app/input"
 	logger "snap-rq/app/log"
 	"snap-rq/app/style"
-
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 )
 
 type Views struct {
@@ -22,11 +21,12 @@ type Views struct {
 
 type AppView struct {
 	*tview.Application
-	Pages    *tview.Pages
-	Styles   style.StyleProvider
-	Views    Views
-	ViewMode string
-	listener AppViewListener
+	Pages        *tview.Pages
+	Styles       style.StyleProvider
+	Views        Views
+	ViewMode     string
+	listener     AppViewListener
+	inputHandler *input.Handler
 }
 
 const (
@@ -49,18 +49,20 @@ func (app *AppView) SetAppViewListener(l AppViewListener) {
 }
 
 func NewAppView() AppView {
+
 	var application = tview.NewApplication()
 
 	var styleProvider = style.DefaultStylesProvider{}
+	var inputHandler = input.NewHandler()
 
-	var collectionListView = NewColletionsList()
+	var collectionListView = NewColletionsList(inputHandler)
 	var hotkeyHelpView = NewHotkeysHelp()
-	var editorView = NewEditorView(application)
+	var editorView = NewEditorView(inputHandler)
 	var requestHeaderBar = NewRequestHeaderBar(&styleProvider)
-	var requestsListView = NewRequestsList(&styleProvider)
+	var requestsListView = NewRequestsList(&styleProvider, inputHandler)
 	var responseWindowView = NewResponseWindow(application)
 	var statusBar = NewStatusBar()
-	var nameEditor = NewNameEditorModal()
+	var nameEditor = NewNameEditorModal(inputHandler)
 
 	var views = Views{
 		CollectionsList:  collectionListView,
@@ -75,9 +77,10 @@ func NewAppView() AppView {
 	}
 
 	appView := AppView{
-		Application: application,
-		Pages:       tview.NewPages(),
-		Views:       views,
+		Application:  application,
+		Pages:        tview.NewPages(),
+		Views:        views,
+		inputHandler: inputHandler,
 	}
 	appView.Styles = &styleProvider
 
@@ -86,14 +89,6 @@ func NewAppView() AppView {
 
 func (app *AppView) Init() {
 	views := app.Views
-
-	// Init UI
-	views.CollectionsList.Init()
-	views.HotkeysHelp.Init()
-	views.RequestHeaderBar.Init()
-	views.RequestsList.Init()
-	views.ResponseWindow.Init()
-	views.EditorView.Init()
 
 	// Build landing page
 	var lrcontent = tview.NewFlex()
@@ -119,52 +114,48 @@ func (app *AppView) Init() {
 	app.Pages.AddPage(string(PAGE_LANDING_VIEW), body, true, true)
 	app.Pages.AddPage(string(PAGE_EDIT_NAME), views.NameEditorModal, true, false)
 
-	// set hotkeys
-	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		// Swap collecti0n/request views
+	app.inputHandler.SetInputCapture(app.Application, input.SourceApp, func(action input.Action) {
 		focus := app.GetFocus()
-		if focus != nil && event.Key() == tcell.KeyTAB {
+		switch action {
+		case input.ActionSwapFocus:
 			switch focus {
 			case views.CollectionsList:
 				app.Focus(views.RequestsList)
-				return nil
 			case views.RequestsList:
 				app.Focus(views.CollectionsList)
-				return nil
 			}
-		}
-		if event.Rune() == 'q' {
-			// Collections focus hotkey
+		case input.ActionFocusCollections:
 			app.Focus(views.CollectionsList)
-			return nil
-		}
-		if event.Rune() == 'w' {
-			// Requests focus hotkey
+		case input.ActionFocusRequests:
 			app.Focus(views.RequestsList)
-			return nil
-		}
-		if event.Rune() == 'e' {
-			// Swap between edit and landing views
+		case input.ActionToggleViewMode:
 			if app.ViewMode == MODE_EDITOR_VIEW {
 				app.changeToLandingView(lrcontent)
 			} else {
 				app.changeToEditorView(lrcontent)
 			}
-			return nil
-		}
-		if event.Key() == tcell.KeyEsc || event.Key() == tcell.KeyEscape || event.Key() == tcell.KeyESC {
-			// Quit
+		case input.ActionExitInputMode:
+			app.inputHandler.SetMode(input.ModeNormal)
+		case input.ActionQuit:
 			app.Stop()
-			return nil
 		}
-		return event
 	})
+
+	// Init UI
+	views.CollectionsList.Init()
+	views.HotkeysHelp.Init()
+	views.RequestHeaderBar.Init()
+	views.RequestsList.Init()
+	views.ResponseWindow.Init()
+	views.EditorView.Init()
+
 }
 
 func (app *AppView) Start() {
 	// Start the app
 	if err := app.
 		SetRoot(app.Pages, true).
+		SetFocus(app.Views.CollectionsList).
 		EnableMouse(true).
 		Run(); err != nil {
 		logger.Println(err)
@@ -198,6 +189,14 @@ func (app *AppView) changeToEditorView(lrcontent *tview.Flex) {
 	app.Focus(app.Views.EditorView)
 	app.ViewMode = MODE_EDITOR_VIEW
 	app.listener.OnViewModeChange(app.ViewMode)
+
+	// Select body/header button based on previous mode
+	lastEditorMode := app.Views.EditorView.GetCurrentMode()
+	if lastEditorMode == EDITOR_VIEW_MODE_HEADERS {
+		app.Focus(app.Views.EditorView.HeadersButton)
+	} else {
+		app.Focus(app.Views.EditorView.BodyButton)
+	}
 }
 
 func (app *AppView) ShowPage(p string) {

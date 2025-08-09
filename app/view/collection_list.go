@@ -1,10 +1,11 @@
 package view
 
 import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 	"snap-rq/app/entity"
+	"snap-rq/app/input"
 	"sort"
+
+	"github.com/rivo/tview"
 )
 
 type CollectionListListener interface {
@@ -20,6 +21,7 @@ func (r *CollectionsList) SetListener(listener CollectionListListener) {
 
 type CollectionsList struct {
 	*tview.Table
+	input    *input.Handler
 	listener CollectionListListener
 }
 
@@ -27,13 +29,36 @@ func (r *CollectionsList) SelectCollection(collection entity.Collection) {
 	r.Select(collection.RowPosition, 0)
 }
 
-func NewColletionsList() *CollectionsList {
+func NewColletionsList(input *input.Handler) *CollectionsList {
 	return &CollectionsList{
 		Table: tview.NewTable(),
+		input: input,
 	}
 }
 
 func (r *CollectionsList) Init() {
+	r.input.SetInputCapture(r.Box, input.SourceCollectionsList, func(action input.Action) {
+		row, _ := r.GetSelection()
+		switch action {
+		case input.ActionAddCollection:
+			r.listener.OnCollectionAdd(row)
+			r.Select(row, 0)
+		case input.ActionEditCollectionName:
+			cell := r.GetCell(row, 0)
+			if col, ok := cell.GetReference().(entity.Collection); ok {
+				r.listener.OnCollectionEditName(col)
+			}
+		case input.ActionRemoveCollection:
+			cell := r.GetCell(row, 0)
+			if cell != nil {
+				if col, ok := cell.GetReference().(entity.Collection); ok {
+					r.listener.OnCollectionRemove(col, row)
+					r.Select(row-1, 0)
+				}
+			}
+		}
+	})
+
 	r.SetBorder(true)
 	r.SetTitle("(q) Collections")
 	r.SetSelectable(true, true)
@@ -47,32 +72,6 @@ func (r *CollectionsList) Init() {
 		r.listener.OnFocusedCollectionChanged(collection)
 	})
 
-	r.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Rune() == 'a' {
-			row, _ := r.GetSelection()
-			r.listener.OnCollectionAdd(row)
-			r.Select(row, 0)
-			return nil
-		} else if event.Rune() == 'n' {
-			row, _ := r.GetSelection()
-			cell := r.GetCell(row, 0)
-			if col, ok := cell.GetReference().(entity.Collection); ok {
-				r.listener.OnCollectionEditName(col)
-			}
-			return nil
-		} else if event.Key() == tcell.KeyDEL || event.Key() == tcell.KeyDelete {
-			row, _ := r.GetSelection()
-			cell := r.GetCell(row, 0)
-			if cell != nil {
-				if col, ok := cell.GetReference().(entity.Collection); ok {
-					r.listener.OnCollectionRemove(col, row)
-					r.Select(row-1, 0)
-				}
-			}
-			return nil
-		}
-		return event
-	})
 }
 
 func (r *CollectionsList) RenderCollections(collections []entity.Collection) {

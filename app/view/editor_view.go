@@ -2,7 +2,8 @@ package view
 
 import (
 	"snap-rq/app/entity"
-	"github.com/gdamore/tcell/v2"
+	"snap-rq/app/input"
+
 	"github.com/rivo/tview"
 )
 
@@ -12,8 +13,9 @@ const (
 )
 
 type EditorViewListener interface {
-	OnEditorModeChanged()
+	OnEditorModeChanged(mode int)
 	OnEditorEditTextArea(editorMode int, edit string)
+	OnEditorTextAreaSelected()
 }
 
 func (r *EditorView) SetListener(l EditorViewListener) {
@@ -22,21 +24,21 @@ func (r *EditorView) SetListener(l EditorViewListener) {
 
 type EditorView struct {
 	*tview.Flex
-	app           *tview.Application
-	headersButton *tview.Button
-	bodyButton    *tview.Button
-	textArea      *tview.TextArea
+	HeadersButton *tview.Button
+	BodyButton    *tview.Button
+	TextArea      *tview.TextArea
 	currentMode   int
 	listener      EditorViewListener
+	inputHandler  *input.Handler
 }
 
-func NewEditorView(app *tview.Application) *EditorView {
+func NewEditorView(inputHandler *input.Handler) *EditorView {
 	editorView := EditorView{
 		Flex:          tview.NewFlex(),
-		app:           app,
-		headersButton: tview.NewButton("(h) Headers"),
-		bodyButton:    tview.NewButton("(b) Body"),
+		HeadersButton: tview.NewButton("(h) Headers"),
+		BodyButton:    tview.NewButton("(b) Body"),
 		currentMode:   EDITOR_VIEW_MODE_HEADERS,
+		inputHandler:  inputHandler,
 	}
 	return &editorView
 }
@@ -46,56 +48,51 @@ func (r *EditorView) Init() {
 	r.SetTitle("Edit Request")
 	r.SetDirection(tview.FlexRow)
 
-	r.textArea = tview.NewTextArea()
-	r.textArea.SetBorder(true)
-	r.textArea.SetChangedFunc(func() {
-		r.listener.OnEditorEditTextArea(r.currentMode, r.textArea.GetText())
+	r.TextArea = tview.NewTextArea()
+	r.TextArea.SetBorder(true)
+	r.TextArea.SetChangedFunc(func() {
+		r.listener.OnEditorEditTextArea(r.currentMode, r.TextArea.GetText())
 	})
 
-	// Update buttons based on selected mode
-	r.updateButtonLabels()
+	// Make sure key input mode is set correct
+	r.TextArea.SetFocusFunc(func() {
+		r.inputHandler.SetMode(input.ModeTextInput)
+	})
+	r.TextArea.SetBlurFunc(func() {
+		r.inputHandler.SetMode(input.ModeNormal)
+	})
 
-	r.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Rune() {
-		case 'b':
+	// Set input capture
+	r.inputHandler.SetInputCapture(r.Box, input.SourceRequestEditor, func(action input.Action) {
+		switch action {
+		case input.ActionRequestEditorSwitchToBody:
 			r.currentMode = EDITOR_VIEW_MODE_BODY
-			r.updateButtonLabels()
-			r.app.SetFocus(r.textArea)
-			r.listener.OnEditorModeChanged()
-			return nil
-		case 'h':
+			r.listener.OnEditorModeChanged(EDITOR_VIEW_MODE_BODY)
+		case input.ActionRequestEditorSwitchToHeaders:
 			r.currentMode = EDITOR_VIEW_MODE_HEADERS
-			r.updateButtonLabels()
-			r.app.SetFocus(r.textArea)
-			r.listener.OnEditorModeChanged()
-			return nil
+			r.listener.OnEditorModeChanged(EDITOR_VIEW_MODE_HEADERS)
+		case input.ActionRequestEditorEdit:
+			r.listener.OnEditorTextAreaSelected()
 		}
-		return event
 	})
 
 	top := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
-		AddItem(r.headersButton, 0, 1, false).
-		AddItem(r.bodyButton, 0, 1, false)
+		AddItem(r.HeadersButton, 0, 1, false).
+		AddItem(r.BodyButton, 0, 1, false)
 
 	r.AddItem(top, 3, 0, false)
-	r.AddItem(r.textArea, 0, 1, true)
+	r.AddItem(r.TextArea, 0, 1, true)
+}
+
+func (r *EditorView) GetCurrentMode() int {
+	return r.currentMode
 }
 
 func (r *EditorView) SetTextArea(request entity.Request) {
 	if r.currentMode == EDITOR_VIEW_MODE_HEADERS {
-		r.textArea.SetText(request.Headers, false)
+		r.TextArea.SetText(request.Headers, false)
 	} else {
-		r.textArea.SetText(request.Body, false)
-	}
-}
-
-func (r *EditorView) updateButtonLabels() {
-	if r.currentMode == EDITOR_VIEW_MODE_HEADERS {
-		r.headersButton.SetLabel("[::b][*] (h) Headers[::-]")
-		r.bodyButton.SetLabel("   (b) Body")
-	} else {
-		r.headersButton.SetLabel("   (h) Headers")
-		r.bodyButton.SetLabel("[::b][*] (b) Body[::-]")
+		r.TextArea.SetText(request.Body, false)
 	}
 }
