@@ -2,7 +2,6 @@ package input
 
 import (
 	"slices"
-	"snap-rq/app/constants"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -23,15 +22,15 @@ type ActionBindingSettings struct {
 }
 
 type Handler struct {
-	bindings  map[constants.ViewNames]map[Binding]ActionBindingSettings
+	bindings  map[Source]map[Binding]ActionBindingSettings
 	listeners []ActionListener
 	mode      Mode
 }
 
 func NewHandler() *Handler {
-	keyBindings := map[constants.ViewNames]map[Binding]ActionBindingSettings{
+	keyBindings := map[Source]map[Binding]ActionBindingSettings{
 		// App focus key bindings
-		constants.ViewApp: {
+		SourceApp: {
 			NewCodeBinding(tcell.KeyTAB): ActionBindingSettings{
 				Action:      ActionSwapFocus,
 				RunsInModes: []Mode{ModeNormal},
@@ -62,7 +61,7 @@ func NewHandler() *Handler {
 			},
 		},
 		// Collection list key bindings
-		constants.ViewCollections: {
+		SourceCollectionsList: {
 			NewRuneBinding('a'): ActionBindingSettings{
 				Action:      ActionAddCollection,
 				RunsInModes: []Mode{ModeNormal},
@@ -77,7 +76,7 @@ func NewHandler() *Handler {
 			},
 		},
 		// Requests lists key bindings
-		constants.ViewRequests: {
+		SourceRequestsList: {
 			NewRuneBinding('a'): ActionBindingSettings{
 				Action:      ActionAddRequest,
 				RunsInModes: []Mode{ModeNormal},
@@ -96,7 +95,7 @@ func NewHandler() *Handler {
 			},
 		},
 		// Modal input editor (e.g. edit names of collection/request)
-		constants.ViewModalEditor: {
+		SourceModalEditor: {
 			NewCodeBinding(tcell.KeyEnter): ActionBindingSettings{
 				Action:      ActionModalSave,
 				RunsInModes: []Mode{ModeNormal},
@@ -107,7 +106,7 @@ func NewHandler() *Handler {
 			},
 		},
 		// Request editor view keys (where we edit the request body/headers etc.
-		constants.ViewRequestEditor: {
+		SourceRequestEditor: {
 			NewRuneBinding('b'): ActionBindingSettings{
 				Action:      ActionSwitchToBody,
 				RunsInModes: []Mode{ModeNormal},
@@ -127,11 +126,6 @@ func NewHandler() *Handler {
 	return handler
 }
 
-func AttachInputCapture(p *tview.Box, h *Handler, view constants.ViewNames) {
-	p.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		return h.SetInputCapture(view, event)
-	})
-}
 
 func (h *Handler) SetMode(mode Mode) {
 	h.mode = mode
@@ -147,19 +141,42 @@ func (h *Handler) emit(action Action) {
 	}
 }
 
-func (h *Handler) SetInputCapture(currentView constants.ViewNames, event *tcell.EventKey) *tcell.EventKey {
-	var binding Binding
-	if event.Key() == tcell.KeyRune {
-		binding = NewRuneBinding(event.Rune())
-	} else {
-		binding = NewCodeBinding(event.Key())
-	}
+func (h *Handler) SetInputCapture(
+    p any,
+    source Source,
+    listener func(action Action),
+) {
+    var setInputCaptureFunc func(func(event *tcell.EventKey) *tcell.EventKey)
 
-	if actionSetting, ok := h.bindings[currentView][binding]; ok {
-		if slices.Contains(actionSetting.RunsInModes, h.mode) {
-			h.emit(actionSetting.Action)
-			return nil
-		}
-	}
-	return event
+    switch v := p.(type) {
+    case *tview.Box:
+        setInputCaptureFunc = func(f func(event *tcell.EventKey) *tcell.EventKey) {
+            _ = v.SetInputCapture(f)
+        }
+    case *tview.Application:
+        setInputCaptureFunc = func(f func(event *tcell.EventKey) *tcell.EventKey) {
+            _ = v.SetInputCapture(f)
+        }
+    default:
+        return
+    }
+
+    setInputCaptureFunc(func(event *tcell.EventKey) *tcell.EventKey {
+        var binding Binding
+        if event.Key() == tcell.KeyRune {
+            binding = NewRuneBinding(event.Rune())
+        } else {
+            binding = NewCodeBinding(event.Key())
+        }
+
+        if actionSetting, ok := h.bindings[source][binding]; ok {
+            if slices.Contains(actionSetting.RunsInModes, h.mode) {
+                if listener != nil {
+                    listener(actionSetting.Action)
+                }
+                return nil
+            }
+        }
+        return event
+    })
 }

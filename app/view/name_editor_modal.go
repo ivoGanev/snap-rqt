@@ -1,7 +1,6 @@
 package view
 
 import (
-	"snap-rq/app/constants"
 	"snap-rq/app/input"
 
 	"github.com/gdamore/tcell/v2"
@@ -83,10 +82,7 @@ func NewNameEditorModal(inputHandler *input.Handler) *NameEditorModal {
 	}
 
 	// Hook key events to listener
-	hCenter.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		return inputHandler.SetInputCapture(constants.ViewModalEditor, event)
-	})
-	inputHandler.AddListener(func(action input.Action) {
+	inputHandler.SetInputCapture(hCenter, input.SourceModalEditor, func(action input.Action) {
 		switch action {
 		case input.ActionModalSave:
 			modal.listener.OnEditorModalSave(modal.Input.GetText(), modal.component)
@@ -94,6 +90,7 @@ func NewNameEditorModal(inputHandler *input.Handler) *NameEditorModal {
 			modal.listener.OnEditorModalCancel()
 		}
 	})
+
 
 	// Hook button presses to listener
 	saveBtn.SetSelectedFunc(func() {

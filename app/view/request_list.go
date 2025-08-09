@@ -1,12 +1,10 @@
 package view
 
 import (
-	"snap-rq/app/constants"
 	"snap-rq/app/entity"
 	"snap-rq/app/input"
 	"snap-rq/app/style"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -60,10 +58,22 @@ func NewRequestsList(styles style.StyleProvider, input *input.Handler) *Requests
 }
 
 func (r *RequestsList) Init() {
-	r.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		return r.input.SetInputCapture(constants.ViewRequests, event)
+	r.input.SetInputCapture(r.Table, input.SourceRequestsList, func(action input.Action) {
+		row, column := r.GetSelection()
+		switch action {
+		case input.ActionAddRequest:
+			r.listener.OnRequestListAdd(row)
+			r.Select(row, REQUEST_COLUMN)
+		case input.ActionRemoveRequest:
+			r.listener.OnRequestListRemove(r.getRequest(row, column), row)
+			r.Select(row-1, REQUEST_COLUMN)
+		case input.ActionDuplicateRequest:
+			r.listener.OnRequestListDuplicate(r.getRequest(row, column))
+		case input.ActionEditRequestName:
+			r.listener.OnRequestListEditName(r.getRequest(row, column))
+		}
 	})
-	
+
 	r.SetBorder(true)
 	r.SetTitle("(w) Requests")
 	r.SetSelectable(true, true)
@@ -82,21 +92,7 @@ func (r *RequestsList) Init() {
 		r.listener.OnRequestListRequestFocusChanged(r.getRequest(row, column))
 	})
 
-	r.input.AddListener(func(action input.Action) {
-		row, column := r.GetSelection()
-		switch action {
-		case input.ActionAddRequest:
-			r.listener.OnRequestListAdd(row)
-			r.Select(row, REQUEST_COLUMN)
-		case input.ActionRemoveRequest:
-			r.listener.OnRequestListRemove(r.getRequest(row, column), row)
-			r.Select(row-1, REQUEST_COLUMN)
-		case input.ActionDuplicateRequest:
-			r.listener.OnRequestListDuplicate(r.getRequest(row, column))
-		case input.ActionEditRequestName:
-			r.listener.OnRequestListEditName(r.getRequest(row, column))
-		}
-	})
+
 }
 
 // Selects an item from the request list

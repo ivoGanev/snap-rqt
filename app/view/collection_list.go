@@ -1,12 +1,10 @@
 package view
 
 import (
-	"snap-rq/app/constants"
 	"snap-rq/app/entity"
 	"snap-rq/app/input"
 	"sort"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -39,25 +37,7 @@ func NewColletionsList(input *input.Handler) *CollectionsList {
 }
 
 func (r *CollectionsList) Init() {
-	r.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		return r.input.SetInputCapture(constants.ViewCollections, event)
-	})
-
-	r.SetBorder(true)
-	r.SetTitle("(q) Collections")
-	r.SetSelectable(true, true)
-
-	r.SetSelectionChangedFunc(func(row, column int) {
-		if row == -1 {
-			return // no-op when the clicked row doesn't have any collection
-		}
-
-		collection := r.GetCell(row, 0).GetReference().(entity.Collection)
-		r.listener.OnFocusedCollectionChanged(collection)
-	})
-
-
-	r.input.AddListener(func(action input.Action) {
+	r.input.SetInputCapture(r.Box, input.SourceCollectionsList, func(action input.Action) {
 		row, _ := r.GetSelection()
 		switch action {
 		case input.ActionAddCollection:
@@ -77,6 +57,19 @@ func (r *CollectionsList) Init() {
 				}
 			}
 		}
+	})
+
+	r.SetBorder(true)
+	r.SetTitle("(q) Collections")
+	r.SetSelectable(true, true)
+
+	r.SetSelectionChangedFunc(func(row, column int) {
+		if row == -1 {
+			return // no-op when the clicked row doesn't have any collection
+		}
+
+		collection := r.GetCell(row, 0).GetReference().(entity.Collection)
+		r.listener.OnFocusedCollectionChanged(collection)
 	})
 
 }

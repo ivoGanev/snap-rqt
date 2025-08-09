@@ -1,11 +1,9 @@
 package view
 
 import (
-	"snap-rq/app/constants"
 	"snap-rq/app/entity"
 	"snap-rq/app/input"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -59,12 +57,9 @@ func (r *EditorView) Init() {
 
 	// Update buttons based on selected mode
 	r.updateButtonLabels()
-
+	
 	// Set input capture
-	r.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		return r.inputHandler.SetInputCapture(constants.ViewRequestEditor, event)
-	})
-	r.inputHandler.AddListener(func(action input.Action) {
+	r.inputHandler.SetInputCapture(r.Box, input.SourceRequestEditor, func(action input.Action) {
 		switch action {
 		case input.ActionSwitchToBody:
 			r.currentMode = EDITOR_VIEW_MODE_BODY

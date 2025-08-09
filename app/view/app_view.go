@@ -1,12 +1,9 @@
 package view
 
 import (
-	"snap-rq/app/constants"
 	"snap-rq/app/input"
 	logger "snap-rq/app/log"
 	"snap-rq/app/style"
-
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -125,10 +122,7 @@ func (app *AppView) Init() {
 	app.Pages.AddPage(string(PAGE_LANDING_VIEW), body, true, true)
 	app.Pages.AddPage(string(PAGE_EDIT_NAME), views.NameEditorModal, true, false)
 
-	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		return app.inputHandler.SetInputCapture(constants.ViewApp, event)
-	})
-	app.inputHandler.AddListener(func(action input.Action) {
+	app.inputHandler.SetInputCapture(app.Application, input.SourceApp, func(action input.Action) {
 		focus := app.GetFocus()
 		switch action {
 		case input.ActionSwapFocus:
