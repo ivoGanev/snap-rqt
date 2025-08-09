@@ -90,14 +90,6 @@ func NewAppView() AppView {
 func (app *AppView) Init() {
 	views := app.Views
 
-	// Init UI
-	views.CollectionsList.Init()
-	views.HotkeysHelp.Init()
-	views.RequestHeaderBar.Init()
-	views.RequestsList.Init()
-	views.ResponseWindow.Init()
-	views.EditorView.Init()
-
 	// Build landing page
 	var lrcontent = tview.NewFlex()
 	lrcontent.AddItem(app.Views.CollectionsList, 0, 1, false)
@@ -142,10 +134,21 @@ func (app *AppView) Init() {
 			} else {
 				app.changeToEditorView(lrcontent)
 			}
+		case input.ActionExitInputMode:
+			app.inputHandler.SetMode(input.ModeNormal)
 		case input.ActionQuit:
 			app.Stop()
 		}
 	})
+	
+	// Init UI
+	views.CollectionsList.Init()
+	views.HotkeysHelp.Init()
+	views.RequestHeaderBar.Init()
+	views.RequestsList.Init()
+	views.ResponseWindow.Init()
+	views.EditorView.Init()
+
 }
 
 func (app *AppView) Start() {

@@ -2,6 +2,7 @@ package input
 
 import (
 	"slices"
+	logger "snap-rq/app/log"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -16,9 +17,20 @@ const (
 	ModeTextInput
 )
 
+func (m Mode) String() string {
+	switch m {
+	case ModeNormal:
+		return "ModeNormal"
+	case ModeTextInput:
+		return "ModeTextInput"
+	default:
+		return "UnknownMode"
+	}
+}
+
 type ActionBindingSettings struct {
 	Action      Action
-	RunsInModes []Mode
+	AllowedInModes []Mode
 }
 
 type Handler struct {
@@ -27,93 +39,87 @@ type Handler struct {
 	mode      Mode
 }
 
+
+// Warning: If the input capture is set on the App (tview.Application),
+// its key bindings will take precedence and override bindings set on
+// other views or primitives. This means app-level bindings can
+// intercept keys before any view-level handlers get them. In these cases,
+// think about if the key should be global to the app or move it to the local UI component insted
 func NewHandler() *Handler {
 	keyBindings := map[Source]map[Binding]ActionBindingSettings{
 		// App focus key bindings
 		SourceApp: {
 			NewCodeBinding(tcell.KeyTAB): ActionBindingSettings{
 				Action:      ActionSwapFocus,
-				RunsInModes: []Mode{ModeNormal},
+				AllowedInModes: []Mode{ModeNormal},
 			},
 			NewRuneBinding('q'): ActionBindingSettings{
 				Action:      ActionFocusCollections,
-				RunsInModes: []Mode{ModeNormal},
+				AllowedInModes: []Mode{ModeNormal},
 			},
 			NewRuneBinding('w'): ActionBindingSettings{
 				Action:      ActionFocusRequests,
-				RunsInModes: []Mode{ModeNormal},
+				AllowedInModes: []Mode{ModeNormal},
 			},
 			NewRuneBinding('e'): ActionBindingSettings{
 				Action:      ActionToggleViewMode,
-				RunsInModes: []Mode{ModeNormal},
-			},
-			NewCodeBinding(tcell.KeyEsc): ActionBindingSettings{
-				Action:      ActionQuit,
-				RunsInModes: []Mode{ModeNormal},
-			},
-			NewCodeBinding(tcell.KeyEscape): ActionBindingSettings{
-				Action:      ActionQuit,
-				RunsInModes: []Mode{ModeNormal},
-			},
-			NewCodeBinding(tcell.KeyESC): ActionBindingSettings{
-				Action:      ActionQuit,
-				RunsInModes: []Mode{ModeNormal},
+				AllowedInModes: []Mode{ModeNormal},
 			},
 		},
 		// Collection list key bindings
 		SourceCollectionsList: {
 			NewRuneBinding('a'): ActionBindingSettings{
 				Action:      ActionAddCollection,
-				RunsInModes: []Mode{ModeNormal},
+				AllowedInModes: []Mode{ModeNormal},
 			},
-			NewRuneBinding('n'): ActionBindingSettings{
+			NewCodeBinding(tcell.KeyEnter): ActionBindingSettings{
 				Action:      ActionEditCollectionName,
-				RunsInModes: []Mode{ModeNormal},
+				AllowedInModes: []Mode{ModeNormal},
 			},
 			NewCodeBinding(tcell.KeyDelete): ActionBindingSettings{
 				Action:      ActionRemoveCollection,
-				RunsInModes: []Mode{ModeNormal},
+				AllowedInModes: []Mode{ModeNormal},
 			},
 		},
 		// Requests lists key bindings
 		SourceRequestsList: {
 			NewRuneBinding('a'): ActionBindingSettings{
 				Action:      ActionAddRequest,
-				RunsInModes: []Mode{ModeNormal},
+				AllowedInModes: []Mode{ModeNormal},
 			},
 			NewRuneBinding('d'): ActionBindingSettings{
 				Action:      ActionDuplicateRequest,
-				RunsInModes: []Mode{ModeNormal},
+				AllowedInModes: []Mode{ModeNormal},
 			},
-			NewRuneBinding('n'): ActionBindingSettings{
+			NewCodeBinding(tcell.KeyEnter): ActionBindingSettings{
 				Action:      ActionEditRequestName,
-				RunsInModes: []Mode{ModeNormal},
+				AllowedInModes: []Mode{ModeNormal},
 			},
 			NewCodeBinding(tcell.KeyDelete): ActionBindingSettings{
 				Action:      ActionRemoveRequest,
-				RunsInModes: []Mode{ModeNormal},
+				AllowedInModes: []Mode{ModeNormal},
 			},
 		},
 		// Modal input editor (e.g. edit names of collection/request)
 		SourceModalEditor: {
 			NewCodeBinding(tcell.KeyEnter): ActionBindingSettings{
 				Action:      ActionModalSave,
-				RunsInModes: []Mode{ModeNormal},
+				AllowedInModes: []Mode{ModeNormal, ModeTextInput},
 			},
-			NewCodeBinding(tcell.KeyEsc): ActionBindingSettings{
+			NewCodeBinding(tcell.KeyESC): ActionBindingSettings{
 				Action:      ActionModalCancel,
-				RunsInModes: []Mode{ModeNormal},
+				AllowedInModes: []Mode{ModeNormal, ModeTextInput},
 			},
 		},
 		// Request editor view keys (where we edit the request body/headers etc.
 		SourceRequestEditor: {
 			NewRuneBinding('b'): ActionBindingSettings{
 				Action:      ActionSwitchToBody,
-				RunsInModes: []Mode{ModeNormal},
+				AllowedInModes: []Mode{ModeNormal},
 			},
 			NewRuneBinding('h'): ActionBindingSettings{
 				Action:      ActionSwitchToHeaders,
-				RunsInModes: []Mode{ModeNormal},
+				AllowedInModes: []Mode{ModeNormal},
 			},
 		},
 	}
@@ -126,57 +132,60 @@ func NewHandler() *Handler {
 	return handler
 }
 
-
 func (h *Handler) SetMode(mode Mode) {
 	h.mode = mode
+	logger.Info("Input mode set to:", mode)
 }
 
 func (h *Handler) AddListener(listener ActionListener) {
 	h.listeners = append(h.listeners, listener)
 }
 
-func (h *Handler) emit(action Action) {
-	for _, l := range h.listeners {
-		l(action)
-	}
-}
-
 func (h *Handler) SetInputCapture(
-    p any,
-    source Source,
-    listener func(action Action),
+	p any,
+	source Source,
+	listener func(action Action),
 ) {
-    var setInputCaptureFunc func(func(event *tcell.EventKey) *tcell.EventKey)
+	var setInputCaptureFunc func(func(event *tcell.EventKey) *tcell.EventKey)
 
-    switch v := p.(type) {
-    case *tview.Box:
-        setInputCaptureFunc = func(f func(event *tcell.EventKey) *tcell.EventKey) {
-            _ = v.SetInputCapture(f)
-        }
-    case *tview.Application:
-        setInputCaptureFunc = func(f func(event *tcell.EventKey) *tcell.EventKey) {
-            _ = v.SetInputCapture(f)
-        }
-    default:
-        return
-    }
+	switch v := p.(type) {
+	case *tview.Box:
+		setInputCaptureFunc = func(f func(event *tcell.EventKey) *tcell.EventKey) {
+			_ = v.SetInputCapture(f)
+		}
+	case *tview.Application:
+		setInputCaptureFunc = func(f func(event *tcell.EventKey) *tcell.EventKey) {
+			_ = v.SetInputCapture(f)
+		}
+	case *tview.Flex:
+		setInputCaptureFunc = func(f func(event *tcell.EventKey) *tcell.EventKey) {
+			_ = v.SetInputCapture(f)
+		}
+	default:
+		return
+	}
 
-    setInputCaptureFunc(func(event *tcell.EventKey) *tcell.EventKey {
-        var binding Binding
-        if event.Key() == tcell.KeyRune {
-            binding = NewRuneBinding(event.Rune())
-        } else {
-            binding = NewCodeBinding(event.Key())
-        }
+	if listener != nil {
+		h.AddListener(listener)
+	}
 
-        if actionSetting, ok := h.bindings[source][binding]; ok {
-            if slices.Contains(actionSetting.RunsInModes, h.mode) {
-                if listener != nil {
-                    listener(actionSetting.Action)
-                }
-                return nil
-            }
-        }
-        return event
-    })
+	setInputCaptureFunc(func(event *tcell.EventKey) *tcell.EventKey {
+		var binding Binding
+		logger.Info("Input key pressed", "key", event.Key(), "rune", event.Rune(), "source", source)
+		if event.Key() == tcell.KeyRune {
+			binding = NewRuneBinding(event.Rune())
+		} else {
+			binding = NewCodeBinding(event.Key())
+		}
+
+		if actionSetting, ok := h.bindings[source][binding]; ok {
+			if slices.Contains(actionSetting.AllowedInModes, h.mode) {
+				for _, l := range h.listeners {
+					l(actionSetting.Action)
+				}
+				return nil
+			}
+		}
+		return event
+	})
 }

@@ -81,6 +81,15 @@ func NewNameEditorModal(inputHandler *input.Handler) *NameEditorModal {
 		component: -1,
 	}
 
+	inputBox.SetFocusFunc(func() {
+		inputHandler.SetMode(input.ModeTextInput)
+	})
+
+	// On blur will make sure the input mode is correctly set for mouse use cases (i.e. user clicked Cancel/OK with mouse so we still need to exit input mode)
+	inputBox.SetBlurFunc(func() {
+		inputHandler.SetMode(input.ModeNormal)
+	})
+
 	// Hook key events to listener
 	inputHandler.SetInputCapture(hCenter, input.SourceModalEditor, func(action input.Action) {
 		switch action {
@@ -90,7 +99,6 @@ func NewNameEditorModal(inputHandler *input.Handler) *NameEditorModal {
 			modal.listener.OnEditorModalCancel()
 		}
 	})
-
 
 	// Hook button presses to listener
 	saveBtn.SetSelectedFunc(func() {

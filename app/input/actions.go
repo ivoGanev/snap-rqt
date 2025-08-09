@@ -20,4 +20,5 @@ const (
 	ActionModalCancel         Action = "modal_cancel"
 	ActionSwitchToBody        Action = "switch_to_body"
 	ActionSwitchToHeaders     Action = "switch_to_headers"
+	ActionExitInputMode       Action = "exit_input_mode"
 )

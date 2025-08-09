@@ -50,10 +50,14 @@ func (c *AppController) OnViewModeChange(mode string) {
 
 func (c *AppController) OnEditorModalCancel() {
 	c.app.HidePage(view.PAGE_EDIT_NAME)
+	c.app.Focus(c.app.Views.CollectionsList)
+	d := c.service.GetBasicFocusData()
+	c.views.CollectionsList.SelectCollection(d.SelectedCollection)
 }
 
 func (c *AppController) OnEditorModalSave(text string, component int) {
 	c.app.HidePage(view.PAGE_EDIT_NAME)
+	
 	switch component {
 	case view.EDITOR_MODAL_COMPONENT_REQUESTS:
 		c.service.UpdateFocusedRequest(entity.UpdateRequest{Name: &text})
@@ -64,6 +68,10 @@ func (c *AppController) OnEditorModalSave(text string, component int) {
 		d := c.service.GetBasicFocusData()
 		c.views.CollectionsList.RenderCollections(d.Collections)
 	}
+
+	d := c.service.GetBasicFocusData()
+	c.app.Focus(c.app.Views.CollectionsList)
+	c.views.CollectionsList.SelectCollection(d.SelectedCollection)
 }
 
 func (c *AppController) OnRequestListEditName(request entity.RequestBasic) {
