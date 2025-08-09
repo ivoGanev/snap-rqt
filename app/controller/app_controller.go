@@ -16,6 +16,7 @@ type AppController struct {
 	service *service.AppService
 }
 
+
 func NewAppController(app view.AppView, appService *service.AppService) AppController {
 	var controller = AppController{
 		&app,
@@ -57,21 +58,22 @@ func (c *AppController) OnEditorModalCancel() {
 
 func (c *AppController) OnEditorModalSave(text string, component int) {
 	c.app.HidePage(view.PAGE_EDIT_NAME)
-	
+
 	switch component {
 	case view.EDITOR_MODAL_COMPONENT_REQUESTS:
 		c.service.UpdateFocusedRequest(entity.UpdateRequest{Name: &text})
 		d := c.service.GetBasicFocusData()
 		c.views.RequestsList.RenderRequests(d.RequestsBasic)
+		c.app.Focus(c.app.Views.RequestsList)
+		c.views.RequestsList.SelectRequest(d.SelectedRequest)
 	case view.EDITOR_MODAL_COMPONENT_COLLETIONS:
 		c.service.UpdateFocusedCollection(entity.UpdateCollection{Name: &text})
 		d := c.service.GetBasicFocusData()
 		c.views.CollectionsList.RenderCollections(d.Collections)
+		c.app.Focus(c.app.Views.CollectionsList)
+		c.views.CollectionsList.SelectCollection(d.SelectedCollection)
 	}
 
-	d := c.service.GetBasicFocusData()
-	c.app.Focus(c.app.Views.CollectionsList)
-	c.views.CollectionsList.SelectCollection(d.SelectedCollection)
 }
 
 func (c *AppController) OnRequestListEditName(request entity.RequestBasic) {
@@ -98,11 +100,21 @@ func (c *AppController) OnEditorEditTextArea(editorMode int, edit string) {
 	}
 }
 
-func (c *AppController) OnEditorModeChanged() {
+func (c *AppController) OnEditorModeChanged(mode int) {
 	request := c.service.GetFocusedRequest()
 	c.views.EditorView.SetTextArea(request)
+	if mode == view.EDITOR_VIEW_MODE_HEADERS {
+		c.app.Focus(c.views.EditorView.HeadersButton)
+	} else {
+		c.app.Focus(c.views.EditorView.BodyButton)
+	}
 }
 
+func (c *AppController) OnEditorTextAreaSelected() {
+	c.app.Focus(c.app.Views.EditorView.TextArea)
+}
+
+// Url Input
 func (c *AppController) OnUrlInputTextChanged(urlText string) {
 	c.service.UpdateFocusedRequest(entity.UpdateRequest{Url: &urlText})
 }

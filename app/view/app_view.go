@@ -1,10 +1,10 @@
 package view
 
 import (
+	"github.com/rivo/tview"
 	"snap-rq/app/input"
 	logger "snap-rq/app/log"
 	"snap-rq/app/style"
-	"github.com/rivo/tview"
 )
 
 type Views struct {
@@ -57,7 +57,7 @@ func NewAppView() AppView {
 
 	var collectionListView = NewColletionsList(inputHandler)
 	var hotkeyHelpView = NewHotkeysHelp()
-	var editorView = NewEditorView(application, inputHandler)
+	var editorView = NewEditorView(inputHandler)
 	var requestHeaderBar = NewRequestHeaderBar(&styleProvider)
 	var requestsListView = NewRequestsList(&styleProvider, inputHandler)
 	var responseWindowView = NewResponseWindow(application)
@@ -140,7 +140,7 @@ func (app *AppView) Init() {
 			app.Stop()
 		}
 	})
-	
+
 	// Init UI
 	views.CollectionsList.Init()
 	views.HotkeysHelp.Init()
@@ -189,6 +189,14 @@ func (app *AppView) changeToEditorView(lrcontent *tview.Flex) {
 	app.Focus(app.Views.EditorView)
 	app.ViewMode = MODE_EDITOR_VIEW
 	app.listener.OnViewModeChange(app.ViewMode)
+
+	// Select body/header button based on previous mode
+	lastEditorMode := app.Views.EditorView.GetCurrentMode()
+	if lastEditorMode == EDITOR_VIEW_MODE_HEADERS {
+		app.Focus(app.Views.EditorView.HeadersButton)
+	} else {
+		app.Focus(app.Views.EditorView.BodyButton)
+	}
 }
 
 func (app *AppView) ShowPage(p string) {
