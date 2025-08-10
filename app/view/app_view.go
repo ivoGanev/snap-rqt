@@ -112,7 +112,7 @@ func (app *AppView) Init() {
 	if ENABLE_DEBUG {
 		body.AddItem(views.Debugger, 0, 1, false)
 	}
-
+	
 	app.Pages.AddPage(string(PAGE_LANDING_VIEW), body, true, true)
 	app.Pages.AddPage(string(PAGE_EDIT_NAME), views.NameEditorModal, true, false)
 	

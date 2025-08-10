@@ -234,6 +234,9 @@ func (h *Handler) SetInputCapture(
 
 }
 
+// To decide if an object should handle input based on input mode, one idea was to track focus changes using OnFocus and OnBlur events.
+// However, this doesn't work well because tview does not emit OnBlur events for Primitives (see https://github.com/rivo/tview/issues/870).
+// Instead, we use an alternative approach where we need to make sure to register each input element which should not have its input stealed by other components.
 func (h *Handler) RegisterInputElement(tviewObject tview.Primitive) {
 	h.inputViews = append(h.inputViews, tviewObject)
 }
