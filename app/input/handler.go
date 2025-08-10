@@ -40,11 +40,11 @@ type Handler struct {
 	mode      Mode
 }
 
-// Warning: If the input capture is set on the App (tview.Application),
+// Warning: If the input capture is set on the SourceApp,
 // its key bindings will take precedence and override bindings set on
 // other views or primitives. This means app-level bindings can
 // intercept keys before any view-level handlers get them. In these cases,
-// think about if the key should be global to the app or move it to the local UI component insted
+// think about if the key should be global to the app or move it to the local UI component instead.
 func NewHandler() *Handler {
 	keyBindings := map[Source]map[Binding]ActionBindingSettings{
 		// App focus key bindings
@@ -62,7 +62,15 @@ func NewHandler() *Handler {
 				AllowedInModes: []Mode{ModeNormal},
 			},
 			NewRuneBinding('e'): ActionBindingSettings{
-				Action:         ActionToggleViewMode,
+				Action:         ActionSwapPuppetModes,
+				AllowedInModes: []Mode{ModeNormal},
+			},
+			NewRuneBinding('u'): ActionBindingSettings{
+				Action:         ActionHeaderBarEditUrl,
+				AllowedInModes: []Mode{ModeNormal},
+			},
+			NewRuneBinding('m'): ActionBindingSettings{
+				Action:         ActionHeaderBarSelectMethod,
 				AllowedInModes: []Mode{ModeNormal},
 			},
 		},
@@ -126,12 +134,22 @@ func NewHandler() *Handler {
 				AllowedInModes: []Mode{ModeNormal},
 			},
 			NewCodeBinding(tcell.KeyESC): ActionBindingSettings{
-				Action:         ActionToggleViewMode,
+				Action:         ActionRequestEditorDone,
 				AllowedInModes: []Mode{ModeNormal, ModeTextInput},
 			},
 			NewCodeBinding(tcell.KeyEnter): ActionBindingSettings{
 				Action:         ActionRequestEditorEdit,
 				AllowedInModes: []Mode{ModeNormal},
+			},
+		},
+		SourceRequestURLInputBox: {
+			NewCodeBinding(tcell.KeyEnter): ActionBindingSettings{
+				Action:         ActionHeaderBarUrlApply,
+				AllowedInModes: []Mode{ModeNormal, ModeTextInput},
+			},
+			NewCodeBinding(tcell.KeyESC): ActionBindingSettings{
+				Action:         ActionLoseFocus,
+				AllowedInModes: []Mode{ModeNormal, ModeTextInput},
 			},
 		},
 	}
@@ -203,4 +221,13 @@ func (h *Handler) SetInputCapture(
 		return event
 	})
 
+}
+
+func (h *Handler) SetBlurFocus(b *tview.Box) {
+	b.SetFocusFunc(func() {
+		h.SetMode(ModeTextInput)
+	})
+	b.SetBlurFunc(func() {
+		h.SetMode(ModeNormal)
+	})
 }

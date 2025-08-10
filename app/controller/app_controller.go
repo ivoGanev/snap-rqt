@@ -16,19 +16,19 @@ type AppController struct {
 	service *service.AppService
 }
 
-
-func NewAppController(app view.AppView, appService *service.AppService) AppController {
+func NewAppController(appService *service.AppService) AppController {
 	var controller = AppController{
-		&app,
-		&app.Views,
-		appService,
+		service: appService,
 	}
 
 	return controller
 }
 
-func (c *AppController) Start() {
+func (c *AppController) Start(app *view.AppView) {
 	logger.Debug("Controller starting")
+
+	c.app = app
+	c.views = &app.Views
 
 	// Load where the user last left
 	d := c.service.GetBasicFocusData()
@@ -90,12 +90,25 @@ func (c *AppController) OnCollectionEditName(entity.Collection) {
 
 // Editor View
 
+func (c *AppController) OnEditorInputDone() {
+	app := c.app
+	if app.Views.EditorView.HasFocusOnInput() {
+		if app.Views.EditorView.GetCurrentMode() == view.EDITOR_VIEW_FOCUS_BODY {
+			app.Focus(app.Views.EditorView.BodyButton)
+		} else {
+			app.Focus(app.Views.EditorView.HeadersButton)
+		}
+	} else { // For convenience, if the user is no longer focused on the input, we will use the same input key to exit to catalog mode
+		app.MorphToCatalog()
+	}
+}
+
 func (c *AppController) OnEditorEditTextArea(editorMode int, edit string) {
 	// change the body|header of current HTTP method selected
 	switch editorMode {
-	case view.EDITOR_VIEW_MODE_BODY:
+	case view.EDITOR_VIEW_FOCUS_BODY:
 		c.service.UpdateFocusedRequest(entity.UpdateRequest{Body: &edit})
-	case view.EDITOR_VIEW_MODE_HEADERS:
+	case view.EDITOR_VIEW_FOCUS_HEADERS:
 		c.service.UpdateFocusedRequest(entity.UpdateRequest{Headers: &edit})
 	}
 }
@@ -103,7 +116,7 @@ func (c *AppController) OnEditorEditTextArea(editorMode int, edit string) {
 func (c *AppController) OnEditorModeChanged(mode int) {
 	request := c.service.GetFocusedRequest()
 	c.views.EditorView.SetTextArea(request)
-	if mode == view.EDITOR_VIEW_MODE_HEADERS {
+	if mode == view.EDITOR_VIEW_FOCUS_HEADERS {
 		c.app.Focus(c.views.EditorView.HeadersButton)
 	} else {
 		c.app.Focus(c.views.EditorView.BodyButton)
@@ -114,9 +127,26 @@ func (c *AppController) OnEditorTextAreaSelected() {
 	c.app.Focus(c.app.Views.EditorView.TextArea)
 }
 
-// Url Input
+// Header Bar (URL Input and Method Selection)
 func (c *AppController) OnUrlInputTextChanged(urlText string) {
 	c.service.UpdateFocusedRequest(entity.UpdateRequest{Url: &urlText})
+}
+
+func (c *AppController) OnUrlApply() {
+	d := c.service.GetBasicFocusData()
+	c.app.Focus(c.app.Views.RequestsList)
+	c.views.RequestsList.SelectRequest(d.SelectedRequest)
+}
+
+func (c *AppController) OnUrlInputLoseFocus() {
+	if c.app.ViewMode == view.MODE_EDITOR_VIEW {
+		mode := c.app.Views.EditorView.GetCurrentMode()
+		if mode == view.EDITOR_VIEW_FOCUS_HEADERS {
+			c.app.Focus(c.views.EditorView.HeadersButton)
+		} else {
+			c.app.Focus(c.views.EditorView.BodyButton)
+		}
+	}
 }
 
 // Landing View (Request Header Bar)

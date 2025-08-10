@@ -11,12 +11,10 @@ func main() {
 	logger.Init("app.log")
 
 	var service = service.NewAppService()
+	var controller = controller.NewAppController(service)
+	var app = view.NewAppView(&controller)
 
-	var app = view.NewAppView()
-
-	var controller = controller.NewAppController(app, service)
-
-	app.SetAppViewListener(&controller)
+	// The listener order is important
 	app.Views.CollectionsList.SetListener(&controller)
 	app.Views.RequestsList.SetListener(&controller)
 	app.Views.RequestHeaderBar.SetListener(&controller)
@@ -24,7 +22,7 @@ func main() {
 	app.Views.NameEditorModal.SetListener(&controller)
 	app.Init()
 	service.Start()
-	controller.Start()
+	controller.Start(&app)
 
 	app.Start() // no function can run beyond this point due to UI loop start
 }
