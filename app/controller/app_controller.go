@@ -78,13 +78,13 @@ func (c *AppController) OnEditorModalSave(text string, component int) {
 
 func (c *AppController) OnRequestListEditName(request entity.RequestBasic) {
 	c.app.ShowPage(view.PAGE_EDIT_NAME)
-	c.views.NameEditorModal.Edit(view.EDITOR_MODAL_COMPONENT_REQUESTS)
+	c.views.NameEditorModal.Edit(view.EDITOR_MODAL_COMPONENT_REQUESTS, request.Name)
 	c.app.Focus(c.views.NameEditorModal.Input)
 }
 
-func (c *AppController) OnCollectionEditName(entity.Collection) {
+func (c *AppController) OnCollectionEditName(collection entity.Collection) {
 	c.app.ShowPage(view.PAGE_EDIT_NAME)
-	c.views.NameEditorModal.Edit(view.EDITOR_MODAL_COMPONENT_COLLETIONS)
+	c.views.NameEditorModal.Edit(view.EDITOR_MODAL_COMPONENT_COLLETIONS, collection.Name)
 	c.app.Focus(c.views.NameEditorModal.Input)
 }
 

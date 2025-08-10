@@ -18,7 +18,7 @@ type Views struct {
 	StatusBar        *StatusBar
 	Debugger         *tview.TextArea
 	NameEditorModal  *NameEditorModal
-	puppetRow        *tview.Flex
+	puppetRow        *tview.Flex  // this is the middle row that can be morphed into catalog and edit view
 }
 
 type AppView struct {
@@ -73,7 +73,7 @@ func NewAppView(listener AppViewListener) AppView {
 		EditorView:       editorView,
 		Debugger:         tview.NewTextArea(),
 		NameEditorModal:  nameEditor,
-		puppetRow:        puppetRow, // this is the middle row that can be morphed into catalog and edit view
+		puppetRow:        puppetRow,
 	}
 
 	appView := AppView{
@@ -115,7 +115,7 @@ func (app *AppView) Init() {
 
 	app.Pages.AddPage(string(PAGE_LANDING_VIEW), body, true, true)
 	app.Pages.AddPage(string(PAGE_EDIT_NAME), views.NameEditorModal, true, false)
-
+	
 	app.inputHandler.SetInputCapture(app.Application, input.SourceApp, func(action input.Action) {
 		focus := app.GetFocus()
 		switch action {
@@ -140,8 +140,6 @@ func (app *AppView) Init() {
 			app.Focus(views.RequestHeaderBar.UrlInput)
 		case input.ActionHeaderBarSelectMethod:
 			app.Focus(views.RequestHeaderBar.RequestMethodDD)
-		case input.ActionExitInputMode:
-			app.inputHandler.SetMode(input.ModeNormal)
 		case input.ActionQuit:
 			app.Stop()
 		}

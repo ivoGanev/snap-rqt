@@ -62,8 +62,8 @@ func (r *RequestHeaderBar) Init() {
 	})
 
 	// Configure input handler
-	r.inputHandler.SetBlurFocus(r.UrlInput.Box)
-	r.inputHandler.SetInputCapture(r.UrlInput.Box, input.SourceRequestURLInputBox, func(action input.Action) {
+	r.inputHandler.RegisterInputElement(r.UrlInput)
+	r.inputHandler.SetInputCapture(r.UrlInput, input.SourceRequestURLInputBox, func(action input.Action) {
 		switch action {
 		case input.ActionHeaderBarUrlApply:
 			r.listener.OnUrlApply()

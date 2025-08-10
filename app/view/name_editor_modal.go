@@ -82,7 +82,7 @@ func NewNameEditorModal(inputHandler *input.Handler) *NameEditorModal {
 	}
 
 	// Hook key events to listener
-	inputHandler.SetBlurFocus(inputBox.Box)
+	inputHandler.RegisterInputElement(inputBox)
 	inputHandler.SetInputCapture(hCenter, input.SourceModalEditor, func(action input.Action) {
 		switch action {
 		case input.ActionModalSave:
@@ -107,7 +107,7 @@ func NewNameEditorModal(inputHandler *input.Handler) *NameEditorModal {
 	return modal
 }
 
-func (n *NameEditorModal) Edit(component int) {
+func (n *NameEditorModal) Edit(component int, newName string) {
 	n.component = component
 	var title string
 	switch component {
@@ -120,4 +120,5 @@ func (n *NameEditorModal) Edit(component int) {
 	}
 
 	n.Form.SetTitle(title)
+	n.Input.SetText(newName)
 }

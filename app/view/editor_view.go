@@ -56,8 +56,8 @@ func (r *EditorView) Init(app *AppView) {
 	})
 
 	// Set input capture
-	r.inputHandler.SetBlurFocus(r.TextArea.Box)
-	r.inputHandler.SetInputCapture(r.Box, input.SourceRequestEditor, func(action input.Action) {
+	r.inputHandler.RegisterInputElement(r.TextArea)
+	r.inputHandler.SetInputCapture(r.Flex, input.SourceRequestEditor, func(action input.Action) {
 		switch action {
 		case input.ActionRequestEditorSwitchToBody:
 			r.logicalFocus = EDITOR_VIEW_FOCUS_BODY
