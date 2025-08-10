@@ -35,16 +35,16 @@ type ActionBindingSettings struct {
 }
 
 type Handler struct {
-	bindings  map[Source]map[Binding]ActionBindingSettings
-	listeners []ActionListener
-	mode      Mode
+	bindings   map[Source]map[Binding]ActionBindingSettings
+	listeners  []ActionListener
+	inputViews []tview.Primitive
 }
 
-// Warning: If the input capture is set on the App (tview.Application),
+// Warning: If the input capture is set on the SourceApp,
 // its key bindings will take precedence and override bindings set on
 // other views or primitives. This means app-level bindings can
 // intercept keys before any view-level handlers get them. In these cases,
-// think about if the key should be global to the app or move it to the local UI component insted
+// think about if the key should be global to the app or move it to the local UI component instead.
 func NewHandler() *Handler {
 	keyBindings := map[Source]map[Binding]ActionBindingSettings{
 		// App focus key bindings
@@ -62,7 +62,15 @@ func NewHandler() *Handler {
 				AllowedInModes: []Mode{ModeNormal},
 			},
 			NewRuneBinding('e'): ActionBindingSettings{
-				Action:         ActionToggleViewMode,
+				Action:         ActionSwapPuppetModes,
+				AllowedInModes: []Mode{ModeNormal},
+			},
+			NewRuneBinding('u'): ActionBindingSettings{
+				Action:         ActionHeaderBarEditUrl,
+				AllowedInModes: []Mode{ModeNormal},
+			},
+			NewRuneBinding('m'): ActionBindingSettings{
+				Action:         ActionHeaderBarSelectMethod,
 				AllowedInModes: []Mode{ModeNormal},
 			},
 		},
@@ -72,7 +80,7 @@ func NewHandler() *Handler {
 				Action:         ActionAddCollection,
 				AllowedInModes: []Mode{ModeNormal},
 			},
-			NewCodeBinding(tcell.KeyEnter): ActionBindingSettings{
+			NewCodeBinding(tcell.KeyF2): ActionBindingSettings{
 				Action:         ActionEditCollectionName,
 				AllowedInModes: []Mode{ModeNormal},
 			},
@@ -126,41 +134,45 @@ func NewHandler() *Handler {
 				AllowedInModes: []Mode{ModeNormal},
 			},
 			NewCodeBinding(tcell.KeyESC): ActionBindingSettings{
-				Action:         ActionToggleViewMode,
+				Action:         ActionRequestEditorDone,
 				AllowedInModes: []Mode{ModeNormal, ModeTextInput},
 			},
 			NewCodeBinding(tcell.KeyEnter): ActionBindingSettings{
 				Action:         ActionRequestEditorEdit,
 				AllowedInModes: []Mode{ModeNormal},
 			},
+			NewCodeBinding(tcell.KeyDown): ActionBindingSettings{
+				Action:         ActionRequestEditorEdit,
+				AllowedInModes: []Mode{ModeNormal},
+			},
+		},
+		SourceRequestURLInputBox: {
+			NewCodeBinding(tcell.KeyEnter): ActionBindingSettings{
+				Action:         ActionHeaderBarUrlApply,
+				AllowedInModes: []Mode{ModeNormal, ModeTextInput},
+			},
+			NewCodeBinding(tcell.KeyESC): ActionBindingSettings{
+				Action:         ActionLoseFocus,
+				AllowedInModes: []Mode{ModeNormal, ModeTextInput},
+			},
 		},
 	}
 
 	handler := &Handler{
-		mode:     ModeNormal,
 		bindings: keyBindings,
 	}
 
 	return handler
 }
 
-func (h *Handler) SetMode(mode Mode) {
-	h.mode = mode
-	logger.Info("Input mode set to:", mode)
-}
-
-func (h *Handler) AddListener(listener ActionListener) {
-	h.listeners = append(h.listeners, listener)
-}
-
 func (h *Handler) SetInputCapture(
-	p any,
+	tviewObject any,
 	source Source,
 	listener func(action Action),
 ) {
 	var setInputCaptureFunc func(func(event *tcell.EventKey) *tcell.EventKey)
 
-	switch v := p.(type) {
+	switch v := tviewObject.(type) {
 	case *tview.Box:
 		setInputCaptureFunc = func(f func(event *tcell.EventKey) *tcell.EventKey) {
 			_ = v.SetInputCapture(f)
@@ -173,12 +185,20 @@ func (h *Handler) SetInputCapture(
 		setInputCaptureFunc = func(f func(event *tcell.EventKey) *tcell.EventKey) {
 			_ = v.SetInputCapture(f)
 		}
+	case *tview.TextArea:
+		setInputCaptureFunc = func(f func(event *tcell.EventKey) *tcell.EventKey) {
+			_ = v.SetInputCapture(f)
+		}
+	case *tview.InputField:
+		setInputCaptureFunc = func(f func(event *tcell.EventKey) *tcell.EventKey) {
+			_ = v.SetInputCapture(f)
+		}
 	default:
-		panic(fmt.Sprintf("unsupported input capture type: %T", p))
+		panic(fmt.Sprintf("unsupported input capture type: %T", tviewObject))
 	}
 
 	if listener != nil {
-		h.AddListener(listener)
+		h.listeners = append(h.listeners, listener)
 	}
 
 	setInputCaptureFunc(func(event *tcell.EventKey) *tcell.EventKey {
@@ -191,9 +211,18 @@ func (h *Handler) SetInputCapture(
 		} else {
 			binding = NewCodeBindingWithModifier(event.Key(), event.Modifiers())
 		}
-
 		if actionSetting, ok := h.bindings[source][binding]; ok {
-			if slices.Contains(actionSetting.AllowedInModes, h.mode) {
+			// If the element allows input (e.g. InputField), accept also bindings allowed in ModeTextInput
+			// Otherwise, only accept bindings allowed in ModeNormal
+			allowed := true
+
+			for _, elem := range h.inputViews {
+				if elem.HasFocus() && !slices.Contains(actionSetting.AllowedInModes, ModeTextInput) {
+					allowed = false
+				}
+			}
+
+			if allowed {
 				for _, l := range h.listeners {
 					l(actionSetting.Action)
 				}
@@ -203,4 +232,11 @@ func (h *Handler) SetInputCapture(
 		return event
 	})
 
+}
+
+// To decide if an object should handle input based on input mode, one idea was to track focus changes using OnFocus and OnBlur events.
+// However, this doesn't work well because tview does not emit OnBlur events for Primitives (see https://github.com/rivo/tview/issues/870).
+// Instead, we use an alternative approach where we need to make sure to register each input element which should not have its input stealed by other components.
+func (h *Handler) RegisterInputElement(tviewObject tview.Primitive) {
+	h.inputViews = append(h.inputViews, tviewObject)
 }

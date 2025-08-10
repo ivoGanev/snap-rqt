@@ -1,10 +1,11 @@
 package view
 
 import (
-	"github.com/rivo/tview"
 	"snap-rq/app/input"
 	logger "snap-rq/app/log"
 	"snap-rq/app/style"
+
+	"github.com/rivo/tview"
 )
 
 type Views struct {
@@ -17,6 +18,7 @@ type Views struct {
 	StatusBar        *StatusBar
 	Debugger         *tview.TextArea
 	NameEditorModal  *NameEditorModal
+	puppetRow        *tview.Flex  // this is the middle row that can be morphed into catalog and edit view
 }
 
 type AppView struct {
@@ -36,7 +38,7 @@ const (
 	PAGE_LANDING_VIEW     = "landing-view"
 	PAGE_EDIT_NAME        = "edit-name"
 	ENABLE_DEBUG          = false
-	MODE_LANDING_VIEW     = "lv"
+	MODE_CATALOG_VIEW     = "lv"
 	MODE_EDITOR_VIEW      = "ev"
 )
 
@@ -44,11 +46,7 @@ type AppViewListener interface {
 	OnViewModeChange(mode string)
 }
 
-func (app *AppView) SetAppViewListener(l AppViewListener) {
-	app.listener = l
-}
-
-func NewAppView() AppView {
+func NewAppView(listener AppViewListener) AppView {
 
 	var application = tview.NewApplication()
 
@@ -58,11 +56,12 @@ func NewAppView() AppView {
 	var collectionListView = NewColletionsList(inputHandler)
 	var hotkeyHelpView = NewHotkeysHelp()
 	var editorView = NewEditorView(inputHandler)
-	var requestHeaderBar = NewRequestHeaderBar(&styleProvider)
+	var requestHeaderBar = NewRequestHeaderBar(&styleProvider, inputHandler)
 	var requestsListView = NewRequestsList(&styleProvider, inputHandler)
 	var responseWindowView = NewResponseWindow(application)
 	var statusBar = NewStatusBar()
 	var nameEditor = NewNameEditorModal(inputHandler)
+	var puppetRow = tview.NewFlex()
 
 	var views = Views{
 		CollectionsList:  collectionListView,
@@ -74,6 +73,7 @@ func NewAppView() AppView {
 		EditorView:       editorView,
 		Debugger:         tview.NewTextArea(),
 		NameEditorModal:  nameEditor,
+		puppetRow:        puppetRow,
 	}
 
 	appView := AppView{
@@ -81,6 +81,7 @@ func NewAppView() AppView {
 		Pages:        tview.NewPages(),
 		Views:        views,
 		inputHandler: inputHandler,
+		listener:     listener,
 	}
 	appView.Styles = &styleProvider
 
@@ -91,29 +92,30 @@ func (app *AppView) Init() {
 	views := app.Views
 
 	// Build landing page
-	var lrcontent = tview.NewFlex()
-	lrcontent.AddItem(app.Views.CollectionsList, 0, 1, false)
-	lrcontent.AddItem(app.Views.RequestsList, 0, 3, false)
-	lrcontent.AddItem(app.Views.ResponseWindow, 0, 3, false)
+	puppetRow := views.puppetRow
 
-	app.ViewMode = MODE_LANDING_VIEW
+	puppetRow.AddItem(app.Views.CollectionsList, 0, 1, false)
+	puppetRow.AddItem(app.Views.RequestsList, 0, 3, false)
+	puppetRow.AddItem(app.Views.ResponseWindow, 0, 3, false)
+
+	app.ViewMode = MODE_CATALOG_VIEW
 
 	var body = tview.NewFlex()
 
 	body.SetDirection(tview.FlexRow)
 	body.AddItem(views.HotkeysHelp, 5, 0, false)
 	body.AddItem(views.RequestHeaderBar, 3, 0, false)
-	body.AddItem(lrcontent, 0, 10, false)
+	body.AddItem(puppetRow, 0, 10, false)
 
 	body.AddItem(views.StatusBar, 1, 0, false)
 
 	if ENABLE_DEBUG {
 		body.AddItem(views.Debugger, 0, 1, false)
 	}
-
+	
 	app.Pages.AddPage(string(PAGE_LANDING_VIEW), body, true, true)
 	app.Pages.AddPage(string(PAGE_EDIT_NAME), views.NameEditorModal, true, false)
-
+	
 	app.inputHandler.SetInputCapture(app.Application, input.SourceApp, func(action input.Action) {
 		focus := app.GetFocus()
 		switch action {
@@ -128,14 +130,16 @@ func (app *AppView) Init() {
 			app.Focus(views.CollectionsList)
 		case input.ActionFocusRequests:
 			app.Focus(views.RequestsList)
-		case input.ActionToggleViewMode:
-			if app.ViewMode == MODE_EDITOR_VIEW {
-				app.changeToLandingView(lrcontent)
+		case input.ActionSwapPuppetModes:
+			if app.ViewMode == MODE_CATALOG_VIEW {
+				app.MorphToEdit()
 			} else {
-				app.changeToEditorView(lrcontent)
+				app.MorphToCatalog()
 			}
-		case input.ActionExitInputMode:
-			app.inputHandler.SetMode(input.ModeNormal)
+		case input.ActionHeaderBarEditUrl:
+			app.Focus(views.RequestHeaderBar.UrlInput)
+		case input.ActionHeaderBarSelectMethod:
+			app.Focus(views.RequestHeaderBar.RequestMethodDD)
 		case input.ActionQuit:
 			app.Stop()
 		}
@@ -147,8 +151,7 @@ func (app *AppView) Init() {
 	views.RequestHeaderBar.Init()
 	views.RequestsList.Init()
 	views.ResponseWindow.Init()
-	views.EditorView.Init()
-
+	views.EditorView.Init(app)
 }
 
 func (app *AppView) Start() {
@@ -163,39 +166,45 @@ func (app *AppView) Start() {
 	}
 }
 
-func (app *AppView) changeToLandingView(lrcontent *tview.Flex) {
-	lrcontent.RemoveItem(app.Views.EditorView)
-	lrcontent.RemoveItem(app.Views.ResponseWindow)
+func (app *AppView) MorphToCatalog() {
+	if app.ViewMode != MODE_CATALOG_VIEW {
+		puppetRow := app.Views.puppetRow
+		puppetRow.RemoveItem(app.Views.EditorView)
+		puppetRow.RemoveItem(app.Views.ResponseWindow)
 
-	lrcontent.
-		AddItem(app.Views.CollectionsList, 0, 1, true).
-		AddItem(app.Views.RequestsList, 0, 3, false).
-		AddItem(app.Views.ResponseWindow, 0, 3, false)
+		puppetRow.
+			AddItem(app.Views.CollectionsList, 0, 1, true).
+			AddItem(app.Views.RequestsList, 0, 3, false).
+			AddItem(app.Views.ResponseWindow, 0, 3, false)
 
-	app.Focus(app.Views.RequestsList)
-	app.ViewMode = MODE_LANDING_VIEW
-	app.listener.OnViewModeChange(app.ViewMode)
+		app.Focus(app.Views.RequestsList)
+		app.ViewMode = MODE_CATALOG_VIEW
+		app.listener.OnViewModeChange(app.ViewMode)
+	}
 }
 
-func (app *AppView) changeToEditorView(lrcontent *tview.Flex) {
-	lrcontent.RemoveItem(app.Views.CollectionsList)
-	lrcontent.RemoveItem(app.Views.RequestsList)
-	lrcontent.RemoveItem(app.Views.ResponseWindow)
+func (app *AppView) MorphToEdit() {
+	if app.ViewMode != MODE_EDITOR_VIEW {
+		puppetRow := app.Views.puppetRow
+		puppetRow.RemoveItem(app.Views.CollectionsList)
+		puppetRow.RemoveItem(app.Views.RequestsList)
+		puppetRow.RemoveItem(app.Views.ResponseWindow)
 
-	lrcontent.
-		AddItem(app.Views.EditorView, 0, 4, true).
-		AddItem(app.Views.ResponseWindow, 0, 3, false)
+		puppetRow.
+			AddItem(app.Views.EditorView, 0, 4, true).
+			AddItem(app.Views.ResponseWindow, 0, 3, false)
 
-	app.Focus(app.Views.EditorView)
-	app.ViewMode = MODE_EDITOR_VIEW
-	app.listener.OnViewModeChange(app.ViewMode)
+		app.Focus(app.Views.EditorView)
+		app.ViewMode = MODE_EDITOR_VIEW
+		app.listener.OnViewModeChange(app.ViewMode)
 
-	// Select body/header button based on previous mode
-	lastEditorMode := app.Views.EditorView.GetCurrentMode()
-	if lastEditorMode == EDITOR_VIEW_MODE_HEADERS {
-		app.Focus(app.Views.EditorView.HeadersButton)
-	} else {
-		app.Focus(app.Views.EditorView.BodyButton)
+		// Select body/header button based on previous mode
+		lastEditorMode := app.Views.EditorView.GetCurrentMode()
+		if lastEditorMode == EDITOR_VIEW_FOCUS_HEADERS {
+			app.Focus(app.Views.EditorView.HeadersButton)
+		} else {
+			app.Focus(app.Views.EditorView.BodyButton)
+		}
 	}
 }
 
