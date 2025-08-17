@@ -41,10 +41,10 @@ func NewRequestHeaderBar(styles style.StyleProvider, inputHandler *input.Handler
 func (r *RequestHeaderBar) Init() {
 	r.SetDirection(tview.FlexColumn)
 
-	r.RequestMethodDD.SetTitle("Method")
+	r.RequestMethodDD.SetTitle("(m) Method")
 	r.RequestMethodDD.SetBorder(true)
 
-	r.UrlInput.SetTitle("URL")
+	r.UrlInput.SetTitle("(u) URL")
 	r.UrlInput.SetBorder(true)
 
 	r.AddItem(r.RequestMethodDD, 0, 1, false).
