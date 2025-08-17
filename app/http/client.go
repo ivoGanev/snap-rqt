@@ -56,6 +56,7 @@ func SendRequest(ctx context.Context, request entity.RawHttpRequest) entity.Http
 			Timestamp:  timestamp,
 			StatusCode: resp.StatusCode,
 			Body:       string(respBody),
+			Header:     resp.Header,
 		},
 		Error: nil,
 	}
