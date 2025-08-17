@@ -1,9 +1,12 @@
 package view
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"snap-rq/app/entity"
+	"strings"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -11,7 +14,7 @@ import (
 )
 
 type ResponseWindow struct {
-	      *tview.TextView
+	*tview.TextView
 	app        *tview.Application
 	ctx        context.Context
 	cancelFunc context.CancelFunc
@@ -20,7 +23,7 @@ type ResponseWindow struct {
 func NewResponseWindow(app *tview.Application) *ResponseWindow {
 	responseView := ResponseWindow{
 		TextView: tview.NewTextView(),
-		app:  app,
+		app:      app,
 	}
 
 	return &responseView
@@ -76,8 +79,26 @@ func (r *ResponseWindow) SetError(err error) {
 
 func (r *ResponseWindow) SetHttpResponse(response entity.HttpResponse) {
 	r.stopPreviousAnimation()
+
+	contentTypes, ok := response.Header["Content-Type"]
+	body := response.Body
+
+	var output string
+
+	// Pretty-print JSON
+	if ok && len(contentTypes) > 0 && strings.HasPrefix(contentTypes[0], "application/json") {
+		var pretty bytes.Buffer
+		if err := json.Indent(&pretty, []byte(body), "", "  "); err != nil {
+			output = fmt.Sprintf("invalid JSON: %v\n\n%s", err, body)
+		} else {
+			output = pretty.String()
+		}
+	} else {
+		output = body
+	}
+
 	r.app.QueueUpdateDraw(func() {
-		r.SetText(response.Body)
+		r.SetText(output)
 	})
 }
 

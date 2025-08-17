@@ -18,14 +18,14 @@ func NewHotkeysHelp() *HotkeysHelp {
 
 func (n *HotkeysHelp) Init() {
 	shortcuts := [][]string{
-		{"(e)", "Edit selected item"},
-		{"(a)", "Add selected item"},
-		{"(d)", "Duplicate selected item"},
-		{"(Del)", "Delete selected item"},
-		{"(Tab)", "Switch windows"},
-		{"(Esc)", "Quit"},
+		{"(e)", "Edit request"},
+		{"(a)", "Add collection/request"},
+		{"(F2)", "Change name of collection/request"},
+		{"(Del)", "Delete collection/request"},
+		{"(Tab)", "Switch collection/request"},
+		{"(ESC)", "Exit edit mode"},
 	}
-	mid := (len(shortcuts) + 1) / 2 // ceiling divide for uneven counts
+	mid := (len(shortcuts) + 1) / 2
 	for row := range mid {
 		left := shortcuts[row]
 		n.SetCell(row, 0,

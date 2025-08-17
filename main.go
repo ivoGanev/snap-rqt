@@ -24,5 +24,5 @@ func main() {
 	service.Start()
 	controller.Start(&app)
 
-	app.Start() // no function can run beyond this point due to UI loop start
+	app.Start()
 }
